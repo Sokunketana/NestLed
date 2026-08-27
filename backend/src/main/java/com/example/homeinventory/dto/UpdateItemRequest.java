@@ -12,7 +12,7 @@ public record UpdateItemRequest(
         @NotNull Long categoryId,
         @NotNull Long roomId,
         Long storageLocationId,
-        @NotNull @PositiveOrZero BigDecimal estimatedValue,
+        @PositiveOrZero BigDecimal estimatedValue,
         LocalDate purchaseDate,
         LocalDate warrantyExpirationDate,
         @NotNull ItemCondition condition,

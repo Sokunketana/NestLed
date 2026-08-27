@@ -33,7 +33,7 @@ public class Item {
     @JoinColumn(name = "storage_location_id")
     private StorageLocation storageLocation;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    @Column(precision = 12, scale = 2)
     private BigDecimal estimatedValue;
 
     private LocalDate purchaseDate;

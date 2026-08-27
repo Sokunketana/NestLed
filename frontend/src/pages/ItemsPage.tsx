@@ -36,7 +36,7 @@ export default function ItemsPage() {
     <div className="mt-6">{error ? <ErrorMessage message={error} /> : !items ? <Loading /> : !items.length ? <Empty>No items match this view. Add one or try different filters.</Empty> :
       <div className="grid gap-4 md:grid-cols-2">{items.map(item => <Link to={`/items/${item.id}`} className="card group flex gap-4" key={item.id}>
         <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-sage text-xl">◇</div>
-        <div className="min-w-0 flex-1"><div className="flex justify-between gap-3"><h2 className="truncate text-lg group-hover:text-pine">{item.name}</h2><span className="font-semibold">{money.format(item.estimatedValue * item.quantity)}</span></div>
+        <div className="min-w-0 flex-1"><div className="flex justify-between gap-3"><h2 className="truncate text-lg group-hover:text-pine">{item.name}</h2><span className="font-semibold">{item.estimatedValue == null ? 'Value not recorded' : money.format(item.estimatedValue * item.quantity)}</span></div>
           <p className="mt-1 text-sm text-stone-500">{item.roomName}{item.storageLocationName && ` → ${item.storageLocationName}`}</p>
           <div className="mt-3 flex gap-2 text-xs"><span className="rounded-full bg-stone-100 px-2 py-1">{item.categoryName}</span><span className="rounded-full bg-stone-100 px-2 py-1">Qty {item.quantity}</span></div>
         </div>

@@ -16,9 +16,11 @@ export default function ItemDetailsPage() {
   }
   if (error) return <ErrorMessage message={error} />
   if (!item) return <Loading />
+  const valueEach = item.estimatedValue == null ? 'Not recorded' : money.format(item.estimatedValue)
+  const totalValue = item.estimatedValue == null ? 'Not recorded' : money.format(item.estimatedValue * item.quantity)
   const fields = [
     ['Category', item.categoryName], ['Condition', item.condition], ['Quantity', item.quantity],
-    ['Value each', money.format(item.estimatedValue)], ['Total value', money.format(item.estimatedValue * item.quantity)],
+    ['Value each', valueEach], ['Total value', totalValue],
     ['Purchase date', item.purchaseDate || 'Not recorded'], ['Warranty expires', item.warrantyExpirationDate || 'Not recorded'],
   ]
   return <>

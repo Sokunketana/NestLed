@@ -8,7 +8,7 @@ import { ErrorMessage, Loading } from '../components/PageState'
 import type { Category, ItemCondition, ItemPayload, Room, StorageLocation } from '../types'
 
 const initial: ItemPayload = { name: '', description: '', quantity: 1, categoryId: 0, roomId: 0,
-  storageLocationId: undefined, estimatedValue: 0, purchaseDate: undefined,
+  storageLocationId: undefined, estimatedValue: undefined, purchaseDate: undefined,
   warrantyExpirationDate: undefined, condition: 'GOOD', notes: '' }
 
 export default function ItemFormPage() {
@@ -19,7 +19,7 @@ export default function ItemFormPage() {
   const [saving, setSaving] = useState(false); const [error, setError] = useState('')
   useEffect(() => {
     Promise.all([roomApi.list(), categoryApi.list(), editing ? itemApi.get(Number(id)) : Promise.resolve(null)])
-      .then(([r,c,item]) => { setRooms(r); setCategories(c); if (item) setForm({ name:item.name, description:item.description, quantity:item.quantity, categoryId:item.categoryId, roomId:item.roomId, storageLocationId:item.storageLocationId, estimatedValue:item.estimatedValue, purchaseDate:item.purchaseDate, warrantyExpirationDate:item.warrantyExpirationDate, condition:item.condition, notes:item.notes }); setLoading(false) })
+      .then(([r,c,item]) => { setRooms(r); setCategories(c); if (item) setForm({ name:item.name, description:item.description, quantity:item.quantity, categoryId:item.categoryId, roomId:item.roomId, storageLocationId:item.storageLocationId, estimatedValue:item.estimatedValue ?? undefined, purchaseDate:item.purchaseDate, warrantyExpirationDate:item.warrantyExpirationDate, condition:item.condition, notes:item.notes }); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
   }, [editing, id])
   useEffect(() => { if (form.roomId) storageLocationApi.byRoom(form.roomId).then(setLocations).catch(() => setLocations([])); else setLocations([]) }, [form.roomId])
@@ -49,7 +49,7 @@ export default function ItemFormPage() {
         <div><label className="label">Category *</label><select className="field" required value={form.categoryId || ''} onChange={e => set('categoryId', Number(e.target.value))}><option value="">Select category</option>{categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
       </div></section>
       <section className="card"><h2 className="mb-5 text-xl">Value & dates</h2><div className="grid gap-5 md:grid-cols-3">
-        <div><label className="label">Estimated value each *</label><input className="field" required type="number" min="0" step="0.01" value={form.estimatedValue} onChange={e => set('estimatedValue', Number(e.target.value))} /></div>
+        <div><label className="label">Estimated value each</label><input className="field" type="number" min="0" step="0.01" value={form.estimatedValue ?? ''} onChange={e => set('estimatedValue', e.target.value === '' ? undefined : Number(e.target.value))} /></div>
         <div><label className="label">Purchase date</label><input className="field" type="date" value={form.purchaseDate ?? ''} onChange={e => set('purchaseDate', e.target.value || undefined)} /></div>
         <div><label className="label">Warranty expiration</label><input className="field" type="date" value={form.warrantyExpirationDate ?? ''} onChange={e => set('warrantyExpirationDate', e.target.value || undefined)} /></div>
         <div className="md:col-span-3"><label className="label">Notes</label><textarea className="field min-h-24" maxLength={2000} value={form.notes ?? ''} onChange={e => set('notes', e.target.value)} placeholder="Serial number, warranty details, or anything else useful" /></div>

@@ -9,7 +9,7 @@ export interface Item {
   id: number; name: string; description?: string; quantity: number
   categoryId: number; categoryName: string; categoryColor?: string
   roomId: number; roomName: string; storageLocationId?: number; storageLocationName?: string
-  estimatedValue: number; purchaseDate?: string; warrantyExpirationDate?: string
+  estimatedValue?: number | null; purchaseDate?: string; warrantyExpirationDate?: string
   condition: ItemCondition; notes?: string; createdAt: string; updatedAt: string
 }
 export type ItemPayload = Omit<Item, 'id' | 'categoryName' | 'categoryColor' | 'roomName' |

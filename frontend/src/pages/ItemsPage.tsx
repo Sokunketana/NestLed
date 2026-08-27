@@ -1,0 +1,45 @@
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { itemApi } from '../api/itemApi'
+import { roomApi } from '../api/roomApi'
+import { categoryApi } from '../api/categoryApi'
+import { Empty, ErrorMessage, Loading } from '../components/PageState'
+import type { Category, Item, Room } from '../types'
+
+const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
+
+export default function ItemsPage() {
+  const [params, setParams] = useSearchParams()
+  const [items, setItems] = useState<Item[]>()
+  const [rooms, setRooms] = useState<Room[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [error, setError] = useState('')
+  const q = params.get('q') ?? ''
+  const roomId = params.get('roomId') ?? ''
+  const categoryId = params.get('categoryId') ?? ''
+  useEffect(() => { Promise.all([roomApi.list(), categoryApi.list()]).then(([r,c]) => { setRooms(r); setCategories(c) }) }, [])
+  useEffect(() => {
+    setItems(undefined); setError('')
+    const call = q ? itemApi.search(q) : itemApi.list({ roomId, categoryId })
+    call.then(setItems).catch(e => setError(e.message))
+  }, [q, roomId, categoryId])
+  function filter(key: string, value: string) {
+    const next = new URLSearchParams(params); value ? next.set(key, value) : next.delete(key); next.delete('q'); setParams(next)
+  }
+  return <>
+    <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="eyebrow">Your belongings</p><h1 className="mt-2 text-4xl">{q ? `Results for “${q}”` : 'All items'}</h1></div><Link to="/items/new" className="btn-primary">＋ Add item</Link></div>
+    <div className="mt-7 flex flex-wrap gap-3">
+      <select aria-label="Filter by room" className="field w-auto min-w-44" value={roomId} onChange={e => filter('roomId', e.target.value)}><option value="">All rooms</option>{rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select>
+      <select aria-label="Filter by category" className="field w-auto min-w-44" value={categoryId} onChange={e => filter('categoryId', e.target.value)}><option value="">All categories</option>{categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+      {(q || roomId || categoryId) && <button className="btn-secondary" onClick={() => setParams({})}>Clear filters</button>}
+    </div>
+    <div className="mt-6">{error ? <ErrorMessage message={error} /> : !items ? <Loading /> : !items.length ? <Empty>No items match this view. Add one or try different filters.</Empty> :
+      <div className="grid gap-4 md:grid-cols-2">{items.map(item => <Link to={`/items/${item.id}`} className="card group flex gap-4" key={item.id}>
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-sage text-xl">◇</div>
+        <div className="min-w-0 flex-1"><div className="flex justify-between gap-3"><h2 className="truncate text-lg group-hover:text-pine">{item.name}</h2><span className="font-semibold">{money.format(item.estimatedValue * item.quantity)}</span></div>
+          <p className="mt-1 text-sm text-stone-500">{item.roomName}{item.storageLocationName && ` → ${item.storageLocationName}`}</p>
+          <div className="mt-3 flex gap-2 text-xs"><span className="rounded-full bg-stone-100 px-2 py-1">{item.categoryName}</span><span className="rounded-full bg-stone-100 px-2 py-1">Qty {item.quantity}</span></div>
+        </div>
+      </Link>)}</div>}</div>
+  </>
+}

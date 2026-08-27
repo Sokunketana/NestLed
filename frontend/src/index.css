@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply border-stone-200; }
+  body { @apply m-0 bg-cream text-ink antialiased; font-family: 'DM Sans', sans-serif; }
+  h1, h2, h3 { font-family: 'Fraunces', serif; }
+  button, input, select, textarea { font: inherit; }
+}
+@layer components {
+  .card { @apply rounded-2xl border bg-white p-5 shadow-soft; }
+  .btn { @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-pine text-white hover:bg-emerald-900; }
+  .btn-secondary { @apply btn border bg-white text-ink hover:bg-stone-50; }
+  .btn-danger { @apply btn bg-red-50 text-red-700 hover:bg-red-100; }
+  .field { @apply w-full rounded-xl border bg-white px-3 py-2.5 outline-none transition focus:border-pine focus:ring-2 focus:ring-pine/10; }
+  .label { @apply mb-1.5 block text-sm font-semibold text-stone-700; }
+  .eyebrow { @apply text-xs font-bold uppercase tracking-[0.18em] text-pine; }
+}

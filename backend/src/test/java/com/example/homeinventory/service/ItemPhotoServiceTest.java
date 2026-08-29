@@ -4,6 +4,7 @@ import com.example.homeinventory.entity.Category;
 import com.example.homeinventory.entity.Item;
 import com.example.homeinventory.entity.ItemCondition;
 import com.example.homeinventory.entity.Room;
+import com.example.homeinventory.entity.StorageLocation;
 import com.example.homeinventory.repository.ItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
@@ -151,6 +152,12 @@ class ItemPhotoServiceTest {
         when(room.getId()).thenReturn(1L);
         when(room.getName()).thenReturn("Office");
         item.setRoom(room);
+
+        StorageLocation location = mock(StorageLocation.class);
+        when(location.getId()).thenReturn(10L);
+        when(location.getName()).thenReturn("Desk drawer");
+        when(location.getRoom()).thenReturn(room);
+        item.setStorageLocation(location);
         return item;
     }
 }

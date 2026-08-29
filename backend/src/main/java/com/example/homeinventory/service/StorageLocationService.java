@@ -3,6 +3,7 @@ package com.example.homeinventory.service;
 import com.example.homeinventory.dto.StorageLocationRequest;
 import com.example.homeinventory.dto.StorageLocationResponse;
 import com.example.homeinventory.entity.StorageLocation;
+import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.ItemRepository;
 import com.example.homeinventory.repository.StorageLocationRepository;
@@ -45,6 +46,10 @@ public class StorageLocationService {
     @Transactional
     public StorageLocationResponse update(Long id, StorageLocationRequest request) {
         StorageLocation location = getEntity(id);
+        if (!location.getRoom().getId().equals(request.roomId())
+                && itemRepository.countByStorageLocationId(id) > 0) {
+            throw new BadRequestException("Move the items out of this storage location before changing its room");
+        }
         copy(request, location);
         return toResponse(repository.save(location));
     }

@@ -2,10 +2,11 @@ import type { Item, ItemPayload } from '../types'
 import { request } from './http'
 
 export const itemApi = {
-  list: (filters?: { roomId?: string; categoryId?: string }) => {
+  list: (filters?: { roomId?: string; categoryId?: string; storageLocationId?: string }) => {
     const query = new URLSearchParams()
     if (filters?.roomId) query.set('roomId', filters.roomId)
     if (filters?.categoryId) query.set('categoryId', filters.categoryId)
+    if (filters?.storageLocationId) query.set('storageLocationId', filters.storageLocationId)
     return request<Item[]>(`/items${query.size ? `?${query}` : ''}`)
   },
   search: (name: string) => request<Item[]>(`/items/search?name=${encodeURIComponent(name)}`),

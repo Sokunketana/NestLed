@@ -26,13 +26,17 @@ class ItemServiceTest {
         ItemService service = new ItemService(items, rooms, categories, locations, photos);
         Room room = mock(Room.class);
         Category category = mock(Category.class);
+        StorageLocation location = mock(StorageLocation.class);
 
         when(rooms.getEntity(1L)).thenReturn(room);
         when(categories.getEntity(1L)).thenReturn(category);
+        when(locations.getEntity(10L)).thenReturn(location);
+        when(location.getRoom()).thenReturn(room);
+        when(room.getId()).thenReturn(1L);
         when(items.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var response = service.create(new CreateItemRequest("Passport", null, 1, 1L, 1L,
-                null, null, null, null, ItemCondition.GOOD, null));
+                10L, null, null, null, ItemCondition.GOOD, null));
 
         assertNull(response.estimatedValue());
         assertNull(response.photoUrl());

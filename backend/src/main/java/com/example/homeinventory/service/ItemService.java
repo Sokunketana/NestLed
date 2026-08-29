@@ -37,9 +37,18 @@ public class ItemService {
         this.photoStorageService = photoStorageService;
     }
 
-    public List<ItemResponse> findAll(Long roomId, Long categoryId) {
+    public List<ItemResponse> findAll(Long roomId, Long categoryId, Long storageLocationId) {
         List<Item> items;
-        if (roomId != null && categoryId != null) {
+        if (storageLocationId != null) {
+            StorageLocation location = storageLocationService.getEntity(storageLocationId);
+            if (roomId != null && !location.getRoom().getId().equals(roomId)) {
+                throw new BadRequestException("The storage location does not belong to the selected room");
+            }
+            items = itemRepository.findByStorageLocationIdOrderByNameAsc(storageLocationId);
+            if (categoryId != null) {
+                items = items.stream().filter(item -> item.getCategory().getId().equals(categoryId)).toList();
+            }
+        } else if (roomId != null && categoryId != null) {
             items = itemRepository.findByRoomIdAndCategoryIdOrderByNameAsc(roomId, categoryId);
         } else if (roomId != null) {
             items = itemRepository.findByRoomIdOrderByNameAsc(roomId);
@@ -150,7 +159,6 @@ public class ItemService {
     }
 
     private StorageLocation resolveLocation(Long locationId, Long roomId) {
-        if (locationId == null) return null;
         StorageLocation location = storageLocationService.getEntity(locationId);
         if (!location.getRoom().getId().equals(roomId)) {
             throw new BadRequestException("The storage location does not belong to the selected room");
@@ -205,7 +213,7 @@ public class ItemService {
         return new ItemResponse(item.getId(), item.getName(), item.getDescription(), item.getQuantity(),
                 item.getCategory().getId(), item.getCategory().getName(), item.getCategory().getColor(),
                 item.getRoom().getId(), item.getRoom().getName(),
-                location == null ? null : location.getId(), location == null ? null : location.getName(),
+                location.getId(), location.getName(),
                 item.getEstimatedValue(), item.getPurchaseDate(), item.getWarrantyExpirationDate(),
                 item.getCondition(), item.getNotes(), item.getPhotoFilename() == null || item.getPhotoContentType() == null
                         ? null : "items/" + item.getId() + "/photo",

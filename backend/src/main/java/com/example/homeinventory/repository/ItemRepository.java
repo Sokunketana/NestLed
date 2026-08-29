@@ -11,6 +11,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findByRoomIdOrderByNameAsc(Long roomId);
     List<Item> findByCategoryIdOrderByNameAsc(Long categoryId);
     List<Item> findByRoomIdAndCategoryIdOrderByNameAsc(Long roomId, Long categoryId);
+    List<Item> findByStorageLocationIdOrderByNameAsc(Long storageLocationId);
     long countByRoomId(Long roomId);
     long countByCategoryId(Long categoryId);
     long countByStorageLocationId(Long storageLocationId);

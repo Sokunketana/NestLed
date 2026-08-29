@@ -24,8 +24,10 @@ public class ItemController {
     public ItemController(ItemService itemService) { this.itemService = itemService; }
 
     @GetMapping
-    public List<ItemResponse> findAll(@RequestParam(required = false) Long roomId, @RequestParam(required = false) Long categoryId) {
-        return itemService.findAll(roomId, categoryId);
+    public List<ItemResponse> findAll(@RequestParam(required = false) Long roomId,
+                                      @RequestParam(required = false) Long categoryId,
+                                      @RequestParam(required = false) Long storageLocationId) {
+        return itemService.findAll(roomId, categoryId, storageLocationId);
     }
 
     @GetMapping("/search")

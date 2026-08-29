@@ -33,8 +33,8 @@ public class Item {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "storage_location_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "storage_location_id", nullable = false)
     private StorageLocation storageLocation;
 
     @Column(precision = 12, scale = 2)

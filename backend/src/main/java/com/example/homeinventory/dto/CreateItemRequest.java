@@ -11,7 +11,7 @@ public record CreateItemRequest(
         @NotNull @Min(1) Integer quantity,
         @NotNull Long categoryId,
         @NotNull Long roomId,
-        Long storageLocationId,
+        @NotNull Long storageLocationId,
         @PositiveOrZero BigDecimal estimatedValue,
         LocalDate purchaseDate,
         LocalDate warrantyExpirationDate,

@@ -47,6 +47,7 @@ class ItemControllerTest {
                   "quantity": 0,
                   "categoryId": 1,
                   "roomId": 1,
+                  "storageLocationId": 10,
                   "estimatedValue": 10.00,
                   "condition": "%s"
                 }
@@ -67,6 +68,7 @@ class ItemControllerTest {
                   "quantity": 1,
                   "categoryId": 1,
                   "roomId": 1,
+                  "storageLocationId": 10,
                   "condition": "%s"
                 }
                 """.formatted(ItemCondition.GOOD);
@@ -78,6 +80,23 @@ class ItemControllerTest {
     }
 
     @Test
+    void createRejectsMissingStorageLocation() throws Exception {
+        String request = """
+                {
+                  "name": "Passport",
+                  "quantity": 1,
+                  "categoryId": 1,
+                  "roomId": 1,
+                  "condition": "%s"
+                }
+                """.formatted(ItemCondition.GOOD);
+
+        mockMvc.perform(post("/api/items").contentType(MediaType.APPLICATION_JSON).content(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.storageLocationId").exists());
+    }
+
+    @Test
     void updateAcceptsMissingEstimatedValue() throws Exception {
         String request = """
                 {
@@ -85,6 +104,7 @@ class ItemControllerTest {
                   "quantity": 1,
                   "categoryId": 1,
                   "roomId": 1,
+                  "storageLocationId": 10,
                   "condition": "%s"
                 }
                 """.formatted(ItemCondition.GOOD);
@@ -103,6 +123,7 @@ class ItemControllerTest {
                   "quantity": 1,
                   "categoryId": 1,
                   "roomId": 1,
+                  "storageLocationId": 10,
                   "estimatedValue": -0.01,
                   "condition": "%s"
                 }

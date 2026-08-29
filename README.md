@@ -20,7 +20,7 @@ It deliberately focuses on Spring Boot fundamentals: no authentication, Docker, 
 
 - Dashboard totals for items, rooms, categories, and estimated value
 - Room cards with item counts
-- Item CRUD, detail view, global name search, room filter, and category filter
+- Item CRUD, detail view, global name search, room/location/category filters, and hierarchical tree navigation
 - Optional item photos with camera/file upload, thumbnails, replacement, and removal
 - Room CRUD and storage-location CRUD
 - Category CRUD with a display color
@@ -106,7 +106,7 @@ Entities belong to the persistence layer:
 - `@Enumerated(EnumType.STRING)` stores `GOOD`, not a fragile numeric enum position.
 - `@PrePersist` and `@PreUpdate` fill timestamps automatically.
 
-The model is `Room 1 → many StorageLocation`, while an `Item` has many-to-one links to `Room`, `Category`, and optionally `StorageLocation`. Item keeps a direct room link because some belongings have a known room but no precise container. The service verifies that an item's storage location belongs to its selected room.
+The model is `Room 1 → many StorageLocation`, while an `Item` has required many-to-one links to `Room`, `Category`, and `StorageLocation`. Requiring a precise location keeps every item addressable in the home tree. The service verifies that an item's storage location belongs to its selected room.
 
 ### Stage 4 — Repositories
 
@@ -192,7 +192,7 @@ The API layer prevents network details from spreading across UI components. A pa
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/api/dashboard` | Totals and room summaries |
-| GET | `/api/items?roomId=&categoryId=` | List/filter items |
+| GET | `/api/items?roomId=&storageLocationId=&categoryId=` | List/filter items |
 | GET | `/api/items/search?name=` | Search names, case-insensitive |
 | GET/PUT/DELETE | `/api/items/{id}` | Read/update/delete an item |
 | GET/PUT/DELETE | `/api/items/{id}/photo` | Read, upload/replace, or remove an item's photo |

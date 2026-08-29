@@ -8,7 +8,7 @@ export interface StorageLocation {
 export interface Item {
   id: number; name: string; description?: string; quantity: number
   categoryId: number; categoryName: string; categoryColor?: string
-  roomId: number; roomName: string; storageLocationId?: number; storageLocationName?: string
+  roomId: number; roomName: string; storageLocationId: number; storageLocationName: string
   estimatedValue?: number | null; purchaseDate?: string; warrantyExpirationDate?: string
   condition: ItemCondition; notes?: string; photoUrl?: string | null; createdAt: string; updatedAt: string
 }

@@ -10,7 +10,7 @@ export default function RoomsPage() {
   const [roomForm, setRoomForm] = useState({ name: '', description: '' }); const [roomEdit, setRoomEdit] = useState<number>()
   const [locationForm, setLocationForm] = useState({ name: '', description: '', roomId: 0 }); const [locationEdit, setLocationEdit] = useState<number>()
   const [error, setError] = useState('')
-  const load = () => Promise.all([roomApi.list(), storageLocationApi.list()]).then(([r,l]) => { setRooms(r); setLocations(l) }).catch(e => setError(e.message))
+  const load = () => Promise.all([roomApi.list(), storageLocationApi.list()]).then(([r,l]) => { setRooms(r); setLocations(l); window.dispatchEvent(new Event('inventory-changed')) }).catch(e => setError(e.message))
   useEffect(() => { load() }, [])
   async function saveRoom(event: FormEvent) {
     event.preventDefault(); setError('')

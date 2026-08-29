@@ -8,9 +8,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -35,6 +37,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ResponseEntity<ApiErrorResponse> handleUnreadable(HttpMessageNotReadableException ex) {
         return error(HttpStatus.BAD_REQUEST, "Request body is malformed or contains an invalid value", Map.of());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ApiErrorResponse> handleOversizedUpload(MaxUploadSizeExceededException ex) {
+        return error(HttpStatus.PAYLOAD_TOO_LARGE, "Photo must be 5 MB or smaller", Map.of());
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    ResponseEntity<ApiErrorResponse> handleConcurrentUpdate(ObjectOptimisticLockingFailureException ex) {
+        return error(HttpStatus.CONFLICT,
+                "This item changed while you were editing it. Reload it and try again", Map.of());
+    }
+
+    @ExceptionHandler(PhotoStorageException.class)
+    ResponseEntity<ApiErrorResponse> handlePhotoStorage(PhotoStorageException ex) {
+        return error(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Photo storage is temporarily unavailable. Please try again", Map.of());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

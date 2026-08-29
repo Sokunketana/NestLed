@@ -22,7 +22,8 @@ class ItemServiceTest {
         RoomService rooms = mock(RoomService.class);
         CategoryService categories = mock(CategoryService.class);
         StorageLocationService locations = mock(StorageLocationService.class);
-        ItemService service = new ItemService(items, rooms, categories, locations);
+        PhotoStorageService photos = mock(PhotoStorageService.class);
+        ItemService service = new ItemService(items, rooms, categories, locations, photos);
         Room room = mock(Room.class);
         Category category = mock(Category.class);
 
@@ -34,6 +35,7 @@ class ItemServiceTest {
                 null, null, null, null, ItemCondition.GOOD, null));
 
         assertNull(response.estimatedValue());
+        assertNull(response.photoUrl());
         verify(items).save(argThat(item -> item.getEstimatedValue() == null));
     }
 
@@ -43,7 +45,8 @@ class ItemServiceTest {
         RoomService rooms = mock(RoomService.class);
         CategoryService categories = mock(CategoryService.class);
         StorageLocationService locations = mock(StorageLocationService.class);
-        ItemService service = new ItemService(items, rooms, categories, locations);
+        PhotoStorageService photos = mock(PhotoStorageService.class);
+        ItemService service = new ItemService(items, rooms, categories, locations, photos);
 
         Room selectedRoom = mock(Room.class);
         Room differentRoom = mock(Room.class);

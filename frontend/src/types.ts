@@ -10,10 +10,10 @@ export interface Item {
   categoryId: number; categoryName: string; categoryColor?: string
   roomId: number; roomName: string; storageLocationId?: number; storageLocationName?: string
   estimatedValue?: number | null; purchaseDate?: string; warrantyExpirationDate?: string
-  condition: ItemCondition; notes?: string; createdAt: string; updatedAt: string
+  condition: ItemCondition; notes?: string; photoUrl?: string | null; createdAt: string; updatedAt: string
 }
 export type ItemPayload = Omit<Item, 'id' | 'categoryName' | 'categoryColor' | 'roomName' |
-  'storageLocationName' | 'createdAt' | 'updatedAt'>
+  'storageLocationName' | 'photoUrl' | 'createdAt' | 'updatedAt'>
 export interface Dashboard {
   totalItems: number; totalRooms: number; totalCategories: number
   totalEstimatedValue: number; rooms: Room[]

@@ -12,6 +12,10 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
     @Column(nullable = false, length = 150)
     private String name;
 
@@ -45,6 +49,12 @@ public class Item {
 
     @Column(length = 2000)
     private String notes;
+
+    @Column(length = 100)
+    private String photoFilename;
+
+    @Column(length = 50)
+    private String photoContentType;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -83,6 +93,10 @@ public class Item {
     public void setCondition(ItemCondition condition) { this.condition = condition; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+    public String getPhotoFilename() { return photoFilename; }
+    public void setPhotoFilename(String photoFilename) { this.photoFilename = photoFilename; }
+    public String getPhotoContentType() { return photoContentType; }
+    public void setPhotoContentType(String photoContentType) { this.photoContentType = photoContentType; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 }

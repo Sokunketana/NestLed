@@ -9,23 +9,32 @@ import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.ItemRepository;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Transactional(readOnly = true)
 public class ItemService {
+    private static final Logger log = LoggerFactory.getLogger(ItemService.class);
+
     private final ItemRepository itemRepository;
     private final RoomService roomService;
     private final CategoryService categoryService;
     private final StorageLocationService storageLocationService;
+    private final PhotoStorageService photoStorageService;
 
-    public ItemService(ItemRepository itemRepository, RoomService roomService,
-                       CategoryService categoryService, StorageLocationService storageLocationService) {
+    public ItemService(ItemRepository itemRepository, RoomService roomService, CategoryService categoryService,
+                       StorageLocationService storageLocationService, PhotoStorageService photoStorageService) {
         this.itemRepository = itemRepository;
         this.roomService = roomService;
         this.categoryService = categoryService;
         this.storageLocationService = storageLocationService;
+        this.photoStorageService = photoStorageService;
     }
 
     public List<ItemResponse> findAll(Long roomId, Long categoryId) {
@@ -43,11 +52,12 @@ public class ItemService {
     }
 
     public List<ItemResponse> search(String name) {
-        return itemRepository.findByNameContainingIgnoreCaseOrderByNameAsc(name.trim())
-                .stream().map(this::toResponse).toList();
+        return itemRepository.findByNameContainingIgnoreCaseOrderByNameAsc(name.trim()).stream().map(this::toResponse).toList();
     }
 
-    public ItemResponse findById(Long id) { return toResponse(getEntity(id)); }
+    public ItemResponse findById(Long id) {
+        return toResponse(getEntity(id));
+    }
 
     @Transactional
     public ItemResponse create(CreateItemRequest request) {
@@ -68,11 +78,58 @@ public class ItemService {
     }
 
     @Transactional
-    public void delete(Long id) { itemRepository.delete(getEntity(id)); }
+    public void delete(Long id) {
+        Item item = getEntity(id);
+        itemRepository.delete(item);
+        itemRepository.flush();
+        deletePhotoAfterCommit(item.getPhotoFilename());
+    }
+
+    @Transactional
+    public ItemResponse updatePhoto(Long id, MultipartFile file) {
+        Item item = getEntity(id);
+        PhotoStorageService.StoredPhoto newPhoto = photoStorageService.store(file);
+        String previousFilename = item.getPhotoFilename();
+        try {
+            item.setPhotoFilename(newPhoto.filename());
+            item.setPhotoContentType(newPhoto.contentType());
+            ItemResponse response = toResponse(itemRepository.saveAndFlush(item));
+            finishPhotoReplacement(newPhoto.filename(), previousFilename);
+            return response;
+        } catch (RuntimeException ex) {
+            try {
+                photoStorageService.delete(newPhoto.filename());
+            } catch (RuntimeException cleanupFailure) {
+                ex.addSuppressed(cleanupFailure);
+            }
+            throw ex;
+        }
+    }
+
+    public ItemPhoto findPhoto(Long id) {
+        Item item = getEntity(id);
+        if (item.getPhotoFilename() == null || item.getPhotoContentType() == null) {
+            throw new ResourceNotFoundException("Photo for item with id " + id + " was not found");
+        }
+        return new ItemPhoto(photoStorageService.load(item.getPhotoFilename()),
+                org.springframework.http.MediaType.parseMediaType(item.getPhotoContentType()));
+    }
+
+    @Transactional
+    public void deletePhoto(Long id) {
+        Item item = getEntity(id);
+        String filename = item.getPhotoFilename();
+        if (filename == null) {
+            return;
+        }
+        item.setPhotoFilename(null);
+        item.setPhotoContentType(null);
+        itemRepository.saveAndFlush(item);
+        deletePhotoAfterCommit(filename);
+    }
 
     private Item getEntity(Long id) {
-        return itemRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Item with id " + id + " was not found"));
+        return itemRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Item with id " + id + " was not found"));
     }
 
     private void copy(Item item, String name, String description, Integer quantity, Long categoryId,
@@ -101,6 +158,47 @@ public class ItemService {
         return location;
     }
 
+    private void finishPhotoReplacement(String newFilename, String previousFilename) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            photoStorageService.delete(previousFilename);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                deletePhotoQuietly(previousFilename);
+            }
+
+            @Override
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    deletePhotoQuietly(newFilename);
+                }
+            }
+        });
+    }
+
+    private void deletePhotoAfterCommit(String filename) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            photoStorageService.delete(filename);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                deletePhotoQuietly(filename);
+            }
+        });
+    }
+
+    private void deletePhotoQuietly(String filename) {
+        try {
+            photoStorageService.delete(filename);
+        } catch (RuntimeException ex) {
+            log.error("Could not clean up stored item photo {}", filename, ex);
+        }
+    }
+
     // Manual mapping keeps persistence details out of the HTTP response and avoids circular JSON.
     private ItemResponse toResponse(Item item) {
         StorageLocation location = item.getStorageLocation();
@@ -109,6 +207,8 @@ public class ItemService {
                 item.getRoom().getId(), item.getRoom().getName(),
                 location == null ? null : location.getId(), location == null ? null : location.getName(),
                 item.getEstimatedValue(), item.getPurchaseDate(), item.getWarrantyExpirationDate(),
-                item.getCondition(), item.getNotes(), item.getCreatedAt(), item.getUpdatedAt());
+                item.getCondition(), item.getNotes(), item.getPhotoFilename() == null || item.getPhotoContentType() == null
+                        ? null : "items/" + item.getId() + "/photo",
+                item.getCreatedAt(), item.getUpdatedAt());
     }
 }

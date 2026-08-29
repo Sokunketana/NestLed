@@ -22,6 +22,7 @@ public record ItemResponse(
         LocalDate warrantyExpirationDate,
         ItemCondition condition,
         String notes,
+        String photoUrl,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {}

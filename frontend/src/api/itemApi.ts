@@ -12,5 +12,11 @@ export const itemApi = {
   get: (id: number) => request<Item>(`/items/${id}`),
   create: (body: ItemPayload) => request<Item>('/items', { method: 'POST', body: JSON.stringify(body) }),
   update: (id: number, body: ItemPayload) => request<Item>(`/items/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  uploadPhoto: (id: number, file: File) => {
+    const body = new FormData()
+    body.append('file', file)
+    return request<Item>(`/items/${id}/photo`, { method: 'PUT', body })
+  },
+  removePhoto: (id: number) => request<void>(`/items/${id}/photo`, { method: 'DELETE' }),
   remove: (id: number) => request<void>(`/items/${id}`, { method: 'DELETE' }),
 }

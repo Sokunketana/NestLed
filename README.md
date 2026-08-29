@@ -21,6 +21,7 @@ It deliberately focuses on Spring Boot fundamentals: no authentication, Docker, 
 - Dashboard totals for items, rooms, categories, and estimated value
 - Room cards with item counts
 - Item CRUD, detail view, global name search, room filter, and category filter
+- Optional item photos with camera/file upload, thumbnails, replacement, and removal
 - Room CRUD and storage-location CRUD
 - Category CRUD with a display color
 - Validation and consistent JSON error responses
@@ -85,9 +86,12 @@ PowerShell setup for the current terminal:
 $env:DB_URL = "jdbc:postgresql://localhost:5432/home_inventory"
 $env:DB_USERNAME = "postgres"
 $env:DB_PASSWORD = "your-password"
+$env:PHOTO_STORAGE_LOCATION = "D:\\home-inventory-photos"
 ```
 
 `application.properties` uses these environment variables and supplies local defaults. `spring.jpa.hibernate.ddl-auto=update` asks Hibernate to compare the JPA entity model to the current schema and add/update schema objects. It is convenient for this first learning version, but it does not provide a reviewed, repeatable history. A production app should normally use Flyway or Liquibase migrations and `ddl-auto=validate`.
+
+Uploaded photos default to `backend/uploads/` when the backend is started from that directory. `PHOTO_STORAGE_LOCATION` can point at another writable directory. The backend accepts JPEG, PNG, WebP, and GIF images up to 5 MB, stores only generated filenames in PostgreSQL, and never uses a client filename as a disk path. This local filesystem setup is intended for local learning; a deployed multi-user version should add authentication and object storage.
 
 ### Stage 3 — Entities and relationships
 
@@ -191,6 +195,7 @@ The API layer prevents network details from spreading across UI components. A pa
 | GET | `/api/items?roomId=&categoryId=` | List/filter items |
 | GET | `/api/items/search?name=` | Search names, case-insensitive |
 | GET/PUT/DELETE | `/api/items/{id}` | Read/update/delete an item |
+| GET/PUT/DELETE | `/api/items/{id}/photo` | Read, upload/replace, or remove an item's photo |
 | POST | `/api/items` | Create an item |
 | GET/POST | `/api/rooms` | List/create rooms |
 | GET/PUT/DELETE | `/api/rooms/{id}` | Read/update/delete a room |
@@ -247,4 +252,4 @@ In short: **Controller → Service → Repository → database** separates trans
 
 ## Sensible future features
 
-After the fundamentals are comfortable: Flyway migrations, pagination and sorting, Testcontainers integration tests, authentication/Spring Security, item photos, CSV export, audit history, and multi-house support.
+After the fundamentals are comfortable: Flyway migrations, pagination and sorting, Testcontainers integration tests, authentication/Spring Security, object-storage-backed photos, CSV export, audit history, and multi-house support.

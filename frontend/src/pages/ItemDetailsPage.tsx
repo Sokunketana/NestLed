@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { itemApi } from '../api/itemApi'
+import ItemPhoto from '../components/ItemPhoto'
 import { ErrorMessage, Loading } from '../components/PageState'
 import type { Item } from '../types'
 
@@ -29,7 +30,11 @@ export default function ItemDetailsPage() {
       <div className="flex gap-2"><Link className="btn-secondary" to={`/items/${item.id}/edit`}>Edit</Link><button className="btn-danger" onClick={remove}>Delete</button></div>
     </div>
     <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-      <div className="space-y-6"><section className="card"><h2 className="text-xl">About this item</h2><p className="mt-4 whitespace-pre-line leading-relaxed text-stone-600">{item.description || 'No description has been added.'}</p></section>
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-2xl border bg-white shadow-soft" aria-label="Item photo">
+          <ItemPhoto photoUrl={item.photoUrl} cacheKey={item.updatedAt} alt={`Photo of ${item.name}`} fallbackLabel={`No photo available for ${item.name}`} className="aspect-[16/10] w-full" loading="eager" />
+        </section>
+        <section className="card"><h2 className="text-xl">About this item</h2><p className="mt-4 whitespace-pre-line leading-relaxed text-stone-600">{item.description || 'No description has been added.'}</p></section>
         {item.notes && <section className="card"><h2 className="text-xl">Notes</h2><p className="mt-4 whitespace-pre-line text-stone-600">{item.notes}</p></section>}
       </div>
       <section className="card"><h2 className="text-xl">Inventory record</h2><dl className="mt-4 divide-y">{fields.map(([label,value]) => <div className="flex justify-between gap-4 py-3 text-sm" key={label}><dt className="text-stone-500">{label}</dt><dd className="text-right font-semibold">{value}</dd></div>)}</dl>

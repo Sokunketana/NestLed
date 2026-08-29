@@ -80,14 +80,16 @@ Create a local database from `psql`:
 CREATE DATABASE home_inventory;
 ```
 
-PowerShell setup for the current terminal:
+Create your persistent local backend configuration once:
 
 ```powershell
-$env:DB_URL = "jdbc:postgresql://localhost:5432/home_inventory"
-$env:DB_USERNAME = "postgres"
-$env:DB_PASSWORD = "your-password"
-$env:PHOTO_STORAGE_LOCATION = "D:\\home-inventory-photos"
+cd backend
+Copy-Item .env.example .env
 ```
+
+Open `backend/.env` and replace `DB_PASSWORD` (and any other value that differs on your machine). Spring Boot imports this file automatically when it is launched from `backend/`, so future terminals only need `mvn spring-boot:run`. The real `.env` is ignored by Git; `.env.example` documents the required keys without containing secrets.
+
+Operating-system environment variables and command-line arguments can still override these local values, which is useful in deployment environments.
 
 `application.properties` uses these environment variables and supplies local defaults. `spring.jpa.hibernate.ddl-auto=update` asks Hibernate to compare the JPA entity model to the current schema and add/update schema objects. It is convenient for this first learning version, but it does not provide a reviewed, repeatable history. A production app should normally use Flyway or Liquibase migrations and `ddl-auto=validate`.
 

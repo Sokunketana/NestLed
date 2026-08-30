@@ -20,7 +20,7 @@ It deliberately focuses on Spring Boot fundamentals: no authentication, Docker, 
 
 - Dashboard totals for items, rooms, categories, and estimated value
 - Room cards with item counts
-- Item CRUD, detail view, global name search, room/location/category filters, and hierarchical tree navigation
+- Item CRUD, detail view, global name search, room/location/category filters, bulk relocation, and hierarchical tree navigation
 - Optional item photos with camera/file upload, thumbnails, replacement, and removal
 - Room CRUD and storage-location CRUD
 - Category CRUD with a display color
@@ -196,6 +196,7 @@ The API layer prevents network details from spreading across UI components. A pa
 | GET | `/api/dashboard` | Totals and room summaries |
 | GET | `/api/items?roomId=&storageLocationId=&categoryId=` | List/filter items |
 | GET | `/api/items/search?name=` | Search names, case-insensitive |
+| POST | `/api/items/bulk-move` | Move multiple items to one room and storage location |
 | GET/PUT/DELETE | `/api/items/{id}` | Read/update/delete an item |
 | GET/PUT/DELETE | `/api/items/{id}/photo` | Read, upload/replace, or remove an item's photo |
 | POST | `/api/items` | Create an item |

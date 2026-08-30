@@ -1,5 +1,6 @@
 package com.example.homeinventory.controller;
 
+import com.example.homeinventory.dto.BulkMoveItemsResponse;
 import com.example.homeinventory.entity.ItemCondition;
 import com.example.homeinventory.exception.GlobalExceptionHandler;
 import com.example.homeinventory.service.ItemPhoto;
@@ -12,6 +13,7 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -113,6 +115,64 @@ class ItemControllerTest {
                 .andExpect(status().isOk());
 
         verify(itemService).update(eq(42L), argThat(item -> item.estimatedValue() == null));
+    }
+
+    @Test
+    void bulkMoveReturnsMoveSummary() throws Exception {
+        when(itemService.bulkMove(any())).thenReturn(
+                new BulkMoveItemsResponse(2, 3L, "Garage", 30L, "Blue storage box"));
+        String request = """
+                {
+                  "itemIds": [1, 1, 2],
+                  "roomId": 3,
+                  "storageLocationId": 30
+                }
+                """;
+
+        mockMvc.perform(post("/api/items/bulk-move").contentType(MediaType.APPLICATION_JSON).content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.movedCount").value(2))
+                .andExpect(jsonPath("$.roomId").value(3))
+                .andExpect(jsonPath("$.roomName").value("Garage"))
+                .andExpect(jsonPath("$.storageLocationId").value(30))
+                .andExpect(jsonPath("$.storageLocationName").value("Blue storage box"));
+
+        verify(itemService).bulkMove(argThat(move -> move.itemIds().equals(java.util.List.of(1L, 1L, 2L))
+                && move.roomId().equals(3L) && move.storageLocationId().equals(30L)));
+    }
+
+    @Test
+    void bulkMoveRejectsEmptySelection() throws Exception {
+        String request = """
+                {
+                  "itemIds": [],
+                  "roomId": 3,
+                  "storageLocationId": 30
+                }
+                """;
+
+        mockMvc.perform(post("/api/items/bulk-move").contentType(MediaType.APPLICATION_JSON).content(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Please correct the invalid fields"))
+                .andExpect(jsonPath("$.fieldErrors.itemIds").exists());
+    }
+
+    @Test
+    void bulkMoveRejectsInvalidIds() throws Exception {
+        String request = """
+                {
+                  "itemIds": [1, null, -2],
+                  "roomId": 0,
+                  "storageLocationId": -30
+                }
+                """;
+
+        mockMvc.perform(post("/api/items/bulk-move").contentType(MediaType.APPLICATION_JSON).content(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors['itemIds[1]']").exists())
+                .andExpect(jsonPath("$.fieldErrors['itemIds[2]']").exists())
+                .andExpect(jsonPath("$.fieldErrors.roomId").exists())
+                .andExpect(jsonPath("$.fieldErrors.storageLocationId").exists());
     }
 
     @Test

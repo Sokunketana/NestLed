@@ -35,7 +35,7 @@ export default function ItemDetailsPage() {
     <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
       <div className="space-y-6">
         <section className="overflow-hidden rounded-2xl border bg-white shadow-soft" aria-label="Item photo">
-          <ItemPhoto photoUrl={item.photoUrl} cacheKey={item.updatedAt} alt={`Photo of ${item.name}`} fallbackLabel={`No photo available for ${item.name}`} className="aspect-[16/10] w-full" loading="eager" />
+          <ItemPhoto photoUrl={item.photoUrl} cacheKey={item.updatedAt} alt={`Photo of ${item.name}`} fallbackLabel={`No photo available for ${item.name}`} className="aspect-[16/10] w-full" loading="eager" expandable />
         </section>
         <section className="card"><h2 className="text-xl">About this item</h2><p className="mt-4 whitespace-pre-line leading-relaxed text-stone-600">{item.description || 'No description has been added.'}</p></section>
         {item.notes && <section className="card"><h2 className="text-xl">Notes</h2><p className="mt-4 whitespace-pre-line text-stone-600">{item.notes}</p></section>}

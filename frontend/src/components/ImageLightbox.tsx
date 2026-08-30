@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 const MIN_ZOOM = 0.5
 const MAX_ZOOM = 3
@@ -30,19 +30,12 @@ export default function ImageLightbox({ src, alt, onClose }: ImageLightboxProps)
     }
   }, [])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const viewport = viewportRef.current
     if (!viewport) return
 
-    const frame = requestAnimationFrame(() => {
-      viewport.scrollTo({
-        left: (viewport.scrollWidth - viewport.clientWidth) / 2,
-        top: (viewport.scrollHeight - viewport.clientHeight) / 2,
-        behavior: 'smooth',
-      })
-    })
-
-    return () => cancelAnimationFrame(frame)
+    viewport.scrollLeft = (viewport.scrollWidth - viewport.clientWidth) / 2
+    viewport.scrollTop = (viewport.scrollHeight - viewport.clientHeight) / 2
   }, [zoom])
 
   function adjustZoom(amount: number) {

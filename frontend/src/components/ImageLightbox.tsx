@@ -74,7 +74,7 @@ export default function ImageLightbox({ src, alt, onClose }: ImageLightboxProps)
       onClick={event => { if (event.target === event.currentTarget) onClose() }}
       onKeyDown={handleKeyDown}
     >
-      <div ref={viewportRef} className="relative h-full w-full overflow-auto">
+      <div ref={viewportRef} className="relative h-full w-full overflow-auto overscroll-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <h2 id={titleId} className="sr-only">Enlarged image</h2>
         <button
           ref={closeButtonRef}

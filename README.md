@@ -7,12 +7,12 @@ Home → Room → Storage location → Item
 Home → Bedroom → Wardrobe → Passport
 ```
 
-It deliberately focuses on Spring Boot fundamentals: no authentication, Docker, Lombok, mapping library, or other infrastructure has been added yet.
+It deliberately focuses on Spring Boot fundamentals. Authentication uses Google OpenID Connect with a server-side Spring Security session; Docker, Lombok, and mapping libraries have not been added.
 
 ## Technology stack
 
 - **Frontend:** React, TypeScript, Vite, Tailwind CSS, React Router, native `fetch`
-- **Backend:** Java 21, Spring Boot, Maven, Spring Web, Spring Data JPA, Hibernate, Bean Validation
+- **Backend:** Java 21, Spring Boot, Maven, Spring Web, Spring Security, OpenID Connect, Spring Data JPA, Hibernate, Bean Validation
 - **Database:** PostgreSQL
 - **Tests:** JUnit 5, Mockito, Spring MockMvc
 
@@ -20,7 +20,7 @@ It deliberately focuses on Spring Boot fundamentals: no authentication, Docker, 
 
 - Dashboard totals for items, rooms, categories, and estimated value
 - Room cards with item counts
-- Item CRUD, detail view, global name search, room/location/category filters, and hierarchical tree navigation
+- Item CRUD, detail view, global name search, room/location/category filters, bulk relocation, and hierarchical tree navigation
 - Optional item photos with camera/file upload, thumbnails, replacement, and removal
 - Room CRUD and storage-location CRUD
 - Category CRUD with a display color
@@ -88,6 +88,16 @@ Copy-Item .env.example .env
 ```
 
 Open `backend/.env` and replace `DB_PASSWORD` (and any other value that differs on your machine). Spring Boot imports this file automatically when it is launched from `backend/`, so future terminals only need `mvn spring-boot:run`. The real `.env` is ignored by Git; `.env.example` documents the required keys without containing secrets.
+
+Authentication also requires a Google OAuth 2.0 **Web application** client. In Google Cloud Console, add this authorized redirect URI:
+
+```text
+http://localhost:8080/login/oauth2/code/google
+```
+
+For a deployed backend, register the corresponding HTTPS URI, such as `https://api.example.com/login/oauth2/code/google`.
+
+Then set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `APP_AUTH_ALLOWED_EMAILS` in `backend/.env`. `APP_AUTH_ALLOWED_EMAILS` is a comma-separated invitation list and is intentionally deny-by-default. To permit every Google account with a verified email instead, set `APP_AUTH_ALLOW_ALL=true`; leave it `false` for an invite-only deployment. A verified Google account is persisted locally by its stable issuer and subject identifiers, while Spring Security keeps the browser signed in with an HTTP-only session cookie.
 
 Operating-system environment variables and command-line arguments can still override these local values, which is useful in deployment environments.
 
@@ -185,7 +195,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. Vite reads `VITE_API_URL`; copy `.env.example` to `.env` only if the backend URL differs. `WebConfig` allows the local Vite origin to call `/api/**`.
+Open `http://localhost:5173`. Vite reads `VITE_API_URL` and `VITE_BACKEND_URL`; copy `.env.example` to `.env` only if the backend URL differs. Spring Security allows the configured `FRONTEND_URL` to make credentialed API calls. The React client obtains a CSRF token before unsafe requests and sends the session cookie with every API request.
 
 The API layer prevents network details from spreading across UI components. A page asks `itemApi.create(payload)` to save an item; `itemApi` owns the URL, HTTP method, JSON encoding, and shared error behavior. This makes components easier to read, endpoints easier to change, and API functions easier to test.
 
@@ -193,9 +203,13 @@ The API layer prevents network details from spreading across UI components. A pa
 
 | Method | Path | Purpose |
 |---|---|---|
+| GET | `/api/auth/me` | Return the signed-in local user |
+| GET | `/api/auth/csrf` | Issue the CSRF token used by the React client |
+| POST | `/api/auth/logout` | End the current server-side session |
 | GET | `/api/dashboard` | Totals and room summaries |
 | GET | `/api/items?roomId=&storageLocationId=&categoryId=` | List/filter items |
 | GET | `/api/items/search?name=` | Search names, case-insensitive |
+| POST | `/api/items/bulk-move` | Move multiple items to one room and storage location |
 | GET/PUT/DELETE | `/api/items/{id}` | Read/update/delete an item |
 | GET/PUT/DELETE | `/api/items/{id}/photo` | Read, upload/replace, or remove an item's photo |
 | POST | `/api/items` | Create an item |
@@ -254,4 +268,4 @@ In short: **Controller → Service → Repository → database** separates trans
 
 ## Sensible future features
 
-After the fundamentals are comfortable: Flyway migrations, pagination and sorting, Testcontainers integration tests, authentication/Spring Security, object-storage-backed photos, CSV export, audit history, and multi-house support.
+After the fundamentals are comfortable: household invitations and membership roles, Flyway migrations, pagination and sorting, Testcontainers integration tests, object-storage-backed photos, CSV export, audit history, and multi-house support.

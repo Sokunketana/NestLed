@@ -1,5 +1,7 @@
 package com.example.homeinventory.controller;
 
+import com.example.homeinventory.dto.BulkMoveItemsRequest;
+import com.example.homeinventory.dto.BulkMoveItemsResponse;
 import com.example.homeinventory.dto.CreateItemRequest;
 import com.example.homeinventory.dto.ItemResponse;
 import com.example.homeinventory.dto.UpdateItemRequest;
@@ -44,6 +46,11 @@ public class ItemController {
     @ResponseStatus(HttpStatus.CREATED)
     public ItemResponse create(@Valid @RequestBody CreateItemRequest request) { 
         return itemService.create(request); 
+    }
+
+    @PostMapping("/bulk-move")
+    public BulkMoveItemsResponse bulkMove(@Valid @RequestBody BulkMoveItemsRequest request) {
+        return itemService.bulkMove(request);
     }
 
     @PutMapping("/{id}")

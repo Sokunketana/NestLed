@@ -1,14 +1,20 @@
 package com.example.homeinventory.service;
 
+import com.example.homeinventory.dto.BulkMoveItemsRequest;
+import com.example.homeinventory.dto.BulkMoveItemsResponse;
 import com.example.homeinventory.dto.CreateItemRequest;
 import com.example.homeinventory.dto.ItemResponse;
 import com.example.homeinventory.dto.UpdateItemRequest;
 import com.example.homeinventory.entity.Item;
+import com.example.homeinventory.entity.Room;
 import com.example.homeinventory.entity.StorageLocation;
 import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.ItemRepository;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -87,6 +93,29 @@ public class ItemService {
     }
 
     @Transactional
+    public BulkMoveItemsResponse bulkMove(BulkMoveItemsRequest request) {
+        Set<Long> itemIds = normalizedItemIds(request);
+        Room destinationRoom = roomService.getEntity(request.roomId());
+        StorageLocation destinationLocation = resolveLocation(request.storageLocationId(), request.roomId());
+
+        List<Item> items = itemRepository.findAllById(itemIds);
+        Set<Long> foundIds = items.stream().map(Item::getId).collect(Collectors.toSet());
+        List<Long> missingIds = itemIds.stream().filter(id -> !foundIds.contains(id)).toList();
+        if (!missingIds.isEmpty()) {
+            throw new ResourceNotFoundException("Items with ids " + missingIds + " were not found");
+        }
+
+        items.forEach(item -> {
+            item.setRoom(destinationRoom);
+            item.setStorageLocation(destinationLocation);
+        });
+        itemRepository.saveAll(items);
+
+        return new BulkMoveItemsResponse(items.size(), destinationRoom.getId(), destinationRoom.getName(),
+                destinationLocation.getId(), destinationLocation.getName());
+    }
+
+    @Transactional
     public void delete(Long id) {
         Item item = getEntity(id);
         itemRepository.delete(item);
@@ -139,6 +168,18 @@ public class ItemService {
 
     private Item getEntity(Long id) {
         return itemRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Item with id " + id + " was not found"));
+    }
+
+    private Set<Long> normalizedItemIds(BulkMoveItemsRequest request) {
+        if (request == null || request.itemIds() == null || request.itemIds().isEmpty()) {
+            throw new BadRequestException("Select at least one item to move");
+        }
+        if (request.roomId() == null || request.roomId() <= 0
+                || request.storageLocationId() == null || request.storageLocationId() <= 0
+                || request.itemIds().stream().anyMatch(id -> id == null || id <= 0)) {
+            throw new BadRequestException("Item, room, and storage location IDs must be positive numbers");
+        }
+        return new LinkedHashSet<>(request.itemIds());
     }
 
     private void copy(Item item, String name, String description, Integer quantity, Long categoryId,

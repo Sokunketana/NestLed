@@ -14,6 +14,18 @@ export interface Item {
 }
 export type ItemPayload = Omit<Item, 'id' | 'categoryName' | 'categoryColor' | 'roomName' |
   'storageLocationName' | 'photoUrl' | 'createdAt' | 'updatedAt'>
+export interface BulkMoveItemsPayload {
+  itemIds: number[]
+  roomId: number
+  storageLocationId: number
+}
+export interface BulkMoveItemsResponse {
+  movedCount: number
+  roomId: number
+  roomName: string
+  storageLocationId: number
+  storageLocationName: string
+}
 export interface Dashboard {
   totalItems: number; totalRooms: number; totalCategories: number
   totalEstimatedValue: number; rooms: Room[]

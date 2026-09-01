@@ -6,8 +6,16 @@ import ItemDetailsPage from './pages/ItemDetailsPage'
 import ItemFormPage from './pages/ItemFormPage'
 import RoomsPage from './pages/RoomsPage'
 import CategoriesPage from './pages/CategoriesPage'
+import LoginPage from './pages/LoginPage'
+import { useAuth } from './auth/AuthContext'
 
 export default function App() {
+  const { status } = useAuth()
+  if (status === 'loading') {
+    return <main className="grid min-h-screen place-items-center text-stone-600">Checking your session…</main>
+  }
+  if (status === 'anonymous') return <LoginPage />
+
   return <Routes>
     <Route element={<Layout />}>
       <Route path="/" element={<DashboardPage />} />

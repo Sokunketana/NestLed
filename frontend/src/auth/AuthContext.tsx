@@ -51,7 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null)
         setStatus('anonymous')
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : 'Could not sign out')
+        const logoutError = cause instanceof Error ? cause : new Error('Could not sign out')
+        setError(logoutError.message)
+        throw logoutError
       }
     },
   }), [error, status, user])

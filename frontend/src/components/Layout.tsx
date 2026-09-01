@@ -1,12 +1,14 @@
 import { FormEvent, useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import HomeTree from './HomeTree'
+import ConfirmationModal from './ConfirmationModal'
 import { useAuth } from '../auth/AuthContext'
 
 const links = [['/', 'Overview'], ['/items', 'Items'], ['/rooms', 'Rooms & Locations'], ['/categories', 'Categories']]
 
 export default function Layout() {
   const [search, setSearch] = useState('')
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false)
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   function submit(event: FormEvent) {
@@ -32,21 +34,33 @@ export default function Layout() {
     </aside>
     <main className="min-w-0 flex-1 lg:ml-80">
       <header className="sticky top-0 z-10 border-b bg-cream/90 px-5 py-4 backdrop-blur lg:px-10">
-        <div className="mx-auto flex max-w-6xl items-center gap-3">
+        <div className="flex items-center gap-3">
           <form onSubmit={submit} className="flex min-w-0 flex-1 gap-3">
             <div className="relative flex-1"><span className="absolute left-4 top-2.5 text-stone-400">⌕</span>
               <input aria-label="Global item search" className="field pl-10" placeholder="Search for a passport, charger, winter coat…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <button className="btn-primary">Search</button>
           </form>
-          <div className="hidden text-right md:block">
-            <p className="text-sm font-semibold">{user?.displayName || user?.email}</p>
-            {user?.displayName && <p className="text-xs text-stone-500">{user.email}</p>}
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            <div className="hidden text-right md:block">
+              <p className="text-sm font-semibold">{user?.displayName || user?.email}</p>
+              {user?.displayName && <p className="text-xs text-stone-500">{user.email}</p>}
+            </div>
+            <button type="button" className="btn-secondary" onClick={() => setShowLogoutConfirmation(true)}>Sign out</button>
           </div>
-          <button type="button" className="btn-secondary" onClick={() => void logout()}>Sign out</button>
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-5 py-8 lg:px-10 lg:py-10"><Outlet /></div>
+      {showLogoutConfirmation && <ConfirmationModal
+        title="Sign out?"
+        description="You’ll need to sign in with Google again to access your home inventory."
+        confirmLabel="Sign out"
+        confirmingLabel="Signing out…"
+        errorMessage="Unable to sign out. Please try again."
+        intent="logout"
+        onClose={() => setShowLogoutConfirmation(false)}
+        onConfirm={logout}
+      />}
     </main>
   </div>
 }

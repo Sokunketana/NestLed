@@ -5,6 +5,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -37,6 +42,15 @@ public class AppUser {
     @Column(name = "picture_url", length = 1000)
     private String pictureUrl;
 
+    // Nullable only so Hibernate can safely upgrade installations created before households existed.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "household_id")
+    private Household household;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "household_role", length = 20)
+    private HouseholdRole householdRole;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -57,6 +71,16 @@ public class AppUser {
         this.pictureUrl = pictureUrl;
     }
 
+    public void joinHousehold(Household household, HouseholdRole role) {
+        this.household = household;
+        this.householdRole = role;
+    }
+
+    public void leaveHousehold() {
+        this.household = null;
+        this.householdRole = null;
+    }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
@@ -75,6 +99,8 @@ public class AppUser {
     public String getEmail() { return email; }
     public String getDisplayName() { return displayName; }
     public String getPictureUrl() { return pictureUrl; }
+    public Household getHousehold() { return household; }
+    public HouseholdRole getHouseholdRole() { return householdRole; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

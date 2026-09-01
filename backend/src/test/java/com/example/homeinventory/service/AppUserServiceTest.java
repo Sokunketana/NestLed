@@ -1,8 +1,14 @@
 package com.example.homeinventory.service;
 
 import com.example.homeinventory.config.AuthProperties;
+import com.example.homeinventory.dto.AuthenticatedUserResponse;
 import com.example.homeinventory.entity.AppUser;
+import com.example.homeinventory.entity.Household;
+import com.example.homeinventory.entity.HouseholdInvitation;
+import com.example.homeinventory.entity.HouseholdRole;
 import com.example.homeinventory.repository.AppUserRepository;
+import com.example.homeinventory.repository.HouseholdInvitationRepository;
+import com.example.homeinventory.repository.HouseholdRepository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -29,17 +35,22 @@ import static org.mockito.Mockito.when;
 class AppUserServiceTest {
     @Mock
     private AppUserRepository userRepository;
+    @Mock
+    private HouseholdRepository householdRepository;
+    @Mock
+    private HouseholdInvitationRepository invitationRepository;
 
     @Test
     void createsLocalUserForAllowlistedVerifiedIdentity() {
         AppUserService service = new AppUserService(
-                userRepository,
+                userRepository, householdRepository, invitationRepository,
                 new AuthProperties("http://localhost:5173", List.of("person@example.com"), false));
         OidcUser oidcUser = oidcUser("Person@Example.com", true);
         when(userRepository.findByOidcIssuerAndOidcSubject(
                 "https://accounts.google.com", "google-subject-123"))
                 .thenReturn(Optional.empty());
         when(userRepository.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(householdRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         service.synchronize(oidcUser);
 
@@ -49,12 +60,35 @@ class AppUserServiceTest {
         assertEquals("google-subject-123", captor.getValue().getOidcSubject());
         assertEquals("person@example.com", captor.getValue().getEmail());
         assertEquals("Person Example", captor.getValue().getDisplayName());
+        assertEquals(HouseholdRole.OWNER, captor.getValue().getHouseholdRole());
+    }
+
+    @Test
+    void invitedIdentityJoinsTheOwnersHousehold() {
+        AppUserService service = new AppUserService(
+                userRepository, householdRepository, invitationRepository,
+                new AuthProperties("http://localhost:5173", List.of(), false));
+        OidcUser oidcUser = oidcUser("family@example.com", true);
+        Household household = new Household("Our home");
+        HouseholdInvitation invitation = new HouseholdInvitation(household, "family@example.com");
+        when(invitationRepository.findByEmailIgnoreCase("family@example.com"))
+                .thenReturn(Optional.of(invitation));
+        when(userRepository.findByOidcIssuerAndOidcSubject(
+                "https://accounts.google.com", "google-subject-123"))
+                .thenReturn(Optional.empty());
+        when(userRepository.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AppUser user = service.synchronize(oidcUser);
+
+        assertEquals(household, user.getHousehold());
+        assertEquals(HouseholdRole.MEMBER, user.getHouseholdRole());
+        verify(invitationRepository).delete(invitation);
     }
 
     @Test
     void rejectsIdentityThatHasNotBeenInvited() {
         AppUserService service = new AppUserService(
-                userRepository,
+                userRepository, householdRepository, invitationRepository,
                 new AuthProperties("http://localhost:5173", List.of("owner@example.com"), false));
 
         OAuth2AuthenticationException exception = assertThrows(
@@ -68,7 +102,7 @@ class AppUserServiceTest {
     @Test
     void rejectsUnverifiedEmail() {
         AppUserService service = new AppUserService(
-                userRepository,
+                userRepository, householdRepository, invitationRepository,
                 new AuthProperties("http://localhost:5173", List.of("person@example.com"), false));
 
         OAuth2AuthenticationException exception = assertThrows(
@@ -82,19 +116,80 @@ class AppUserServiceTest {
     @Test
     void createsLocalUserForAnyVerifiedIdentityWhenAllowAllIsEnabled() {
         AppUserService service = new AppUserService(
-                userRepository,
+                userRepository, householdRepository, invitationRepository,
                 new AuthProperties("http://localhost:5173", List.of(), true));
         OidcUser oidcUser = oidcUser("anyone@example.com", true);
         when(userRepository.findByOidcIssuerAndOidcSubject(
                 "https://accounts.google.com", "google-subject-123"))
                 .thenReturn(Optional.empty());
         when(userRepository.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(householdRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         service.synchronize(oidcUser);
 
         ArgumentCaptor<AppUser> captor = ArgumentCaptor.forClass(AppUser.class);
         verify(userRepository).save(captor.capture());
         assertEquals("anyone@example.com", captor.getValue().getEmail());
+    }
+
+    @Test
+    void rejectsUninvitedIdentityWhenHouseholdAlreadyExistsEvenIfAllowAllIsEnabled() {
+        AppUserService service = new AppUserService(
+                userRepository, householdRepository, invitationRepository,
+                new AuthProperties("http://localhost:5173", List.of(), true));
+        Household household = new Household("Our home");
+        when(userRepository.findByOidcIssuerAndOidcSubject(
+                "https://accounts.google.com", "google-subject-123"))
+                .thenReturn(Optional.empty());
+        when(householdRepository.findFirstByOrderByIdAsc()).thenReturn(Optional.of(household));
+        OAuth2AuthenticationException exception = assertThrows(
+                OAuth2AuthenticationException.class,
+                () -> service.synchronize(oidcUser("new-person@example.com", true)));
+
+        assertEquals("access_denied", exception.getError().getErrorCode());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void removedMemberCannotRejoinWithoutANewInvitation() {
+        AppUserService service = new AppUserService(
+                userRepository, householdRepository, invitationRepository,
+                new AuthProperties("http://localhost:5173", List.of(), true));
+        AppUser removedUser = new AppUser(
+                "https://accounts.google.com", "google-subject-123",
+                "removed@example.com", "Removed Person", null);
+        when(userRepository.findByOidcIssuerAndOidcSubject(
+                "https://accounts.google.com", "google-subject-123"))
+                .thenReturn(Optional.of(removedUser));
+        when(householdRepository.findFirstByOrderByIdAsc())
+                .thenReturn(Optional.of(new Household("Our home")));
+
+        OAuth2AuthenticationException exception = assertThrows(
+                OAuth2AuthenticationException.class,
+                () -> service.synchronize(oidcUser("removed@example.com", true)));
+
+        assertEquals("access_denied", exception.getError().getErrorCode());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void buildsAuthenticatedProfileWhileHouseholdIsAvailable() {
+        AppUserService service = new AppUserService(
+                userRepository, householdRepository, invitationRepository,
+                new AuthProperties("http://localhost:5173", List.of(), true));
+        Household household = new Household("Our home");
+        AppUser user = new AppUser(
+                "https://accounts.google.com", "google-subject-123",
+                "person@example.com", "Person Example", null);
+        user.joinHousehold(household, HouseholdRole.OWNER);
+        when(userRepository.findByOidcIssuerAndOidcSubject(
+                "https://accounts.google.com", "google-subject-123"))
+                .thenReturn(Optional.of(user));
+
+        AuthenticatedUserResponse profile = service.getProfile(oidcUser("person@example.com", true));
+
+        assertEquals("Our home", profile.householdName());
+        assertEquals(HouseholdRole.OWNER, profile.householdRole());
     }
 
     private OidcUser oidcUser(String email, boolean verified) {

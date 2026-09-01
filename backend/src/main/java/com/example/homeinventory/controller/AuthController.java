@@ -2,7 +2,6 @@ package com.example.homeinventory.controller;
 
 import com.example.homeinventory.dto.AuthenticatedUserResponse;
 import com.example.homeinventory.dto.CsrfTokenResponse;
-import com.example.homeinventory.entity.AppUser;
 import com.example.homeinventory.service.AppUserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -22,12 +21,7 @@ public class AuthController {
 
     @GetMapping("/me")
     AuthenticatedUserResponse me(@AuthenticationPrincipal OidcUser oidcUser) {
-        AppUser appUser = appUserService.getRequired(oidcUser);
-        return new AuthenticatedUserResponse(
-                appUser.getId(),
-                appUser.getEmail(),
-                appUser.getDisplayName(),
-                appUser.getPictureUrl());
+        return appUserService.getProfile(oidcUser);
     }
 
     @GetMapping("/csrf")

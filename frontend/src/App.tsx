@@ -7,6 +7,7 @@ import ItemFormPage from './pages/ItemFormPage'
 import RoomsPage from './pages/RoomsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import LoginPage from './pages/LoginPage'
+import HouseholdPage from './pages/HouseholdPage'
 import { useAuth } from './auth/AuthContext'
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
       <Route path="/items/:id/edit" element={<ItemFormPage />} />
       <Route path="/rooms" element={<RoomsPage />} />
       <Route path="/categories" element={<CategoriesPage />} />
+      <Route path="/household" element={<HouseholdPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Route>
   </Routes>

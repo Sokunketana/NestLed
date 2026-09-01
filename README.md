@@ -97,7 +97,9 @@ http://localhost:8080/login/oauth2/code/google
 
 For a deployed backend, register the corresponding HTTPS URI, such as `https://api.example.com/login/oauth2/code/google`.
 
-Then set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `APP_AUTH_ALLOWED_EMAILS` in `backend/.env`. `APP_AUTH_ALLOWED_EMAILS` is a comma-separated invitation list and is intentionally deny-by-default. To permit every Google account with a verified email instead, set `APP_AUTH_ALLOW_ALL=true`; leave it `false` for an invite-only deployment. A verified Google account is persisted locally by its stable issuer and subject identifiers, while Spring Security keeps the browser signed in with an HTTP-only session cookie.
+Then set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `APP_AUTH_ALLOWED_EMAILS` in `backend/.env`. `APP_AUTH_ALLOWED_EMAILS` is a comma-separated bootstrap list used only to decide who may create the first household, and it is intentionally deny-by-default. `APP_AUTH_ALLOW_ALL=true` can make that first-run bootstrap convenient during local development, but it does not let arbitrary accounts join an existing household. After the household exists, every new account must be invited by its owner. A verified Google account is persisted locally by its stable issuer and subject identifiers, while Spring Security keeps the browser signed in with an HTTP-only session cookie.
+
+The first configured account to sign in becomes the household owner. The owner can open **Household** in the sidebar, rename the shared home, and invite another person's Google email. A pending household invitation also permits that email through sign-in, so the server environment does not need to be changed for every family member. Members share the installation's rooms, locations, categories, and items; only the owner can invite or remove people. Existing accounts are placed into the shared household automatically when upgrading, with the oldest account becoming its owner.
 
 Operating-system environment variables and command-line arguments can still override these local values, which is useful in deployment environments.
 
@@ -268,4 +270,4 @@ In short: **Controller → Service → Repository → database** separates trans
 
 ## Sensible future features
 
-After the fundamentals are comfortable: household invitations and membership roles, Flyway migrations, pagination and sorting, Testcontainers integration tests, object-storage-backed photos, CSV export, audit history, and multi-house support.
+After the fundamentals are comfortable: email delivery for household invitations, Flyway migrations, pagination and sorting, Testcontainers integration tests, object-storage-backed photos, CSV export, audit history, and multi-house support.

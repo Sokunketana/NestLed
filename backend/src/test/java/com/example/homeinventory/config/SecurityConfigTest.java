@@ -1,7 +1,7 @@
 package com.example.homeinventory.config;
 
 import com.example.homeinventory.controller.AuthController;
-import com.example.homeinventory.entity.AppUser;
+import com.example.homeinventory.dto.AuthenticatedUserResponse;
 import com.example.homeinventory.service.AppUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,17 +51,20 @@ class SecurityConfigTest {
 
     @Test
     void returnsLocalProfileForAuthenticatedOidcUser() throws Exception {
-        when(appUserService.getRequired(any())).thenReturn(new AppUser(
-                "https://accounts.google.com",
-                "subject-123",
+        when(appUserService.getProfile(any())).thenReturn(new AuthenticatedUserResponse(
+                1L,
                 "person@example.com",
                 "Person Example",
-                null));
+                null,
+                1L,
+                "Our home",
+                com.example.homeinventory.entity.HouseholdRole.OWNER));
 
         mockMvc.perform(get("/api/auth/me").with(oidcLogin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("person@example.com"))
-                .andExpect(jsonPath("$.displayName").value("Person Example"));
+                .andExpect(jsonPath("$.displayName").value("Person Example"))
+                .andExpect(jsonPath("$.householdName").value("Our home"));
     }
 
     @Test

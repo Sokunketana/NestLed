@@ -97,7 +97,7 @@ http://localhost:8080/login/oauth2/code/google
 
 For a deployed backend, register the corresponding HTTPS URI, such as `https://api.example.com/login/oauth2/code/google`.
 
-Then set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `APP_AUTH_ALLOWED_EMAILS` in `backend/.env`. `APP_AUTH_ALLOWED_EMAILS` is a comma-separated invitation list and is intentionally deny-by-default. A verified Google account is persisted locally by its stable issuer and subject identifiers, while Spring Security keeps the browser signed in with an HTTP-only session cookie.
+Then set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `APP_AUTH_ALLOWED_EMAILS` in `backend/.env`. `APP_AUTH_ALLOWED_EMAILS` is a comma-separated invitation list and is intentionally deny-by-default. To permit every Google account with a verified email instead, set `APP_AUTH_ALLOW_ALL=true`; leave it `false` for an invite-only deployment. A verified Google account is persisted locally by its stable issuer and subject identifiers, while Spring Security keeps the browser signed in with an HTTP-only session cookie.
 
 Operating-system environment variables and command-line arguments can still override these local values, which is useful in deployment environments.
 

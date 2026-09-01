@@ -34,7 +34,7 @@ class AppUserServiceTest {
     void createsLocalUserForAllowlistedVerifiedIdentity() {
         AppUserService service = new AppUserService(
                 userRepository,
-                new AuthProperties("http://localhost:5173", List.of("person@example.com")));
+                new AuthProperties("http://localhost:5173", List.of("person@example.com"), false));
         OidcUser oidcUser = oidcUser("Person@Example.com", true);
         when(userRepository.findByOidcIssuerAndOidcSubject(
                 "https://accounts.google.com", "google-subject-123"))
@@ -55,7 +55,7 @@ class AppUserServiceTest {
     void rejectsIdentityThatHasNotBeenInvited() {
         AppUserService service = new AppUserService(
                 userRepository,
-                new AuthProperties("http://localhost:5173", List.of("owner@example.com")));
+                new AuthProperties("http://localhost:5173", List.of("owner@example.com"), false));
 
         OAuth2AuthenticationException exception = assertThrows(
                 OAuth2AuthenticationException.class,
@@ -69,7 +69,7 @@ class AppUserServiceTest {
     void rejectsUnverifiedEmail() {
         AppUserService service = new AppUserService(
                 userRepository,
-                new AuthProperties("http://localhost:5173", List.of("person@example.com")));
+                new AuthProperties("http://localhost:5173", List.of("person@example.com"), false));
 
         OAuth2AuthenticationException exception = assertThrows(
                 OAuth2AuthenticationException.class,
@@ -77,6 +77,24 @@ class AppUserServiceTest {
 
         assertEquals("access_denied", exception.getError().getErrorCode());
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void createsLocalUserForAnyVerifiedIdentityWhenAllowAllIsEnabled() {
+        AppUserService service = new AppUserService(
+                userRepository,
+                new AuthProperties("http://localhost:5173", List.of(), true));
+        OidcUser oidcUser = oidcUser("anyone@example.com", true);
+        when(userRepository.findByOidcIssuerAndOidcSubject(
+                "https://accounts.google.com", "google-subject-123"))
+                .thenReturn(Optional.empty());
+        when(userRepository.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.synchronize(oidcUser);
+
+        ArgumentCaptor<AppUser> captor = ArgumentCaptor.forClass(AppUser.class);
+        verify(userRepository).save(captor.capture());
+        assertEquals("anyone@example.com", captor.getValue().getEmail());
     }
 
     private OidcUser oidcUser(String email, boolean verified) {

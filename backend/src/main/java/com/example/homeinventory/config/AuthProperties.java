@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.StringUtils;
 
 @ConfigurationProperties(prefix = "app.auth")
-public record AuthProperties(String frontendUrl, List<String> allowedEmails) {
+public record AuthProperties(String frontendUrl, List<String> allowedEmails, boolean allowAll) {
     public AuthProperties {
         frontendUrl = StringUtils.hasText(frontendUrl)
                 ? frontendUrl.replaceAll("/+$", "")

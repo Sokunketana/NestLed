@@ -30,11 +30,13 @@ public class AppUserService {
         if (!Boolean.TRUE.equals(oidcUser.getEmailVerified())) {
             throw denied("The identity provider has not verified this email address");
         }
-        if (authProperties.allowedEmails().isEmpty()) {
-            throw denied("No permitted accounts have been configured");
-        }
-        if (!authProperties.allowedEmails().contains(email)) {
-            throw denied("This account has not been invited");
+        if (!authProperties.allowAll()) {
+            if (authProperties.allowedEmails().isEmpty()) {
+                throw denied("No permitted accounts have been configured");
+            }
+            if (!authProperties.allowedEmails().contains(email)) {
+                throw denied("This account has not been invited");
+            }
         }
 
         String issuer = requireIssuer(oidcUser.getIssuer());

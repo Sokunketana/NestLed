@@ -9,4 +9,5 @@ public record AuthenticatedUserResponse(
         String pictureUrl,
         Long householdId,
         String householdName,
-        HouseholdRole householdRole) {}
+        HouseholdRole householdRole,
+        PendingHouseholdInvitationResponse pendingInvitation) {}

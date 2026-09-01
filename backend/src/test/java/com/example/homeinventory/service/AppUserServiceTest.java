@@ -25,6 +25,7 @@ import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -64,7 +65,7 @@ class AppUserServiceTest {
     }
 
     @Test
-    void invitedIdentityJoinsTheOwnersHousehold() {
+    void invitedIdentityRemainsPendingUntilTheInvitationIsAccepted() {
         AppUserService service = new AppUserService(
                 userRepository, householdRepository, invitationRepository,
                 new AuthProperties("http://localhost:5173", List.of(), false));
@@ -80,9 +81,10 @@ class AppUserServiceTest {
 
         AppUser user = service.synchronize(oidcUser);
 
-        assertEquals(household, user.getHousehold());
-        assertEquals(HouseholdRole.MEMBER, user.getHouseholdRole());
-        verify(invitationRepository).delete(invitation);
+        assertNull(user.getHousehold());
+        assertNull(user.getHouseholdRole());
+        verify(invitationRepository, never()).delete(any());
+        verify(householdRepository, never()).save(any());
     }
 
     @Test
@@ -190,6 +192,58 @@ class AppUserServiceTest {
 
         assertEquals("Our home", profile.householdName());
         assertEquals(HouseholdRole.OWNER, profile.householdRole());
+        assertNull(profile.pendingInvitation());
+    }
+
+    @Test
+    void buildsAuthenticatedProfileForPendingInvitee() {
+        AppUserService service = new AppUserService(
+                userRepository, householdRepository, invitationRepository,
+                new AuthProperties("http://localhost:5173", List.of(), false));
+        Household household = new Household("Our home");
+        HouseholdInvitation invitation = new HouseholdInvitation(household, "person@example.com");
+        org.springframework.test.util.ReflectionTestUtils.setField(household, "id", 12L);
+        org.springframework.test.util.ReflectionTestUtils.setField(invitation, "id", 34L);
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                invitation, "createdAt", Instant.parse("2026-09-01T04:00:00Z"));
+        AppUser user = new AppUser(
+                "https://accounts.google.com", "google-subject-123",
+                "person@example.com", "Person Example", null);
+        when(userRepository.findByOidcIssuerAndOidcSubject(
+                "https://accounts.google.com", "google-subject-123"))
+                .thenReturn(Optional.of(user));
+        when(invitationRepository.findByEmailIgnoreCase("person@example.com"))
+                .thenReturn(Optional.of(invitation));
+
+        AuthenticatedUserResponse profile = service.getProfile(oidcUser("person@example.com", true));
+
+        assertNull(profile.householdId());
+        assertNull(profile.householdName());
+        assertNull(profile.householdRole());
+        assertEquals(34L, profile.pendingInvitation().id());
+        assertEquals(12L, profile.pendingInvitation().householdId());
+        assertEquals("Our home", profile.pendingInvitation().householdName());
+        assertEquals(Instant.parse("2026-09-01T04:00:00Z"), profile.pendingInvitation().createdAt());
+    }
+
+    @Test
+    void buildsAuthenticatedProfileAfterInvitationIsRejected() {
+        AppUserService service = new AppUserService(
+                userRepository, householdRepository, invitationRepository,
+                new AuthProperties("http://localhost:5173", List.of(), false));
+        AppUser user = new AppUser(
+                "https://accounts.google.com", "google-subject-123",
+                "person@example.com", "Person Example", null);
+        when(userRepository.findByOidcIssuerAndOidcSubject(
+                "https://accounts.google.com", "google-subject-123"))
+                .thenReturn(Optional.of(user));
+
+        AuthenticatedUserResponse profile = service.getProfile(oidcUser("person@example.com", true));
+
+        assertNull(profile.householdId());
+        assertNull(profile.householdName());
+        assertNull(profile.householdRole());
+        assertNull(profile.pendingInvitation());
     }
 
     private OidcUser oidcUser(String email, boolean verified) {

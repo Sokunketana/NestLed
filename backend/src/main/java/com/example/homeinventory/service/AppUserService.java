@@ -2,6 +2,7 @@ package com.example.homeinventory.service;
 
 import com.example.homeinventory.config.AuthProperties;
 import com.example.homeinventory.dto.AuthenticatedUserResponse;
+import com.example.homeinventory.dto.PendingHouseholdInvitationResponse;
 import com.example.homeinventory.entity.AppUser;
 import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.HouseholdInvitation;
@@ -14,7 +15,6 @@ import java.util.Locale;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -69,12 +69,13 @@ public class AppUserService {
         }
         appUser.updateProfile(email, displayName, pictureUrl);
 
-        if (invitation != null) {
-            appUser.joinHousehold(invitation.getHousehold(), HouseholdRole.MEMBER);
-            invitationRepository.delete(invitation);
-        } else {
+        if (invitation == null) {
             Household household = householdRepository.save(new Household(defaultHouseholdName(displayName)));
             appUser.joinHousehold(household, HouseholdRole.OWNER);
+        } else {
+            // Signing in proves ownership of the invited email, but the invitee must
+            // explicitly accept before gaining access to the household.
+            appUser.leaveHousehold();
         }
         return userRepository.save(appUser);
     }
@@ -105,17 +106,27 @@ public class AppUserService {
     public AuthenticatedUserResponse getProfile(OidcUser oidcUser) {
         AppUser appUser = getRequired(oidcUser);
         Household household = appUser.getHousehold();
+        PendingHouseholdInvitationResponse pendingInvitation = null;
         if (household == null || appUser.getHouseholdRole() == null) {
-            throw new AccessDeniedException("This account is not a household member");
+            HouseholdInvitation invitation = invitationRepository
+                    .findByEmailIgnoreCase(appUser.getEmail()).orElse(null);
+            if (invitation != null) {
+                pendingInvitation = new PendingHouseholdInvitationResponse(
+                        invitation.getId(),
+                        invitation.getHousehold().getId(),
+                        invitation.getHousehold().getName(),
+                        invitation.getCreatedAt());
+            }
         }
         return new AuthenticatedUserResponse(
                 appUser.getId(),
                 appUser.getEmail(),
                 appUser.getDisplayName(),
                 appUser.getPictureUrl(),
-                household.getId(),
-                household.getName(),
-                appUser.getHouseholdRole());
+                household == null ? null : household.getId(),
+                household == null ? null : household.getName(),
+                household == null ? null : appUser.getHouseholdRole(),
+                pendingInvitation);
     }
 
     private String normalizeEmail(String email) {

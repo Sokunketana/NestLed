@@ -99,7 +99,7 @@ For a deployed backend, register the corresponding HTTPS URI, such as `https://a
 
 Then set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `APP_AUTH_ALLOWED_EMAILS` in `backend/.env`. `APP_AUTH_ALLOWED_EMAILS` is a comma-separated bootstrap list used only to decide who may create the first household, and it is intentionally deny-by-default. `APP_AUTH_ALLOW_ALL=true` can make that first-run bootstrap convenient during local development, but it does not let arbitrary accounts join an existing household. After the household exists, every new account must be invited by its owner. A verified Google account is persisted locally by its stable issuer and subject identifiers, while Spring Security keeps the browser signed in with an HTTP-only session cookie.
 
-The first configured account to sign in becomes the household owner. The owner can open **Household** in the sidebar, rename the shared home, and invite another person's Google email. A pending household invitation also permits that email through sign-in, so the server environment does not need to be changed for every family member. Members share the installation's rooms, locations, categories, and items; only the owner can invite or remove people. Existing accounts are placed into the shared household automatically when upgrading, with the oldest account becoming its owner.
+The first configured account to sign in becomes the household owner. The owner can open **Household** in the sidebar, rename the shared home, and invite another person's Google email. A pending invitation permits that email to sign in, but it does not grant household access: the invitee must explicitly accept or decline it first. Accepted members share the installation's rooms, locations, categories, and items; only the owner can invite or remove people. Existing accounts are placed into the shared household automatically when upgrading, with the oldest account becoming its owner.
 
 Operating-system environment variables and command-line arguments can still override these local values, which is useful in deployment environments.
 
@@ -208,6 +208,8 @@ The API layer prevents network details from spreading across UI components. A pa
 | GET | `/api/auth/me` | Return the signed-in local user |
 | GET | `/api/auth/csrf` | Issue the CSRF token used by the React client |
 | POST | `/api/auth/logout` | End the current server-side session |
+| POST | `/api/invitations/{id}/accept` | Accept an invitation addressed to the signed-in email |
+| DELETE | `/api/invitations/{id}` | Decline an invitation addressed to the signed-in email |
 | GET | `/api/dashboard` | Totals and room summaries |
 | GET | `/api/items?roomId=&storageLocationId=&categoryId=` | List/filter items |
 | GET | `/api/items/search?name=` | Search names, case-insensitive |

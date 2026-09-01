@@ -58,7 +58,8 @@ class SecurityConfigTest {
                 null,
                 1L,
                 "Our home",
-                com.example.homeinventory.entity.HouseholdRole.OWNER));
+                com.example.homeinventory.entity.HouseholdRole.OWNER,
+                null));
 
         mockMvc.perform(get("/api/auth/me").with(oidcLogin()))
                 .andExpect(status().isOk())

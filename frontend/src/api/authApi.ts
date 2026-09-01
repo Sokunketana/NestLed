@@ -5,9 +5,15 @@ export type AuthenticatedUser = {
   email: string
   displayName?: string | null
   pictureUrl?: string | null
-  householdId?: number | null
-  householdName?: string | null
-  householdRole?: 'OWNER' | 'MEMBER' | null
+  householdId: number | null
+  householdName: string | null
+  householdRole: 'OWNER' | 'MEMBER' | null
+  pendingInvitation: {
+    id: number
+    householdId: number
+    householdName: string
+    createdAt: string
+  } | null
 }
 
 export const authApi = {

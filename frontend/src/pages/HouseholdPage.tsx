@@ -76,7 +76,7 @@ export default function HouseholdPage() {
 
     {isOwner && <section className="card">
       <h2 className="text-xl">Invite someone</h2>
-      <p className="mt-1 text-sm text-stone-500">Use the email address they use with Google. Their invitation is accepted automatically when they sign in.</p>
+      <p className="mt-1 text-sm text-stone-500">Use the email address they use with Google. They can accept or decline after signing in.</p>
       <form onSubmit={invite} className="mt-4 flex max-w-xl gap-3">
         <input className="field" type="email" aria-label="Email address" placeholder="family@example.com"
           maxLength={320} required value={email} onChange={event => setEmail(event.target.value)} />
@@ -106,7 +106,7 @@ export default function HouseholdPage() {
       <h2 className="text-xl">Pending invitations</h2>
       <div className="mt-4 divide-y">
         {household.pendingInvitations.map(invitation => <div key={invitation.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-          <div className="min-w-0 flex-1"><p className="truncate font-semibold">{invitation.email}</p><p className="text-sm text-stone-500">Waiting for sign-in</p></div>
+          <div className="min-w-0 flex-1"><p className="truncate font-semibold">{invitation.email}</p><p className="text-sm text-stone-500">Waiting for a response</p></div>
           <button type="button" className="btn-secondary" disabled={busy}
             onClick={() => void run(() => householdApi.cancelInvitation(invitation.id))}>Cancel</button>
         </div>)}

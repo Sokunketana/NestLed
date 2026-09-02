@@ -44,8 +44,9 @@ public class ItemController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ItemResponse create(@Valid @RequestBody CreateItemRequest request) { 
-        return itemService.create(request); 
+    public ItemResponse create(@Valid @RequestBody CreateItemRequest request,
+                               @RequestParam(defaultValue = "false") boolean allowDuplicate) {
+        return itemService.create(request, allowDuplicate);
     }
 
     @PostMapping("/bulk-move")

@@ -78,7 +78,27 @@ class ItemControllerTest {
         mockMvc.perform(post("/api/items").contentType(MediaType.APPLICATION_JSON).content(request))
                 .andExpect(status().isCreated());
 
-        verify(itemService).create(argThat(item -> item.estimatedValue() == null));
+        verify(itemService).create(argThat(item -> item.estimatedValue() == null), eq(false));
+    }
+
+    @Test
+    void createForwardsTheDuplicateConfirmation() throws Exception {
+        String request = """
+                {
+                  "name": "Passport",
+                  "quantity": 1,
+                  "categoryId": 1,
+                  "roomId": 1,
+                  "storageLocationId": 10,
+                  "condition": "%s"
+                }
+                """.formatted(ItemCondition.GOOD);
+
+        mockMvc.perform(post("/api/items?allowDuplicate=true")
+                        .contentType(MediaType.APPLICATION_JSON).content(request))
+                .andExpect(status().isCreated());
+
+        verify(itemService).create(any(), eq(true));
     }
 
     @Test

@@ -15,6 +15,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findByHouseholdIdAndRoomIdAndCategoryIdOrderByNameAsc(
             Long householdId, Long roomId, Long categoryId);
     List<Item> findByHouseholdIdAndStorageLocationIdOrderByNameAsc(Long householdId, Long storageLocationId);
+    List<Item> findByHouseholdIdAndNameIgnoreCaseAndCategoryIdAndRoomIdAndStorageLocationIdOrderByCreatedAtDesc(
+            Long householdId, String name, Long categoryId, Long roomId, Long storageLocationId);
     List<Item> findByIdInAndHouseholdId(Collection<Long> ids, Long householdId);
     java.util.Optional<Item> findByIdAndHouseholdId(Long id, Long householdId);
     long countByHouseholdId(Long householdId);

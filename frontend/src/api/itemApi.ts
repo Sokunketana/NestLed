@@ -11,7 +11,10 @@ export const itemApi = {
   },
   search: (name: string) => request<Item[]>(`/items/search?name=${encodeURIComponent(name)}`),
   get: (id: number) => request<Item>(`/items/${id}`),
-  create: (body: ItemPayload) => request<Item>('/items', { method: 'POST', body: JSON.stringify(body) }),
+  create: (body: ItemPayload, allowDuplicate = false) => request<Item>(
+    `/items${allowDuplicate ? '?allowDuplicate=true' : ''}`,
+    { method: 'POST', body: JSON.stringify(body) },
+  ),
   update: (id: number, body: ItemPayload) => request<Item>(`/items/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   bulkMove: (body: BulkMoveItemsPayload) => request<BulkMoveItemsResponse>('/items/bulk-move', {
     method: 'POST',

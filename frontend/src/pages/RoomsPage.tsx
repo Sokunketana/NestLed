@@ -5,6 +5,7 @@ import { storageLocationApi } from '../api/storageLocationApi'
 import ConfirmationModal from '../components/ConfirmationModal'
 import Icon from '../components/Icon'
 import { ErrorMessage, Loading } from '../components/PageState'
+import SpaceEditModal, { SpaceEditForm, SpaceEditTarget } from '../components/SpaceEditModal'
 import type { Room, StorageLocation } from '../types'
 
 type DeleteTarget = { type: 'room'; value: Room } | { type: 'location'; value: StorageLocation }
@@ -13,9 +14,8 @@ export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>()
   const [locations, setLocations] = useState<StorageLocation[]>([])
   const [roomForm, setRoomForm] = useState({ name: '', description: '' })
-  const [roomEdit, setRoomEdit] = useState<number>()
   const [locationForm, setLocationForm] = useState({ name: '', description: '', roomId: 0 })
-  const [locationEdit, setLocationEdit] = useState<number>()
+  const [editingTarget, setEditingTarget] = useState<SpaceEditTarget>()
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>()
   const [error, setError] = useState('')
 
@@ -25,17 +25,17 @@ export default function RoomsPage() {
       setLocations(nextLocations)
       window.dispatchEvent(new Event('inventory-changed'))
     })
-    .catch(cause => setError(cause instanceof Error ? cause.message : 'Unable to load rooms.'))
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void load().catch(cause => setError(cause instanceof Error ? cause.message : 'Unable to load rooms.'))
+  }, [])
 
   async function saveRoom(event: FormEvent) {
     event.preventDefault()
     setError('')
     try {
-      roomEdit ? await roomApi.update(roomEdit, roomForm) : await roomApi.create(roomForm)
+      await roomApi.create(roomForm)
       setRoomForm({ name: '', description: '' })
-      setRoomEdit(undefined)
       await load()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to save room.')
@@ -46,9 +46,8 @@ export default function RoomsPage() {
     event.preventDefault()
     setError('')
     try {
-      locationEdit ? await storageLocationApi.update(locationEdit, locationForm) : await storageLocationApi.create(locationForm)
+      await storageLocationApi.create(locationForm)
       setLocationForm({ name: '', description: '', roomId: 0 })
-      setLocationEdit(undefined)
       await load()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to save storage location.')
@@ -66,14 +65,21 @@ export default function RoomsPage() {
     }
   }
 
-  function cancelRoomEdit() {
-    setRoomEdit(undefined)
-    setRoomForm({ name: '', description: '' })
-  }
+  async function saveEdit(form: SpaceEditForm) {
+    if (!editingTarget) return
 
-  function cancelLocationEdit() {
-    setLocationEdit(undefined)
-    setLocationForm({ name: '', description: '', roomId: 0 })
+    if (editingTarget.type === 'room') {
+      await roomApi.update(editingTarget.value.id, { name: form.name, description: form.description })
+    } else {
+      if (!form.roomId) throw new Error('Select a room before saving the storage location.')
+      await storageLocationApi.update(editingTarget.value.id, {
+        name: form.name,
+        description: form.description,
+        roomId: form.roomId,
+      })
+    }
+
+    await load()
   }
 
   if (!rooms) return <Loading />
@@ -99,7 +105,7 @@ export default function RoomsPage() {
               <div className="min-w-0"><h2 className="truncate text-xl">{room.name}</h2><p className="mt-0.5 text-sm text-stone-600">{room.itemCount} {room.itemCount === 1 ? 'item' : 'items'} in this room</p></div>
             </div>
             <div className="flex shrink-0 gap-1">
-              <button type="button" title={`Edit ${room.name}`} aria-label={`Edit ${room.name}`} className="btn-secondary h-9 w-9 p-0" onClick={() => { setRoomEdit(room.id); setRoomForm({ name: room.name, description: room.description ?? '' }) }}><Icon name="edit" className="h-4 w-4" /></button>
+              <button type="button" title={`Edit ${room.name}`} aria-label={`Edit ${room.name}`} className="btn-secondary h-9 w-9 p-0" onClick={() => setEditingTarget({ type: 'room', value: room })}><Icon name="edit" className="h-4 w-4" /></button>
               <button type="button" title={`Delete ${room.name}`} aria-label={`Delete ${room.name}`} className="btn-danger h-9 w-9 p-0" onClick={() => setDeleteTarget({ type: 'room', value: room })}><Icon name="trash" className="h-4 w-4" /></button>
             </div>
           </div>
@@ -108,7 +114,7 @@ export default function RoomsPage() {
             <div className="mt-4 flex flex-wrap gap-2">
               {locations.filter(location => location.roomId === room.id).map(location => <div className="group flex items-center gap-2 rounded-xl border border-line bg-cream px-3 py-2 text-sm" key={location.id}>
                 <Icon name="map" className="h-3.5 w-3.5 text-pine" /><span>{location.name} <span className="text-stone-400">·</span> {location.itemCount}</span>
-                <button type="button" title={`Edit ${location.name}`} aria-label={`Edit ${location.name}`} className="ml-1 text-pine hover:text-deep" onClick={() => { setLocationEdit(location.id); setLocationForm({ name: location.name, description: location.description ?? '', roomId: location.roomId }) }}><Icon name="edit" className="h-3.5 w-3.5" /></button>
+                <button type="button" title={`Edit ${location.name}`} aria-label={`Edit ${location.name}`} className="ml-1 text-pine hover:text-deep" onClick={() => setEditingTarget({ type: 'location', value: location })}><Icon name="edit" className="h-3.5 w-3.5" /></button>
                 <button type="button" title={`Delete ${location.name}`} aria-label={`Delete ${location.name}`} className="text-red-600 hover:text-red-800" onClick={() => setDeleteTarget({ type: 'location', value: location })}><Icon name="x" className="h-3.5 w-3.5" /></button>
               </div>)}
               {!locations.some(location => location.roomId === room.id) && <span className="rounded-xl border border-dashed border-line px-3 py-2 text-sm text-stone-400">No storage locations yet</span>}
@@ -120,21 +126,28 @@ export default function RoomsPage() {
 
       <aside className="space-y-4">
         <form className="card" onSubmit={saveRoom}>
-          <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-coral/10 text-coral"><Icon name="home" className="h-4 w-4" /></span><div><h2 className="text-xl">{roomEdit ? 'Edit room' : 'Add a room'}</h2><p className="mt-1 text-sm text-ink-soft">Start with the spaces you use every day.</p></div></div>
+          <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-coral/10 text-coral"><Icon name="home" className="h-4 w-4" /></span><div><h2 className="text-xl">Add a room</h2><p className="mt-1 text-sm text-ink-soft">Start with the spaces you use every day.</p></div></div>
           <div className="mt-5"><label className="label">Name *</label><input className="field" required maxLength={100} value={roomForm.name} onChange={event => setRoomForm({ ...roomForm, name: event.target.value })} placeholder="Bedroom" /></div>
           <div className="mt-3"><label className="label">Description</label><textarea className="field min-h-20" maxLength={500} value={roomForm.description} onChange={event => setRoomForm({ ...roomForm, description: event.target.value })} placeholder="A short note about this space" /></div>
-          <div className="mt-4 flex gap-2"><button className="btn-primary"><Icon name={roomEdit ? 'check' : 'plus'} className="h-4 w-4" />{roomEdit ? 'Save room' : 'Add room'}</button>{roomEdit && <button type="button" className="btn-secondary" onClick={cancelRoomEdit}>Cancel</button>}</div>
+          <div className="mt-4 flex gap-2"><button className="btn-primary"><Icon name="plus" className="h-4 w-4" />Add room</button></div>
         </form>
 
         <form className="card" onSubmit={saveLocation}>
-          <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-sage text-pine"><Icon name="map" className="h-4 w-4" /></span><div><h2 className="text-xl">{locationEdit ? 'Edit location' : 'Add storage location'}</h2><p className="mt-1 text-sm text-ink-soft">Be as specific as future-you needs.</p></div></div>
+          <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-sage text-pine"><Icon name="map" className="h-4 w-4" /></span><div><h2 className="text-xl">Add storage location</h2><p className="mt-1 text-sm text-ink-soft">Be as specific as future-you needs.</p></div></div>
           <div className="mt-5"><label className="label">Room *</label><select className="field" required value={locationForm.roomId || ''} onChange={event => setLocationForm({ ...locationForm, roomId: Number(event.target.value) })}><option value="">Select room</option>{rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}</select></div>
           <div className="mt-3"><label className="label">Name *</label><input className="field" required maxLength={100} value={locationForm.name} onChange={event => setLocationForm({ ...locationForm, name: event.target.value })} placeholder="Top drawer" /></div>
           <div className="mt-3"><label className="label">Description</label><textarea className="field min-h-20" maxLength={500} value={locationForm.description} onChange={event => setLocationForm({ ...locationForm, description: event.target.value })} placeholder="Which drawer, shelf, or cabinet?" /></div>
-          <div className="mt-4 flex gap-2"><button className="btn-primary" disabled={!rooms.length}><Icon name={locationEdit ? 'check' : 'plus'} className="h-4 w-4" />{locationEdit ? 'Save location' : 'Add location'}</button>{locationEdit && <button type="button" className="btn-secondary" onClick={cancelLocationEdit}>Cancel</button>}</div>
+          <div className="mt-4 flex gap-2"><button className="btn-primary" disabled={!rooms.length}><Icon name="plus" className="h-4 w-4" />Add location</button></div>
         </form>
       </aside>
     </div>
+    {editingTarget && <SpaceEditModal
+      key={`${editingTarget.type}-${editingTarget.value.id}`}
+      target={editingTarget}
+      rooms={rooms}
+      onClose={() => setEditingTarget(undefined)}
+      onSave={saveEdit}
+    />}
     {deleteTarget && <ConfirmationModal
       title={`Delete “${deleteTarget.value.name}”?`}
       description={deleteTarget.type === 'room' ? 'This room can only be deleted when it contains no storage locations or items.' : 'This storage location can only be deleted when it contains no items.'}

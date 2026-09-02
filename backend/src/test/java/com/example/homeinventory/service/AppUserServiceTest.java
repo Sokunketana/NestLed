@@ -6,7 +6,6 @@ import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.HouseholdInvitation;
 import com.example.homeinventory.entity.HouseholdMembership;
 import com.example.homeinventory.entity.HouseholdRole;
-import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.AppUserRepository;
 import com.example.homeinventory.repository.HouseholdInvitationRepository;
 import com.example.homeinventory.repository.HouseholdMembershipRepository;
@@ -57,9 +56,8 @@ class AppUserServiceTest {
             ReflectionTestUtils.setField(household, "id", 11L);
             return household;
         });
-        when(membershipRepository.findByUserIdOrderByHouseholdNameAsc(7L))
-                .thenAnswer(invocation -> createdMembership.get() == null
-                        ? List.of() : List.of(createdMembership.get()));
+        when(membershipRepository.findByUserId(7L))
+                .thenAnswer(invocation -> Optional.ofNullable(createdMembership.get()));
         when(membershipRepository.save(any())).thenAnswer(invocation -> {
             HouseholdMembership membership = invocation.getArgument(0);
             createdMembership.set(membership);
@@ -83,66 +81,26 @@ class AppUserServiceTest {
     }
 
     @Test
-    void profileListsEveryMembershipAndOnlyInvitationsForOtherHouseholds() {
+    void profileExposesOnlyTheUsersSingleHouseholdAndInvitationsForOtherHouseholds() {
         AppUserService service = service();
         AppUser user = user(5L, "person@example.com");
         Household personal = household(10L, "My place");
-        Household shared = household(20L, "Family home");
         user.joinHousehold(personal, HouseholdRole.OWNER);
         HouseholdMembership personalMembership = new HouseholdMembership(personal, user, HouseholdRole.OWNER);
-        HouseholdMembership sharedMembership = new HouseholdMembership(shared, user, HouseholdRole.MEMBER);
         HouseholdInvitation duplicate = invitation(30L, personal, "person@example.com");
         Household invited = household(40L, "Friends home");
         HouseholdInvitation pending = invitation(31L, invited, "PERSON@example.com");
         when(userRepository.findByOidcIssuerAndOidcSubject(any(), any())).thenReturn(Optional.of(user));
-        when(membershipRepository.findByUserIdAndHouseholdId(5L, 10L))
+        when(membershipRepository.findByUserId(5L))
                 .thenReturn(Optional.of(personalMembership));
-        when(membershipRepository.findByUserIdOrderByHouseholdNameAsc(5L))
-                .thenReturn(List.of(sharedMembership, personalMembership));
         when(invitationRepository.findByEmailIgnoreCaseOrderByCreatedAtAsc("person@example.com"))
                 .thenReturn(List.of(duplicate, pending));
 
         AuthenticatedUserResponse profile = service.getProfile(oidcUser("person@example.com", true));
 
         assertEquals(10L, profile.householdId());
-        assertEquals(2, profile.households().size());
         assertEquals(1, profile.pendingInvitations().size());
         assertEquals(40L, profile.pendingInvitations().getFirst().householdId());
-    }
-
-    @Test
-    void switchingRequiresMembershipAndUpdatesTheActiveHousehold() {
-        AppUserService service = service();
-        AppUser user = user(5L, "person@example.com");
-        Household personal = household(10L, "My place");
-        Household shared = household(20L, "Family home");
-        user.joinHousehold(personal, HouseholdRole.OWNER);
-        HouseholdMembership personalMembership = new HouseholdMembership(personal, user, HouseholdRole.OWNER);
-        HouseholdMembership sharedMembership = new HouseholdMembership(shared, user, HouseholdRole.MEMBER);
-        when(userRepository.findByOidcIssuerAndOidcSubject(any(), any())).thenReturn(Optional.of(user));
-        when(membershipRepository.findByUserIdAndHouseholdId(5L, 20L))
-                .thenReturn(Optional.of(sharedMembership));
-        when(membershipRepository.findByUserIdOrderByHouseholdNameAsc(5L))
-                .thenReturn(List.of(sharedMembership, personalMembership));
-        when(invitationRepository.findByEmailIgnoreCaseOrderByCreatedAtAsc(any())).thenReturn(List.of());
-
-        AuthenticatedUserResponse response = service.activateHousehold(
-                oidcUser("person@example.com", true), 20L);
-
-        assertEquals(20L, response.householdId());
-        assertEquals(HouseholdRole.MEMBER, response.householdRole());
-        assertSame(shared, user.getHousehold());
-        verify(userRepository).save(user);
-    }
-
-    @Test
-    void switchingToAHouseholdWithoutMembershipDoesNotRevealIt() {
-        AppUser user = user(5L, "person@example.com");
-        when(userRepository.findByOidcIssuerAndOidcSubject(any(), any())).thenReturn(Optional.of(user));
-        when(membershipRepository.findByUserIdAndHouseholdId(5L, 99L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class,
-                () -> service().activateHousehold(oidcUser("person@example.com", true), 99L));
     }
 
     private AppUserService service() {

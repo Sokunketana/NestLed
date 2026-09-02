@@ -24,7 +24,7 @@ It deliberately focuses on Spring Boot fundamentals. Authentication uses Google 
 - Optional item photos with camera/file upload, thumbnails, replacement, and removal
 - Room CRUD and storage-location CRUD
 - Category CRUD with a display color
-- Separate household inventories, household switching, and invitation-based sharing
+- Separate household inventories with one household per account and invitation-based sharing
 - Validation and consistent JSON error responses
 - DTO-only controller responses (JPA entities never become the API contract)
 - Responsive React interface and one centralized API layer
@@ -100,7 +100,7 @@ For a deployed backend, register the corresponding HTTPS URI, such as `https://a
 
 Then set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `backend/.env`. Any Google account with a verified email can sign in. The account is persisted locally by its stable issuer and subject identifiers, while Spring Security keeps the browser signed in with an HTTP-only session cookie.
 
-Every user receives a personal household that they own. Owners can open **Household** in the sidebar, rename the selected household, and invite another person's Google email. The invitee keeps their personal household and must explicitly accept or decline; accepting adds a membership and switches them to the shared household. The household selector in the sidebar lets a user move between every household they own or have joined. Rooms, locations, categories, items, dashboard totals, searches, bulk actions, and photos are all restricted to the selected household. Existing records are migrated into the original household, while existing member accounts also receive their own personal household.
+Every user starts with a personal household that they own. Owners can open **Household** in the sidebar, rename the household, and invite another person's Google email. The invitee must explicitly accept or decline; accepting an invitation moves the account into the invited household and replaces its previous membership, so an account belongs to only one household at a time. Rooms, locations, categories, items, dashboard totals, searches, bulk actions, and photos are all restricted to that household. Existing records are migrated into the original household, while existing member accounts keep only their current household membership.
 
 Operating-system environment variables and command-line arguments can still override these local values, which is useful in deployment environments.
 
@@ -209,15 +209,14 @@ The API layer prevents network details from spreading across UI components. A pa
 | GET | `/api/auth/me` | Return the signed-in local user |
 | GET | `/api/auth/csrf` | Issue the CSRF token used by the React client |
 | POST | `/api/auth/logout` | End the current server-side session |
-| POST | `/api/auth/households/{id}/activate` | Switch to one of the signed-in user's households |
-| DELETE | `/api/household/leave` | Leave the selected household as a non-owner member |
+| DELETE | `/api/household/leave` | Leave the current household as a non-owner member |
 | POST | `/api/invitations/{id}/accept` | Accept an invitation addressed to the signed-in email |
 | DELETE | `/api/invitations/{id}` | Decline an invitation addressed to the signed-in email |
 | GET | `/api/dashboard` | Totals and room summaries |
 | GET | `/api/items?roomId=&storageLocationId=&categoryId=` | List/filter items |
 | GET | `/api/items/search?name=` | Search names, case-insensitive |
 | POST | `/api/items/bulk-move` | Move multiple items to one room and storage location |
-| GET | `/api/item-movements` | List the selected household's newest item movements |
+| GET | `/api/item-movements` | List the current household's newest item movements |
 | GET/PUT/DELETE | `/api/items/{id}` | Read/update/delete an item |
 | GET/PUT/DELETE | `/api/items/{id}/photo` | Read, upload/replace, or remove an item's photo |
 | POST | `/api/items` | Create an item |

@@ -132,7 +132,7 @@ export default function HouseholdPage() {
     {user && user.pendingInvitations.length > 0 && <section className="card">
       <p className="eyebrow">Incoming</p>
       <h2 className="mt-1 text-xl">Household invitations</h2>
-      <p className="mt-1 text-sm text-stone-500">Review invitations here when you’re ready. You’ll stay in your current household until you accept one.</p>
+      <p className="mt-1 text-sm text-stone-500">Accepting an invitation moves you to that household. You can belong to only one household at a time.</p>
       {invitationError && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{invitationError}</p>}
       <div className="mt-4 divide-y">
         {user.pendingInvitations.map(invitation => <div key={invitation.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
@@ -205,7 +205,7 @@ export default function HouseholdPage() {
     />}
   {showLeaveConfirmation && <ConfirmationModal
       title={`Leave ${household.name}?`}
-      description="You’ll lose access to this household, and your personal household will become active. The shared household and its items will not be deleted."
+      description="You’ll lose access to this household. A new personal household will be created when you return if you are not invited elsewhere."
       confirmLabel="Leave household"
       confirmingLabel="Leaving…"
       errorMessage="Unable to leave this household. Please try again."

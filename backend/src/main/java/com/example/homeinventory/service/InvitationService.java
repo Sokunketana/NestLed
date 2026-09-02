@@ -34,13 +34,19 @@ public class InvitationService {
     public AuthenticatedUserResponse accept(OidcUser principal, Long invitationId) {
         AppUser invitee = appUserService.getRequired(principal);
         HouseholdInvitation invitation = requiredInvitation(invitee, invitationId);
-        if (membershipRepository.findByUserIdAndHouseholdId(
-                invitee.getId(), invitation.getHousehold().getId()).isPresent()) {
+        HouseholdMembership membership = membershipRepository.findByUserId(invitee.getId()).orElse(null);
+        if (membership != null && membership.getHousehold().getId().equals(invitation.getHousehold().getId())) {
             throw new BadRequestException("This account already belongs to that household");
         }
 
-        membershipRepository.save(new HouseholdMembership(
-                invitation.getHousehold(), invitee, HouseholdRole.MEMBER));
+        if (membership == null) {
+            membership = new HouseholdMembership(invitation.getHousehold(), invitee, HouseholdRole.MEMBER);
+        } else {
+            // A user has one membership row. Accepting another invitation transfers
+            // that row instead of creating a second membership.
+            membership.moveTo(invitation.getHousehold(), HouseholdRole.MEMBER);
+        }
+        membershipRepository.save(membership);
         invitee.joinHousehold(invitation.getHousehold(), HouseholdRole.MEMBER);
         userRepository.save(invitee);
         invitationRepository.delete(invitation);

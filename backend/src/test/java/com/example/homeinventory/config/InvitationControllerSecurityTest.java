@@ -47,7 +47,7 @@ class InvitationControllerSecurityTest {
     void letsAuthenticatedHouseholdlessUserAcceptAnInvitation() throws Exception {
         when(invitationService.accept(any(), eq(23L))).thenReturn(new AuthenticatedUserResponse(
                 1L, "person@example.com", "Person Example", null,
-                4L, "Our home", HouseholdRole.MEMBER, List.of(), List.of()));
+                4L, "Our home", HouseholdRole.MEMBER, List.of()));
 
         mockMvc.perform(post("/api/invitations/23/accept").with(oidcLogin()).with(csrf()))
                 .andExpect(status().isOk())
@@ -61,7 +61,7 @@ class InvitationControllerSecurityTest {
     void letsAuthenticatedHouseholdlessUserRejectAnInvitation() throws Exception {
         when(invitationService.reject(any(), eq(23L))).thenReturn(new AuthenticatedUserResponse(
                 1L, "person@example.com", "Person Example", null,
-                7L, "Personal home", HouseholdRole.OWNER, List.of(), List.of()));
+                7L, "Personal home", HouseholdRole.OWNER, List.of()));
 
         mockMvc.perform(delete("/api/invitations/23").with(oidcLogin()).with(csrf()))
                 .andExpect(status().isOk())

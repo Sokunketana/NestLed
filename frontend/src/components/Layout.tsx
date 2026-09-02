@@ -62,21 +62,23 @@ export default function Layout() {
         </div>
 
         <div className="mt-auto pt-8">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
-            <label className="block px-1 text-[0.64rem] font-bold uppercase tracking-[0.18em] text-emerald-200/75" htmlFor="household-switcher">Current household</label>
-            <select id="household-switcher" className="mt-2 w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-sm text-white outline-none transition focus:border-emerald-200/60 focus:ring-2 focus:ring-emerald-200/20"
-              value={user?.householdId ?? ''} disabled={switchingHousehold}
-              onChange={event => void switchHousehold(Number(event.target.value))}>
-              {user?.households.map(household => <option className="text-stone-900" key={household.id} value={household.id}>
-                {household.name} ({household.role === 'OWNER' ? 'Owner' : 'Member'})
-              </option>)}
-            </select>
-            {householdError && <p role="alert" className="mt-2 text-xs text-red-200">{householdError}</p>}
-          </div>
           <details className="group mt-4 lg:contents" open>
             <summary className="cursor-pointer list-none rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold lg:hidden">Browse your home <Icon name="chevron-down" className="float-right mt-0.5 h-4 w-4 transition group-open:rotate-180" /></summary>
             <HomeTree />
           </details>
+          <div className="mt-6 border-t border-white/10 pt-5">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
+              <label className="block px-1 text-[0.64rem] font-bold uppercase tracking-[0.18em] text-emerald-200/75" htmlFor="household-switcher">Current household</label>
+              <select id="household-switcher" className="mt-2 w-full rounded-xl border border-white/10 bg-white/10 px-3 py-2.5 text-sm text-white outline-none transition focus:border-emerald-200/60 focus:ring-2 focus:ring-emerald-200/20"
+                value={user?.householdId ?? ''} disabled={switchingHousehold}
+                onChange={event => void switchHousehold(Number(event.target.value))}>
+                {user?.households.map(household => <option className="text-stone-900" key={household.id} value={household.id}>
+                  {household.name} ({household.role === 'OWNER' ? 'Owner' : 'Member'})
+                </option>)}
+              </select>
+              {householdError && <p role="alert" className="mt-2 text-xs text-red-200">{householdError}</p>}
+            </div>
+          </div>
         </div>
       </div>
     </aside>

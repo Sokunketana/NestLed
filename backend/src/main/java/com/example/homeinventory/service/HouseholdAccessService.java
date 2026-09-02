@@ -30,10 +30,10 @@ public class HouseholdAccessService {
     public HouseholdMembership getActiveMembership(OidcUser principal) {
         AppUser user = appUserService.getRequired(principal);
         if (user.getHousehold() == null) {
-            throw new AccessDeniedException("Select a household before accessing inventory");
+            throw new AccessDeniedException("Join a household before accessing inventory");
         }
         return membershipRepository.findByUserIdAndHouseholdId(user.getId(), user.getHousehold().getId())
-                .orElseThrow(() -> new AccessDeniedException("This account cannot access the selected household"));
+                .orElseThrow(() -> new AccessDeniedException("This account cannot access the current household"));
     }
 
     private OidcUser currentOidcUser() {

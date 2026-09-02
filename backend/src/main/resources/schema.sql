@@ -42,12 +42,41 @@ BEGIN
 END $$^^^
 
 -- Preserve the previous one-household-per-user assignments as memberships. The
--- app_users household columns now identify only the household currently selected.
+-- app_users household columns identify the user's one household.
 INSERT INTO household_memberships (household_id, app_user_id, role, joined_at)
 SELECT household_id, id, COALESCE(household_role, 'MEMBER'), COALESCE(created_at, CURRENT_TIMESTAMP)
 FROM app_users
 WHERE household_id IS NOT NULL
-ON CONFLICT (household_id, app_user_id) DO NOTHING^^^
+  AND NOT EXISTS (
+      SELECT 1
+      FROM household_memberships existing_membership
+      WHERE existing_membership.app_user_id = app_users.id
+  )^^^
+
+-- A user may belong to only one household. Older versions allowed multiple
+-- memberships, so retain the current household and remove the older extras
+-- before adding the database-level invariant.
+DO $$
+BEGIN
+    IF to_regclass('public.household_memberships') IS NOT NULL
+       AND to_regclass('public.app_users') IS NOT NULL THEN
+        DELETE FROM household_memberships duplicate
+        USING (
+            SELECT membership.id,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY membership.app_user_id
+                       ORDER BY CASE WHEN membership.household_id = app_user.household_id THEN 0 ELSE 1 END,
+                                membership.joined_at, membership.id) AS membership_rank
+            FROM household_memberships membership
+            JOIN app_users app_user ON app_user.id = membership.app_user_id
+        ) ranked
+        WHERE duplicate.id = ranked.id
+          AND ranked.membership_rank > 1;
+    END IF;
+END $$^^^
+
+CREATE UNIQUE INDEX IF NOT EXISTS uk_household_membership_app_user
+    ON household_memberships (app_user_id)^^^
 
 -- Assign legacy inventory data to the original shared household. New records are
 -- always written with the active household by the application services.

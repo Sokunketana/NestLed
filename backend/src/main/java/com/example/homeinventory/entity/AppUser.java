@@ -42,8 +42,8 @@ public class AppUser {
     @Column(name = "picture_url", length = 1000)
     private String pictureUrl;
 
-    // The selected household is cached on the user for request routing. Access is
-    // still authorized through HouseholdMembership on every protected request.
+    // The user's single household is cached on the user for request routing.
+    // Access is still authorized through HouseholdMembership on every protected request.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "household_id")
     private Household household;

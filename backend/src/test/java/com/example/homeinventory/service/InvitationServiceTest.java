@@ -37,7 +37,7 @@ class InvitationServiceTest {
     @Mock private OidcUser principal;
 
     @Test
-    void acceptingAddsMembershipAndSwitchesToTheInvitedHousehold() {
+    void acceptingAnInvitationCreatesTheUsersOnlyMembership() {
         InvitationService service = service();
         AppUser invitee = invitee("Family@Example.com");
         Household household = household(20L);
@@ -45,7 +45,7 @@ class InvitationServiceTest {
         AuthenticatedUserResponse expected = profile(20L, HouseholdRole.MEMBER);
         when(appUserService.getRequired(principal)).thenReturn(invitee);
         when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
-        when(membershipRepository.findByUserIdAndHouseholdId(5L, 20L)).thenReturn(Optional.empty());
+        when(membershipRepository.findByUserId(5L)).thenReturn(Optional.empty());
         when(appUserService.getProfile(principal)).thenReturn(expected);
 
         AuthenticatedUserResponse response = service.accept(principal, 10L);
@@ -57,6 +57,32 @@ class InvitationServiceTest {
         verify(membershipRepository).save(membership.capture());
         assertSame(invitee, membership.getValue().getUser());
         assertSame(household, membership.getValue().getHousehold());
+        verify(invitationRepository).delete(invitation);
+    }
+
+    @Test
+    void acceptingAnInvitationReplacesTheExistingMembership() {
+        InvitationService service = service();
+        AppUser invitee = invitee("family@example.com");
+        Household personal = household(30L);
+        Household invitedHousehold = household(20L);
+        invitee.joinHousehold(personal, HouseholdRole.OWNER);
+        HouseholdMembership existingMembership = new HouseholdMembership(
+                personal, invitee, HouseholdRole.OWNER);
+        HouseholdInvitation invitation = new HouseholdInvitation(invitedHousehold, "family@example.com");
+        AuthenticatedUserResponse expected = profile(20L, HouseholdRole.MEMBER);
+        when(appUserService.getRequired(principal)).thenReturn(invitee);
+        when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
+        when(membershipRepository.findByUserId(5L)).thenReturn(Optional.of(existingMembership));
+        when(appUserService.getProfile(principal)).thenReturn(expected);
+
+        AuthenticatedUserResponse response = service.accept(principal, 10L);
+
+        assertSame(expected, response);
+        assertSame(invitedHousehold, invitee.getHousehold());
+        assertSame(invitedHousehold, existingMembership.getHousehold());
+        assertEquals(HouseholdRole.MEMBER, existingMembership.getRole());
+        verify(membershipRepository).save(existingMembership);
         verify(invitationRepository).delete(invitation);
     }
 
@@ -88,7 +114,7 @@ class InvitationServiceTest {
         HouseholdInvitation invitation = new HouseholdInvitation(household, "family@example.com");
         when(appUserService.getRequired(principal)).thenReturn(invitee);
         when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
-        when(membershipRepository.findByUserIdAndHouseholdId(5L, 20L))
+        when(membershipRepository.findByUserId(5L))
                 .thenReturn(Optional.of(new HouseholdMembership(household, invitee, HouseholdRole.MEMBER)));
 
         assertThrows(BadRequestException.class, () -> service.accept(principal, 10L));
@@ -137,6 +163,6 @@ class InvitationServiceTest {
     private AuthenticatedUserResponse profile(Long householdId, HouseholdRole role) {
         return new AuthenticatedUserResponse(
                 5L, "family@example.com", "Family Member", null,
-                householdId, "Our home", role, List.of(), List.of());
+                householdId, "Our home", role, List.of());
     }
 }

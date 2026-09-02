@@ -10,7 +10,6 @@ import com.example.homeinventory.repository.AppUserRepository;
 import com.example.homeinventory.repository.HouseholdInvitationRepository;
 import com.example.homeinventory.repository.HouseholdMembershipRepository;
 import com.example.homeinventory.repository.HouseholdRepository;
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -26,23 +25,18 @@ import static org.mockito.Mockito.when;
 
 class HouseholdServiceTest {
     @Test
-    void removingMemberFromCurrentHouseholdSwitchesThemToTheirOtherHousehold() {
+    void removingMemberFromCurrentHouseholdRemovesTheirOnlyMembership() {
         Fixture fixture = new Fixture();
         AppUser memberUser = fixture.user(2L, "member@example.com");
         memberUser.joinHousehold(fixture.shared, HouseholdRole.MEMBER);
         HouseholdMembership member = new HouseholdMembership(
                 fixture.shared, memberUser, HouseholdRole.MEMBER);
-        Household personal = fixture.household(20L, "Member's home");
-        HouseholdMembership alternative = new HouseholdMembership(
-                personal, memberUser, HouseholdRole.OWNER);
         when(fixture.memberships.findByHouseholdIdAndUserId(10L, 2L)).thenReturn(Optional.of(member));
-        when(fixture.memberships.findByUserIdOrderByHouseholdNameAsc(2L))
-                .thenReturn(List.of(member, alternative));
 
         fixture.service.removeMember(fixture.principal, 2L);
 
         verify(fixture.memberships).delete(member);
-        assertSame(personal, memberUser.getHousehold());
+        org.junit.jupiter.api.Assertions.assertNull(memberUser.getHousehold());
         verify(fixture.users).save(memberUser);
     }
 
@@ -58,24 +52,19 @@ class HouseholdServiceTest {
     }
 
     @Test
-    void nonOwnerCanLeaveCurrentHouseholdAndSwitchesToTheirOtherHousehold() {
+    void nonOwnerCanLeaveTheirCurrentHousehold() {
         Fixture fixture = new Fixture();
         AppUser memberUser = fixture.user(2L, "member@example.com");
         memberUser.joinHousehold(fixture.shared, HouseholdRole.MEMBER);
         HouseholdMembership member = new HouseholdMembership(
                 fixture.shared, memberUser, HouseholdRole.MEMBER);
-        Household personal = fixture.household(20L, "Member's home");
-        HouseholdMembership alternative = new HouseholdMembership(
-                personal, memberUser, HouseholdRole.OWNER);
         when(fixture.appUsers.getRequired(fixture.principal)).thenReturn(memberUser);
         when(fixture.memberships.findByUserIdAndHouseholdId(2L, 10L)).thenReturn(Optional.of(member));
-        when(fixture.memberships.findByUserIdOrderByHouseholdNameAsc(2L))
-                .thenReturn(List.of(member, alternative));
 
         fixture.service.leave(fixture.principal);
 
         verify(fixture.memberships).delete(member);
-        assertSame(personal, memberUser.getHousehold());
+        org.junit.jupiter.api.Assertions.assertNull(memberUser.getHousehold());
         verify(fixture.users).save(memberUser);
     }
 

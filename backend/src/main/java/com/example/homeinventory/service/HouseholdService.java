@@ -89,19 +89,10 @@ public class HouseholdService {
         }
 
         AppUser removedUser = member.getUser();
-        List<HouseholdMembership> alternatives = membershipRepository
-                .findByUserIdOrderByHouseholdNameAsc(removedUser.getId()).stream()
-                .filter(value -> !value.getHousehold().getId().equals(owner.getHousehold().getId()))
-                .toList();
         membershipRepository.delete(member);
         if (removedUser.getHousehold() != null
                 && removedUser.getHousehold().getId().equals(owner.getHousehold().getId())) {
-            if (alternatives.isEmpty()) {
-                removedUser.leaveHousehold();
-            } else {
-                HouseholdMembership replacement = alternatives.getFirst();
-                removedUser.joinHousehold(replacement.getHousehold(), replacement.getRole());
-            }
+            removedUser.leaveHousehold();
             userRepository.save(removedUser);
         }
         return toResponse(owner);
@@ -115,18 +106,8 @@ public class HouseholdService {
             throw new BadRequestException("A household owner cannot leave the household");
         }
 
-        List<HouseholdMembership> alternatives = membershipRepository
-                .findByUserIdOrderByHouseholdNameAsc(user.getId()).stream()
-                .filter(value -> !value.getHousehold().getId().equals(membership.getHousehold().getId()))
-                .toList();
         membershipRepository.delete(membership);
-
-        HouseholdMembership replacement = alternatives.isEmpty() ? null : alternatives.getFirst();
-        if (replacement == null) {
-            user.leaveHousehold();
-        } else {
-            user.joinHousehold(replacement.getHousehold(), replacement.getRole());
-        }
+        user.leaveHousehold();
         userRepository.save(user);
     }
 
@@ -137,10 +118,10 @@ public class HouseholdService {
 
     private HouseholdMembership requiredMember(AppUser user) {
         if (user.getHousehold() == null) {
-            throw new AccessDeniedException("Select a household first");
+            throw new AccessDeniedException("Join a household first");
         }
         return membershipRepository.findByUserIdAndHouseholdId(user.getId(), user.getHousehold().getId())
-                .orElseThrow(() -> new AccessDeniedException("This account cannot access the selected household"));
+                .orElseThrow(() -> new AccessDeniedException("This account cannot access the current household"));
     }
 
     private HouseholdMembership requiredOwner(OidcUser principal) {

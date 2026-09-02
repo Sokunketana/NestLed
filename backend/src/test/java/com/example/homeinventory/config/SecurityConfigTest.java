@@ -64,7 +64,6 @@ class SecurityConfigTest {
                 1L,
                 "Our home",
                 com.example.homeinventory.entity.HouseholdRole.OWNER,
-                List.of(),
                 List.of()));
 
         mockMvc.perform(get("/api/auth/me").with(oidcLogin()))
@@ -72,12 +71,6 @@ class SecurityConfigTest {
                 .andExpect(jsonPath("$.email").value("person@example.com"))
                 .andExpect(jsonPath("$.displayName").value("Person Example"))
                 .andExpect(jsonPath("$.householdName").value("Our home"));
-    }
-
-    @Test
-    void protectsHouseholdSwitchingWithCsrf() throws Exception {
-        mockMvc.perform(post("/api/auth/households/4/activate").with(oidcLogin()))
-                .andExpect(status().isForbidden());
     }
 
     @Test

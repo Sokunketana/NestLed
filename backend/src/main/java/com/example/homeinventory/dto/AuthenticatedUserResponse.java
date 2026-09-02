@@ -11,5 +11,4 @@ public record AuthenticatedUserResponse(
         Long householdId,
         String householdName,
         HouseholdRole householdRole,
-        List<HouseholdSummaryResponse> households,
         List<PendingHouseholdInvitationResponse> pendingInvitations) {}

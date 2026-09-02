@@ -4,9 +4,11 @@ import { categoryApi } from '../api/categoryApi'
 import { itemApi } from '../api/itemApi'
 import { roomApi } from '../api/roomApi'
 import { storageLocationApi } from '../api/storageLocationApi'
+import { ApiRequestError } from '../api/http'
+import DuplicateItemModal from '../components/DuplicateItemModal'
 import ItemPhoto from '../components/ItemPhoto'
 import { ErrorMessage, Loading } from '../components/PageState'
-import type { Category, ItemCondition, ItemPayload, Room, StorageLocation } from '../types'
+import type { Category, Item, ItemCondition, ItemPayload, Room, StorageLocation } from '../types'
 
 const initial: ItemPayload = { name: '', description: '', quantity: 1, categoryId: 0, roomId: 0,
   storageLocationId: 0, estimatedValue: undefined, purchaseDate: undefined,
@@ -27,6 +29,8 @@ export default function ItemFormPage() {
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
   const [removePhoto, setRemovePhoto] = useState(false)
   const [photoError, setPhotoError] = useState('')
+  const [duplicateItems, setDuplicateItems] = useState<Item[]>([])
+  const [pendingDuplicatePayload, setPendingDuplicatePayload] = useState<ItemPayload | null>(null)
   const photoInput = useRef<HTMLInputElement>(null)
   const persistedItemId = useRef<number | null>(id ? Number(id) : null)
 
@@ -82,33 +86,54 @@ export default function ItemFormPage() {
     setPhotoError(''); setPhotoFile(null); setPhotoPreviewUrl(null); setRemovePhoto(false); resetFileInput()
   }
 
-  async function submit(event: FormEvent) {
-    event.preventDefault(); setSaving(true); setError('')
-    const payload = { ...form,
-      purchaseDate: form.purchaseDate || undefined, warrantyExpirationDate: form.warrantyExpirationDate || undefined }
-
+  async function persist(payload: ItemPayload, allowDuplicate = false) {
+    const creating = persistedItemId.current == null
     let saved
-    try {
-      saved = persistedItemId.current == null
-        ? await itemApi.create(payload)
-        : await itemApi.update(persistedItemId.current, payload)
-      persistedItemId.current = saved.id
-    } catch (e) {
-      setError((e as Error).message); setSaving(false); return
-    }
+    saved = creating
+      ? await itemApi.create(payload, allowDuplicate)
+      : await itemApi.update(persistedItemId.current!, payload)
+    persistedItemId.current = saved.id
 
     try {
       if (photoFile) await itemApi.uploadPhoto(saved.id, photoFile)
       else if (removePhoto && existingPhotoUrl) await itemApi.removePhoto(saved.id)
     } catch (e) {
       const action = photoFile ? 'uploaded' : 'removed'
-      if (!editing) navigate(`/items/${saved.id}/edit`, { replace: true })
-      setError(`Item details were saved, but the photo could not be ${action}. ${(e as Error).message} Your item is safe; save again to retry without creating a duplicate.`)
-      setSaving(false)
-      return
+      if (creating) navigate(`/items/${saved.id}/edit`, { replace: true })
+      throw new Error(`Item details were saved, but the photo could not be ${action}. ${(e as Error).message} Your item is safe; save again to retry without creating a duplicate.`)
     }
 
     navigate(`/items/${saved.id}`)
+  }
+
+  async function submit(event: FormEvent) {
+    event.preventDefault(); setSaving(true); setError('')
+    const payload = { ...form,
+      purchaseDate: form.purchaseDate || undefined, warrantyExpirationDate: form.warrantyExpirationDate || undefined }
+
+    try {
+      await persist(payload)
+    } catch (cause) {
+      if (!editing && cause instanceof ApiRequestError && cause.status === 409
+          && cause.response?.duplicateItems?.length) {
+        setDuplicateItems(cause.response.duplicateItems)
+        setPendingDuplicatePayload(payload)
+      } else {
+        setError(cause instanceof Error ? cause.message : 'Unable to save this item')
+      }
+      setSaving(false)
+    }
+  }
+
+  async function createConfirmedDuplicate() {
+    if (!pendingDuplicatePayload) return
+    setSaving(true); setError('')
+    try {
+      await persist(pendingDuplicatePayload, true)
+    } catch (cause) {
+      setSaving(false)
+      throw cause
+    }
   }
 
   if (loading) return <Loading />
@@ -117,6 +142,11 @@ export default function ItemFormPage() {
   const hasDisplayedPhoto = hasSelectedPhoto || Boolean(existingPhotoUrl && !removePhoto)
 
   return <>
+    {duplicateItems.length > 0 && <DuplicateItemModal
+      items={duplicateItems}
+      onClose={() => { setDuplicateItems([]); setPendingDuplicatePayload(null) }}
+      onConfirm={createConfirmedDuplicate}
+    />}
     <Link to={editing ? `/items/${id}` : '/items'} className="text-sm font-semibold text-pine">← Cancel</Link>
     <div className="mt-5"><p className="eyebrow">{editing ? 'Update record' : 'New record'}</p><h1 className="mt-2 text-4xl">{editing ? 'Edit item' : 'Add an item'}</h1><p className="mt-2 text-stone-500">Record what it is, what it is worth, and exactly where it lives.</p></div>
     {!rooms.length || !locations.length || !categories.length ? <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Create at least one <Link className="underline" to="/rooms">room and storage location</Link> and <Link className="underline" to="/categories">category</Link> before adding an item.</div> : null}

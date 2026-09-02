@@ -10,6 +10,7 @@ import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.Room;
 import com.example.homeinventory.entity.StorageLocation;
 import com.example.homeinventory.exception.BadRequestException;
+import com.example.homeinventory.exception.DuplicateItemException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.ItemRepository;
 import java.util.LinkedHashSet;
@@ -86,7 +87,17 @@ public class ItemService {
     }
 
     @Transactional
-    public ItemResponse create(CreateItemRequest request) {
+    public ItemResponse create(CreateItemRequest request, boolean allowDuplicate) {
+        if (!allowDuplicate) {
+            List<ItemResponse> duplicates = itemRepository
+                    .findByHouseholdIdAndNameIgnoreCaseAndCategoryIdAndRoomIdAndStorageLocationIdOrderByCreatedAtDesc(
+                            activeHousehold().getId(), request.name().trim(), request.categoryId(), request.roomId(),
+                            request.storageLocationId())
+                    .stream().map(this::toResponse).toList();
+            if (!duplicates.isEmpty()) {
+                throw new DuplicateItemException(duplicates);
+            }
+        }
         Item item = new Item();
         copy(item, request.name(), request.description(), request.quantity(), request.categoryId(),
                 request.roomId(), request.storageLocationId(), request.estimatedValue(), request.purchaseDate(),

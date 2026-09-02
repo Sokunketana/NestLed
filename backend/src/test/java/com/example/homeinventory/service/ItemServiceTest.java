@@ -9,6 +9,7 @@ import com.example.homeinventory.entity.ItemCondition;
 import com.example.homeinventory.entity.Room;
 import com.example.homeinventory.entity.StorageLocation;
 import com.example.homeinventory.exception.BadRequestException;
+import com.example.homeinventory.exception.DuplicateItemException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.ItemRepository;
 import java.math.BigDecimal;
@@ -27,6 +28,52 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class ItemServiceTest {
+    @Test
+    void createWarnsWhenAnItemWithTheSameNameAndPlacementExists() {
+        ItemRepository items = mock(ItemRepository.class);
+        ItemService service = service(items, mock(RoomService.class), mock(CategoryService.class),
+                mock(StorageLocationService.class), mock(PhotoStorageService.class), household());
+        Item duplicate = duplicateItem("Passport");
+        when(items.findByHouseholdIdAndNameIgnoreCaseAndCategoryIdAndRoomIdAndStorageLocationIdOrderByCreatedAtDesc(
+                99L, "Passport", 1L, 1L, 10L)).thenReturn(List.of(duplicate));
+        CreateItemRequest request = new CreateItemRequest(" Passport ", null, 1, 1L, 1L,
+                10L, null, null, null, ItemCondition.GOOD, null);
+
+        DuplicateItemException error = assertThrows(DuplicateItemException.class,
+                () -> service.create(request, false));
+
+        assertEquals(1, error.getDuplicateItems().size());
+        assertEquals("Passport", error.getDuplicateItems().getFirst().name());
+        verify(items, never()).save(any());
+    }
+
+    @Test
+    void createAllowsAnExplicitlyConfirmedDuplicate() {
+        ItemRepository items = mock(ItemRepository.class);
+        RoomService rooms = mock(RoomService.class);
+        CategoryService categories = mock(CategoryService.class);
+        StorageLocationService locations = mock(StorageLocationService.class);
+        ItemService service = service(items, rooms, categories, locations,
+                mock(PhotoStorageService.class), household());
+        Room room = mock(Room.class);
+        Category category = mock(Category.class);
+        StorageLocation location = mock(StorageLocation.class);
+        when(rooms.getEntity(1L)).thenReturn(room);
+        when(categories.getEntity(1L)).thenReturn(category);
+        when(locations.getEntity(10L)).thenReturn(location);
+        when(location.getRoom()).thenReturn(room);
+        when(room.getId()).thenReturn(1L);
+        when(items.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.create(new CreateItemRequest("Passport", null, 1, 1L, 1L,
+                10L, null, null, null, ItemCondition.GOOD, null), true);
+
+        verify(items, never())
+                .findByHouseholdIdAndNameIgnoreCaseAndCategoryIdAndRoomIdAndStorageLocationIdOrderByCreatedAtDesc(
+                        any(), any(), any(), any(), any());
+        verify(items).save(any(Item.class));
+    }
+
     @Test
     void createPreservesMissingEstimatedValueAndAssignsTheActiveHousehold() {
         ItemRepository items = mock(ItemRepository.class);
@@ -48,7 +95,7 @@ class ItemServiceTest {
         when(items.save(any(Item.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         var response = service.create(new CreateItemRequest("Passport", null, 1, 1L, 1L,
-                10L, null, null, null, ItemCondition.GOOD, null));
+                10L, null, null, null, ItemCondition.GOOD, null), false);
 
         assertNull(response.estimatedValue());
         assertNull(response.photoUrl());
@@ -77,7 +124,7 @@ class ItemServiceTest {
         CreateItemRequest request = new CreateItemRequest("Passport", null, 1, 1L, 1L, 10L,
                 BigDecimal.ZERO, null, null, ItemCondition.GOOD, null);
 
-        assertThrows(BadRequestException.class, () -> service.create(request));
+        assertThrows(BadRequestException.class, () -> service.create(request, false));
         verify(items, never()).save(any());
     }
 
@@ -205,5 +252,26 @@ class ItemServiceTest {
         Household household = mock(Household.class);
         when(household.getId()).thenReturn(99L);
         return household;
+    }
+
+    private Item duplicateItem(String name) {
+        Item item = mock(Item.class);
+        Category category = mock(Category.class);
+        Room room = mock(Room.class);
+        StorageLocation location = mock(StorageLocation.class);
+        when(item.getId()).thenReturn(7L);
+        when(item.getName()).thenReturn(name);
+        when(item.getQuantity()).thenReturn(1);
+        when(item.getCondition()).thenReturn(ItemCondition.GOOD);
+        when(item.getCategory()).thenReturn(category);
+        when(item.getRoom()).thenReturn(room);
+        when(item.getStorageLocation()).thenReturn(location);
+        when(category.getId()).thenReturn(1L);
+        when(category.getName()).thenReturn("Documents");
+        when(room.getId()).thenReturn(1L);
+        when(room.getName()).thenReturn("Office");
+        when(location.getId()).thenReturn(10L);
+        when(location.getName()).thenReturn("Safe");
+        return item;
     }
 }

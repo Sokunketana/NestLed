@@ -13,7 +13,7 @@ let csrfDetails: CsrfDetails | null = null
 let csrfRequest: Promise<CsrfDetails> | null = null
 
 export class ApiRequestError extends Error {
-  constructor(message: string, readonly status: number) {
+  constructor(message: string, readonly status: number, readonly response?: ApiError) {
     super(message)
     this.name = 'ApiRequestError'
   }
@@ -83,7 +83,7 @@ export async function request<T>(path: string, options?: RequestInit): Promise<T
   if (!response.ok) {
     const error = (await response.json().catch(() => ({ message: 'Request failed' }))) as ApiError
     const validation = error.fieldErrors ? Object.values(error.fieldErrors).join(', ') : ''
-    throw new ApiRequestError(validation || error.message || 'Request failed', response.status)
+    throw new ApiRequestError(validation || error.message || 'Request failed', response.status, error)
   }
   if (response.status === 204) return undefined as T
   return response.json() as Promise<T>

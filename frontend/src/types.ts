@@ -44,4 +44,8 @@ export interface Dashboard {
   totalItems: number; totalRooms: number; totalCategories: number
   totalEstimatedValue: number; rooms: Room[]
 }
-export interface ApiError { message: string; fieldErrors?: Record<string, string> }
+export interface ApiError {
+  message: string
+  fieldErrors?: Record<string, string>
+  duplicateItems?: Item[]
+}

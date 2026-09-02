@@ -1,6 +1,7 @@
 package com.example.homeinventory.exception;
 
 import com.example.homeinventory.dto.ApiErrorResponse;
+import com.example.homeinventory.dto.DuplicateItemWarningResponse;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -30,6 +31,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     ResponseEntity<ApiErrorResponse> handleBadRequest(BadRequestException ex) {
         return error(HttpStatus.BAD_REQUEST, ex.getMessage(), Map.of());
+    }
+
+    @ExceptionHandler(DuplicateItemException.class)
+    ResponseEntity<DuplicateItemWarningResponse> handleDuplicateItem(DuplicateItemException ex) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        return ResponseEntity.status(status).body(new DuplicateItemWarningResponse(
+                Instant.now(), status.value(), status.getReasonPhrase(), ex.getMessage(), ex.getDuplicateItems()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

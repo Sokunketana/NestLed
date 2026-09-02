@@ -4,6 +4,7 @@ import { itemApi } from '../api/itemApi'
 import ConfirmationModal from '../components/ConfirmationModal'
 import ItemPhoto from '../components/ItemPhoto'
 import { ErrorMessage, Loading } from '../components/PageState'
+import Icon from '../components/Icon'
 import type { Item } from '../types'
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
@@ -28,19 +29,19 @@ export default function ItemDetailsPage() {
     ['Purchase date', item.purchaseDate || 'Not recorded'], ['Warranty expires', item.warrantyExpirationDate || 'Not recorded'],
   ]
   return <>
-    <Link to="/items" className="text-sm font-semibold text-pine">← Back to items</Link>
+    <Link to="/items" className="inline-flex items-center gap-2 text-sm font-bold text-pine"><Icon name="arrow-left" className="h-4 w-4" />Back to items</Link>
     <div className="mt-5 flex flex-wrap items-start justify-between gap-4"><div><p className="eyebrow">Item details</p><h1 className="mt-2 text-4xl">{item.name}</h1><p className="mt-3 text-stone-500">Home → {item.roomName} → {item.storageLocationName}</p></div>
-      <div className="flex gap-2"><Link className="btn-secondary" to={`/items/${item.id}/edit`}>Edit</Link><button className="btn-danger" onClick={() => setShowDeleteConfirmation(true)}>Delete</button></div>
+      <div className="flex gap-2"><Link className="btn-secondary" to={`/items/${item.id}/edit`}><Icon name="edit" className="h-4 w-4" />Edit</Link><button className="btn-danger" onClick={() => setShowDeleteConfirmation(true)}><Icon name="trash" className="h-4 w-4" />Delete</button></div>
     </div>
     <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
       <div className="space-y-6">
-        <section className="overflow-hidden rounded-2xl border bg-white shadow-soft" aria-label="Item photo">
+        <section className="overflow-hidden rounded-[1.35rem] border border-line bg-surface shadow-card" aria-label="Item photo">
           <ItemPhoto photoUrl={item.photoUrl} cacheKey={item.updatedAt} alt={`Photo of ${item.name}`} fallbackLabel={`No photo available for ${item.name}`} className="aspect-[16/10] w-full" loading="eager" expandable />
         </section>
-        <section className="card"><h2 className="text-xl">About this item</h2><p className="mt-4 whitespace-pre-line leading-relaxed text-stone-600">{item.description || 'No description has been added.'}</p></section>
-        {item.notes && <section className="card"><h2 className="text-xl">Notes</h2><p className="mt-4 whitespace-pre-line text-stone-600">{item.notes}</p></section>}
+        <section className="card"><div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-sage text-pine"><Icon name="box" className="h-4 w-4" /></span><h2 className="text-xl">About this item</h2></div><p className="mt-4 whitespace-pre-line leading-relaxed text-stone-600">{item.description || 'No description has been added.'}</p></section>
+        {item.notes && <section className="card"><div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-gold/15 text-amber-700"><Icon name="tag" className="h-4 w-4" /></span><h2 className="text-xl">Notes</h2></div><p className="mt-4 whitespace-pre-line text-stone-600">{item.notes}</p></section>}
       </div>
-      <section className="card"><h2 className="text-xl">Inventory record</h2><dl className="mt-4 divide-y">{fields.map(([label,value]) => <div className="flex justify-between gap-4 py-3 text-sm" key={label}><dt className="text-stone-500">{label}</dt><dd className="text-right font-semibold">{value}</dd></div>)}</dl>
+      <section className="card"><div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-coral/10 text-coral"><Icon name="sliders" className="h-4 w-4" /></span><h2 className="text-xl">Inventory record</h2></div><dl className="mt-4 divide-y">{fields.map(([label,value]) => <div className="flex justify-between gap-4 py-3 text-sm" key={label}><dt className="text-stone-500">{label}</dt><dd className="text-right font-semibold">{value}</dd></div>)}</dl>
         <p className="mt-5 text-xs text-stone-400">Added {new Date(item.createdAt).toLocaleDateString()} · Updated {new Date(item.updatedAt).toLocaleDateString()}</p>
       </section>
     </div>

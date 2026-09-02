@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { resolvePhotoUrl } from '../api/http'
 import ImageLightbox from './ImageLightbox'
+import Icon from './Icon'
 
 interface ItemPhotoProps {
   photoUrl?: string | null
@@ -36,8 +37,8 @@ export default function ItemPhoto({
   useEffect(() => setFailed(false), [src])
 
   if (!src || failed) {
-    return <div className={`grid place-items-center bg-sage text-2xl text-pine ${className}`} role="img" aria-label={fallbackLabel}>
-      <span aria-hidden="true">◇</span>
+    return <div className={`grid place-items-center bg-sage/70 text-pine ${className}`} role="img" aria-label={fallbackLabel}>
+      <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white/60" aria-hidden="true"><Icon name="box" className="h-5 w-5" /></span>
     </div>
   }
 

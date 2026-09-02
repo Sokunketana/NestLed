@@ -4,18 +4,41 @@
 @tailwind utilities;
 
 @layer base {
-  * { @apply border-stone-200; }
+  * { border-color: #e5dfd4; }
+  html { background: #f5f2eb; }
   body { @apply m-0 bg-cream text-ink antialiased; font-family: 'DM Sans', sans-serif; }
-  h1, h2, h3 { font-family: 'Fraunces', serif; }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .35; background-image: radial-gradient(rgba(20, 82, 71, .07) .7px, transparent .7px); background-size: 18px 18px; mask-image: linear-gradient(to bottom, black, transparent 75%); }
+  h1, h2, h3 { font-family: 'Fraunces', serif; letter-spacing: -0.025em; }
+  ::selection { background: #dcebe3; color: #123f38; }
+  :focus-visible { outline: 2px solid #145247; outline-offset: 2px; }
   button, input, select, textarea { font: inherit; }
 }
 @layer components {
-  .card { @apply rounded-2xl border bg-white p-5 shadow-soft; }
-  .btn { @apply inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50; }
-  .btn-primary { @apply btn bg-pine text-white hover:bg-emerald-900; }
-  .btn-secondary { @apply btn border bg-white text-ink hover:bg-stone-50; }
+  .card { @apply rounded-[1.35rem] p-5; background: #fffdf9; border: 1px solid #e5dfd4; box-shadow: 0 2px 0 rgba(31, 49, 43, 0.03), 0 12px 28px rgba(31, 49, 43, 0.055); }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn text-white shadow-sm hover:shadow-md; background: #145247; }
+  .btn-primary:hover { background: #123f38; }
+  .btn-secondary { @apply btn text-ink hover:border-stone-300 hover:bg-white; background: #fffdf9; border: 1px solid #e5dfd4; }
   .btn-danger { @apply btn bg-red-50 text-red-700 hover:bg-red-100; }
-  .field { @apply w-full rounded-xl border bg-white px-3 py-2.5 outline-none transition focus:border-pine focus:ring-2 focus:ring-pine/10; }
+  .field { @apply w-full rounded-xl bg-white px-3.5 py-2.5 outline-none transition placeholder:text-stone-400; border: 1px solid #e5dfd4; }
+  .field:focus { border-color: #145247; box-shadow: 0 0 0 3px rgba(20, 82, 71, 0.1); }
   .label { @apply mb-1.5 block text-sm font-semibold text-stone-700; }
-  .eyebrow { @apply text-xs font-bold uppercase tracking-[0.18em] text-pine; }
+  .eyebrow { @apply text-[0.68rem] font-bold uppercase tracking-[0.2em]; color: #145247; }
+}
+
+@layer utilities {
+  /* Keep the design tokens available to the dev server even when Tailwind's
+     config cache has not been refreshed yet. */
+  .bg-deep { background-color: #123f38; }
+  .text-deep { color: #123f38; }
+  .text-ink-soft { color: #6d7974; }
+  .bg-surface { background-color: #fffdf9; }
+  .bg-mint { background-color: #edf6f1; }
+  .border-line { border-color: #e5dfd4; }
+  .border-line\/70 { border-color: rgb(229 223 212 / .7); }
+  .border-line\/80 { border-color: rgb(229 223 212 / .8); }
+  .bg-gold\/10 { background-color: rgb(216 165 43 / .1); }
+  .bg-gold\/15 { background-color: rgb(216 165 43 / .15); }
+  .text-deep\/60 { color: rgb(18 63 56 / .6); }
+  .shadow-card { box-shadow: 0 2px 0 rgba(31, 49, 43, .03), 0 12px 28px rgba(31, 49, 43, .055); }
 }

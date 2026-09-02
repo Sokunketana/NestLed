@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 @RestController
 @RequestMapping("/api/household")
@@ -50,5 +52,11 @@ public class HouseholdController {
     @DeleteMapping("/members/{id}")
     public HouseholdResponse removeMember(@AuthenticationPrincipal OidcUser user, @PathVariable Long id) {
         return service.removeMember(user, id);
+    }
+
+    @DeleteMapping("/leave")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leave(@AuthenticationPrincipal OidcUser user) {
+        service.leave(user);
     }
 }

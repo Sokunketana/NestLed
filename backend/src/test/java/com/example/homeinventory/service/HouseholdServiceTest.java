@@ -4,6 +4,7 @@ import com.example.homeinventory.entity.AppUser;
 import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.HouseholdMembership;
 import com.example.homeinventory.entity.HouseholdRole;
+import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.AppUserRepository;
 import com.example.homeinventory.repository.HouseholdInvitationRepository;
@@ -52,6 +53,37 @@ class HouseholdServiceTest {
 
         assertThrows(ResourceNotFoundException.class,
                 () -> fixture.service.removeMember(fixture.principal, 77L));
+
+        verify(fixture.memberships, never()).delete(any());
+    }
+
+    @Test
+    void nonOwnerCanLeaveCurrentHouseholdAndSwitchesToTheirOtherHousehold() {
+        Fixture fixture = new Fixture();
+        AppUser memberUser = fixture.user(2L, "member@example.com");
+        memberUser.joinHousehold(fixture.shared, HouseholdRole.MEMBER);
+        HouseholdMembership member = new HouseholdMembership(
+                fixture.shared, memberUser, HouseholdRole.MEMBER);
+        Household personal = fixture.household(20L, "Member's home");
+        HouseholdMembership alternative = new HouseholdMembership(
+                personal, memberUser, HouseholdRole.OWNER);
+        when(fixture.appUsers.getRequired(fixture.principal)).thenReturn(memberUser);
+        when(fixture.memberships.findByUserIdAndHouseholdId(2L, 10L)).thenReturn(Optional.of(member));
+        when(fixture.memberships.findByUserIdOrderByHouseholdNameAsc(2L))
+                .thenReturn(List.of(member, alternative));
+
+        fixture.service.leave(fixture.principal);
+
+        verify(fixture.memberships).delete(member);
+        assertSame(personal, memberUser.getHousehold());
+        verify(fixture.users).save(memberUser);
+    }
+
+    @Test
+    void ownerCannotLeaveTheirHousehold() {
+        Fixture fixture = new Fixture();
+
+        assertThrows(BadRequestException.class, () -> fixture.service.leave(fixture.principal));
 
         verify(fixture.memberships, never()).delete(any());
     }

@@ -38,4 +38,7 @@ export const householdApi = {
   removeMember: (id: number) => request<Household>(`/household/members/${id}`, {
     method: 'DELETE',
   }),
+  leave: () => request<void>('/household/leave', {
+    method: 'DELETE',
+  }),
 }

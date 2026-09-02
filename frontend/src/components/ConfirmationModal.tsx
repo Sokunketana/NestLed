@@ -6,7 +6,7 @@ type ConfirmationModalProps = {
   confirmLabel?: string
   confirmingLabel?: string
   errorMessage?: string
-  intent?: 'delete' | 'logout'
+  intent?: 'delete' | 'logout' | 'leave'
   onClose: () => void
   onConfirm: () => Promise<void> | void
 }
@@ -68,7 +68,7 @@ export default function ConfirmationModal({
     >
       <div className="p-6 sm:p-7">
         <div className="grid h-12 w-12 place-items-center rounded-full bg-red-50 text-red-700" aria-hidden="true">
-          {intent === 'logout'
+          {intent === 'logout' || intent === 'leave'
             ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M18 9l3 3m0 0-3 3m3-3H9" />
               </svg>

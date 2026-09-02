@@ -8,16 +8,14 @@ import RoomsPage from './pages/RoomsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import LoginPage from './pages/LoginPage'
 import HouseholdPage from './pages/HouseholdPage'
-import InvitationPage from './pages/InvitationPage'
 import { useAuth } from './auth/AuthContext'
 
 export default function App() {
-  const { status, user } = useAuth()
+  const { status } = useAuth()
   if (status === 'loading') {
     return <main className="grid min-h-screen place-items-center text-stone-600">Checking your session…</main>
   }
   if (status === 'anonymous') return <LoginPage />
-  if (user && user.pendingInvitations.length > 0) return <InvitationPage />
 
   return <Routes>
     <Route element={<Layout />}>

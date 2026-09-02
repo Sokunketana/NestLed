@@ -7,11 +7,12 @@ import { ErrorMessage, Loading } from '../components/PageState'
 import { useAuth } from '../auth/AuthContext'
 
 export default function HouseholdPage() {
-  const { user } = useAuth()
+  const { user, updateHouseholdName } = useAuth()
   const [household, setHousehold] = useState<Household | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<HouseholdMember | null>(null)
   const [respondingInvitationId, setRespondingInvitationId] = useState<number | null>(null)
@@ -35,9 +36,22 @@ export default function HouseholdPage() {
     }
   }
 
-  function rename(event: FormEvent) {
+  async function rename(event: FormEvent) {
     event.preventDefault()
-    void run(() => householdApi.rename(name))
+    setBusy(true)
+    setError(null)
+    setSaved(false)
+    try {
+      const updated = await householdApi.rename(name)
+      setHousehold(updated)
+      setName(updated.name)
+      updateHouseholdName(updated.id, updated.name)
+      setSaved(true)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'The household could not be updated')
+    } finally {
+      setBusy(false)
+    }
   }
 
   function invite(event: FormEvent) {
@@ -93,11 +107,14 @@ export default function HouseholdPage() {
 
     <section className="card">
       <h2 className="text-xl">Household details</h2>
-      {isOwner ? <form onSubmit={rename} className="mt-4 flex max-w-xl gap-3">
-        <input className="field" aria-label="Household name" maxLength={100} required value={name}
-          onChange={event => setName(event.target.value)} />
-        <button className="btn-primary" disabled={busy || !name.trim()}>Save</button>
-      </form> : <p className="mt-3 text-stone-600">{household.name}</p>}
+      {isOwner ? <>
+        <form onSubmit={rename} className="mt-4 flex max-w-xl gap-3">
+          <input className="field" aria-label="Household name" maxLength={100} required value={name}
+            onChange={event => { setName(event.target.value); setSaved(false) }} />
+          <button className="btn-primary" disabled={busy || !name.trim()}>{busy ? 'Saving…' : 'Save'}</button>
+        </form>
+        {saved && <p role="status" className="mt-2 text-sm text-emerald-700">Household name saved.</p>}
+      </> : <p className="mt-3 text-stone-600">{household.name}</p>}
     </section>
 
     {user && user.pendingInvitations.length > 0 && <section className="card">

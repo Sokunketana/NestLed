@@ -12,6 +12,7 @@ type AuthContextValue = {
   login: () => void
   logout: () => Promise<void>
   activateHousehold: (id: number) => Promise<void>
+  updateHouseholdName: (id: number, name: string) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -54,6 +55,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setError(activationError.message)
         throw activationError
       }
+    },
+    updateHouseholdName: (id: number, name: string) => {
+      setUser(currentUser => currentUser ? {
+        ...currentUser,
+        householdName: currentUser.householdId === id ? name : currentUser.householdName,
+        households: currentUser.households.map(household =>
+          household.id === id ? { ...household, name } : household),
+      } : null)
     },
     logout: async () => {
       setError(null)

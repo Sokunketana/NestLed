@@ -26,6 +26,20 @@ export interface BulkMoveItemsResponse {
   storageLocationId: number
   storageLocationName: string
 }
+export interface ItemMovement {
+  id: number
+  itemId: number
+  itemName: string
+  fromRoomId: number
+  fromRoomName: string
+  fromLocationId: number
+  fromLocationName: string
+  toRoomId: number
+  toRoomName: string
+  toLocationId: number
+  toLocationName: string
+  movedAt: string
+}
 export interface Dashboard {
   totalItems: number; totalRooms: number; totalCategories: number
   totalEstimatedValue: number; rooms: Room[]

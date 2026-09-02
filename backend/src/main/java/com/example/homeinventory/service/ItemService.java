@@ -35,16 +35,18 @@ public class ItemService {
     private final StorageLocationService storageLocationService;
     private final PhotoStorageService photoStorageService;
     private final HouseholdAccessService householdAccessService;
+    private final ItemMovementService itemMovementService;
 
     public ItemService(ItemRepository itemRepository, RoomService roomService, CategoryService categoryService,
                        StorageLocationService storageLocationService, PhotoStorageService photoStorageService,
-                       HouseholdAccessService householdAccessService) {
+                       HouseholdAccessService householdAccessService, ItemMovementService itemMovementService) {
         this.itemRepository = itemRepository;
         this.roomService = roomService;
         this.categoryService = categoryService;
         this.storageLocationService = storageLocationService;
         this.photoStorageService = photoStorageService;
         this.householdAccessService = householdAccessService;
+        this.itemMovementService = itemMovementService;
     }
 
     public List<ItemResponse> findAll(Long roomId, Long categoryId, Long storageLocationId) {
@@ -95,10 +97,14 @@ public class ItemService {
     @Transactional
     public ItemResponse update(Long id, UpdateItemRequest request) {
         Item item = getEntity(id);
+        Room previousRoom = item.getRoom();
+        StorageLocation previousLocation = item.getStorageLocation();
         copy(item, request.name(), request.description(), request.quantity(), request.categoryId(),
                 request.roomId(), request.storageLocationId(), request.estimatedValue(), request.purchaseDate(),
                 request.warrantyExpirationDate(), request.condition(), request.notes());
-        return toResponse(itemRepository.save(item));
+        Item savedItem = itemRepository.save(item);
+        itemMovementService.recordMove(savedItem, previousRoom, previousLocation);
+        return toResponse(savedItem);
     }
 
     @Transactional
@@ -116,8 +122,11 @@ public class ItemService {
         }
 
         items.forEach(item -> {
+            Room previousRoom = item.getRoom();
+            StorageLocation previousLocation = item.getStorageLocation();
             item.setRoom(destinationRoom);
             item.setStorageLocation(destinationLocation);
+            itemMovementService.recordMove(item, previousRoom, previousLocation);
         });
         itemRepository.saveAll(items);
 

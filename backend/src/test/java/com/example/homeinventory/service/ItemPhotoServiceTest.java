@@ -3,6 +3,7 @@ package com.example.homeinventory.service;
 import com.example.homeinventory.entity.Category;
 import com.example.homeinventory.entity.Item;
 import com.example.homeinventory.entity.ItemCondition;
+import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.Room;
 import com.example.homeinventory.entity.StorageLocation;
 import com.example.homeinventory.repository.ItemRepository;
@@ -28,8 +29,12 @@ class ItemPhotoServiceTest {
     void setUp() {
         items = mock(ItemRepository.class);
         photos = mock(PhotoStorageService.class);
+        Household household = mock(Household.class);
+        when(household.getId()).thenReturn(99L);
+        HouseholdAccessService access = mock(HouseholdAccessService.class);
+        when(access.getActiveHousehold()).thenReturn(household);
         service = new ItemService(items, mock(RoomService.class), mock(CategoryService.class),
-                mock(StorageLocationService.class), photos);
+                mock(StorageLocationService.class), photos, access);
     }
 
     @AfterEach
@@ -44,7 +49,7 @@ class ItemPhotoServiceTest {
         Item item = itemWithPhoto("11111111-1111-4111-8111-111111111111.jpg", "image/jpeg");
         MultipartFile upload = mock(MultipartFile.class);
         String newFilename = "22222222-2222-4222-8222-222222222222.png";
-        when(items.findById(42L)).thenReturn(java.util.Optional.of(item));
+        when(items.findByIdAndHouseholdId(42L, 99L)).thenReturn(java.util.Optional.of(item));
         when(photos.store(upload)).thenReturn(new PhotoStorageService.StoredPhoto(newFilename, "image/png"));
         when(items.saveAndFlush(item)).thenReturn(item);
 
@@ -54,7 +59,7 @@ class ItemPhotoServiceTest {
         assertEquals(newFilename, item.getPhotoFilename());
         assertEquals("image/png", item.getPhotoContentType());
         InOrder order = inOrder(items, photos);
-        order.verify(items).findById(42L);
+        order.verify(items).findByIdAndHouseholdId(42L, 99L);
         order.verify(photos).store(upload);
         order.verify(items).saveAndFlush(item);
         order.verify(photos).delete("11111111-1111-4111-8111-111111111111.jpg");
@@ -66,7 +71,7 @@ class ItemPhotoServiceTest {
         String newFilename = "22222222-2222-4222-8222-222222222222.png";
         Item item = itemWithPhoto(oldFilename, "image/jpeg");
         MultipartFile upload = mock(MultipartFile.class);
-        when(items.findById(42L)).thenReturn(java.util.Optional.of(item));
+        when(items.findByIdAndHouseholdId(42L, 99L)).thenReturn(java.util.Optional.of(item));
         when(photos.store(upload)).thenReturn(new PhotoStorageService.StoredPhoto(newFilename, "image/png"));
         when(items.saveAndFlush(item)).thenThrow(new RuntimeException("database unavailable"));
 
@@ -82,7 +87,7 @@ class ItemPhotoServiceTest {
         String newFilename = "22222222-2222-4222-8222-222222222222.png";
         Item item = itemWithPhoto(oldFilename, "image/jpeg");
         MultipartFile upload = mock(MultipartFile.class);
-        when(items.findById(42L)).thenReturn(java.util.Optional.of(item));
+        when(items.findByIdAndHouseholdId(42L, 99L)).thenReturn(java.util.Optional.of(item));
         when(photos.store(upload)).thenReturn(new PhotoStorageService.StoredPhoto(newFilename, "image/png"));
         when(items.saveAndFlush(item)).thenReturn(item);
         TransactionSynchronizationManager.initSynchronization();
@@ -104,7 +109,7 @@ class ItemPhotoServiceTest {
         String newFilename = "22222222-2222-4222-8222-222222222222.png";
         Item item = itemWithPhoto(oldFilename, "image/jpeg");
         MultipartFile upload = mock(MultipartFile.class);
-        when(items.findById(42L)).thenReturn(java.util.Optional.of(item));
+        when(items.findByIdAndHouseholdId(42L, 99L)).thenReturn(java.util.Optional.of(item));
         when(photos.store(upload)).thenReturn(new PhotoStorageService.StoredPhoto(newFilename, "image/png"));
         when(items.saveAndFlush(item)).thenReturn(item);
         TransactionSynchronizationManager.initSynchronization();
@@ -123,7 +128,7 @@ class ItemPhotoServiceTest {
     void deletesStoredPhotoAfterItemDeletionIsFlushed() {
         String filename = "11111111-1111-4111-8111-111111111111.jpg";
         Item item = itemWithPhoto(filename, "image/jpeg");
-        when(items.findById(42L)).thenReturn(java.util.Optional.of(item));
+        when(items.findByIdAndHouseholdId(42L, 99L)).thenReturn(java.util.Optional.of(item));
 
         service.delete(42L);
 

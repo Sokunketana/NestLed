@@ -21,6 +21,11 @@ public class StorageLocation {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
+    // Nullable in the entity only so existing installations can be backfilled by schema.sql.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "household_id")
+    private Household household;
+
     @OneToMany(mappedBy = "storageLocation")
     private List<Item> items = new ArrayList<>();
 
@@ -33,5 +38,7 @@ public class StorageLocation {
     public void setDescription(String description) { this.description = description; }
     public Room getRoom() { return room; }
     public void setRoom(Room room) { this.room = room; }
+    public Household getHousehold() { return household; }
+    public void setHousehold(Household household) { this.household = household; }
     public List<Item> getItems() { return items; }
 }

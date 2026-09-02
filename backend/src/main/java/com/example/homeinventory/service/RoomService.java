@@ -3,6 +3,7 @@ package com.example.homeinventory.service;
 import com.example.homeinventory.dto.RoomRequest;
 import com.example.homeinventory.dto.RoomResponse;
 import com.example.homeinventory.entity.Room;
+import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.ItemRepository;
@@ -16,14 +17,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class RoomService {
     private final RoomRepository roomRepository;
     private final ItemRepository itemRepository;
+    private final HouseholdAccessService householdAccessService;
 
-    public RoomService(RoomRepository roomRepository, ItemRepository itemRepository) {
+    public RoomService(RoomRepository roomRepository, ItemRepository itemRepository,
+                       HouseholdAccessService householdAccessService) {
         this.roomRepository = roomRepository;
         this.itemRepository = itemRepository;
+        this.householdAccessService = householdAccessService;
     }
 
     public List<RoomResponse> findAll() {
-        return roomRepository.findAll().stream().map(this::toResponse).toList();
+        return roomRepository.findByHouseholdIdOrderByNameAsc(activeHousehold().getId())
+                .stream().map(this::toResponse).toList();
     }
 
     public RoomResponse findById(Long id) { return toResponse(getEntity(id)); }
@@ -32,6 +37,7 @@ public class RoomService {
     public RoomResponse create(RoomRequest request) {
         ensureUniqueName(request.name(), null);
         Room room = new Room();
+        room.setHousehold(activeHousehold());
         copy(request, room);
         return toResponse(roomRepository.save(room));
     }
@@ -48,13 +54,13 @@ public class RoomService {
     public void delete(Long id) { roomRepository.delete(getEntity(id)); }
 
     public Room getEntity(Long id) {
-        return roomRepository.findById(id)
+        return roomRepository.findByIdAndHouseholdId(id, activeHousehold().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Room with id " + id + " was not found"));
     }
 
     public RoomResponse toResponse(Room room) {
         return new RoomResponse(room.getId(), room.getName(), room.getDescription(),
-                itemRepository.countByRoomId(room.getId()));
+                itemRepository.countByHouseholdIdAndRoomId(room.getHousehold().getId(), room.getId()));
     }
 
     private void copy(RoomRequest request, Room room) {
@@ -64,8 +70,13 @@ public class RoomService {
 
     private void ensureUniqueName(String name, String currentName) {
         if ((currentName == null || !currentName.equalsIgnoreCase(name.trim()))
-                && roomRepository.existsByNameIgnoreCase(name.trim())) {
+                && roomRepository.existsByHouseholdIdAndNameIgnoreCase(
+                        activeHousehold().getId(), name.trim())) {
             throw new BadRequestException("A room named '" + name.trim() + "' already exists");
         }
+    }
+
+    private Household activeHousehold() {
+        return householdAccessService.getActiveHousehold();
     }
 }

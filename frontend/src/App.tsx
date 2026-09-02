@@ -17,7 +17,7 @@ export default function App() {
     return <main className="grid min-h-screen place-items-center text-stone-600">Checking your session…</main>
   }
   if (status === 'anonymous') return <LoginPage />
-  if (!user?.householdId || !user.householdRole) return <InvitationPage />
+  if (user && user.pendingInvitations.length > 0) return <InvitationPage />
 
   return <Routes>
     <Route element={<Layout />}>

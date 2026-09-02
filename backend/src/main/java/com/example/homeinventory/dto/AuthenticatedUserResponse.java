@@ -1,6 +1,7 @@
 package com.example.homeinventory.dto;
 
 import com.example.homeinventory.entity.HouseholdRole;
+import java.util.List;
 
 public record AuthenticatedUserResponse(
         Long id,
@@ -10,4 +11,5 @@ public record AuthenticatedUserResponse(
         Long householdId,
         String householdName,
         HouseholdRole householdRole,
-        PendingHouseholdInvitationResponse pendingInvitation) {}
+        List<HouseholdSummaryResponse> households,
+        List<PendingHouseholdInvitationResponse> pendingInvitations) {}

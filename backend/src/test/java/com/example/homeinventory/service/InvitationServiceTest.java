@@ -4,20 +4,24 @@ import com.example.homeinventory.dto.AuthenticatedUserResponse;
 import com.example.homeinventory.entity.AppUser;
 import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.HouseholdInvitation;
+import com.example.homeinventory.entity.HouseholdMembership;
 import com.example.homeinventory.entity.HouseholdRole;
 import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.AppUserRepository;
 import com.example.homeinventory.repository.HouseholdInvitationRepository;
+import com.example.homeinventory.repository.HouseholdMembershipRepository;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
@@ -26,24 +30,22 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class InvitationServiceTest {
-    @Mock
-    private AppUserService appUserService;
-    @Mock
-    private AppUserRepository userRepository;
-    @Mock
-    private HouseholdInvitationRepository invitationRepository;
-    @Mock
-    private OidcUser principal;
+    @Mock private AppUserService appUserService;
+    @Mock private AppUserRepository userRepository;
+    @Mock private HouseholdMembershipRepository membershipRepository;
+    @Mock private HouseholdInvitationRepository invitationRepository;
+    @Mock private OidcUser principal;
 
     @Test
-    void acceptsInvitationMatchingTheLocalUsersEmail() {
+    void acceptingAddsMembershipAndSwitchesToTheInvitedHousehold() {
         InvitationService service = service();
         AppUser invitee = invitee("Family@Example.com");
-        Household household = new Household("Our home");
+        Household household = household(20L);
         HouseholdInvitation invitation = new HouseholdInvitation(household, "family@example.com");
-        AuthenticatedUserResponse expected = profile(HouseholdRole.MEMBER);
+        AuthenticatedUserResponse expected = profile(20L, HouseholdRole.MEMBER);
         when(appUserService.getRequired(principal)).thenReturn(invitee);
         when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
+        when(membershipRepository.findByUserIdAndHouseholdId(5L, 20L)).thenReturn(Optional.empty());
         when(appUserService.getProfile(principal)).thenReturn(expected);
 
         AuthenticatedUserResponse response = service.accept(principal, 10L);
@@ -51,17 +53,21 @@ class InvitationServiceTest {
         assertSame(expected, response);
         assertSame(household, invitee.getHousehold());
         assertEquals(HouseholdRole.MEMBER, invitee.getHouseholdRole());
-        verify(userRepository).save(invitee);
+        ArgumentCaptor<HouseholdMembership> membership = ArgumentCaptor.forClass(HouseholdMembership.class);
+        verify(membershipRepository).save(membership.capture());
+        assertSame(invitee, membership.getValue().getUser());
+        assertSame(household, membership.getValue().getHousehold());
         verify(invitationRepository).delete(invitation);
     }
 
     @Test
-    void rejectsInvitationMatchingTheLocalUsersEmail() {
+    void rejectingKeepsTheUsersCurrentHousehold() {
         InvitationService service = service();
         AppUser invitee = invitee("family@example.com");
-        HouseholdInvitation invitation = new HouseholdInvitation(
-                new Household("Our home"), "FAMILY@example.com");
-        AuthenticatedUserResponse expected = profile(null);
+        Household personal = household(30L);
+        invitee.joinHousehold(personal, HouseholdRole.OWNER);
+        HouseholdInvitation invitation = new HouseholdInvitation(household(20L), "FAMILY@example.com");
+        AuthenticatedUserResponse expected = profile(30L, HouseholdRole.OWNER);
         when(appUserService.getRequired(principal)).thenReturn(invitee);
         when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
         when(appUserService.getProfile(principal)).thenReturn(expected);
@@ -69,69 +75,68 @@ class InvitationServiceTest {
         AuthenticatedUserResponse response = service.reject(principal, 10L);
 
         assertSame(expected, response);
-        assertNull(invitee.getHousehold());
-        assertNull(invitee.getHouseholdRole());
+        assertSame(personal, invitee.getHousehold());
         verify(invitationRepository).delete(invitation);
-        verify(userRepository, never()).save(invitee);
+        verify(membershipRepository, never()).save(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void cannotAcceptAHouseholdAlreadyJoined() {
+        InvitationService service = service();
+        AppUser invitee = invitee("family@example.com");
+        Household household = household(20L);
+        HouseholdInvitation invitation = new HouseholdInvitation(household, "family@example.com");
+        when(appUserService.getRequired(principal)).thenReturn(invitee);
+        when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
+        when(membershipRepository.findByUserIdAndHouseholdId(5L, 20L))
+                .thenReturn(Optional.of(new HouseholdMembership(household, invitee, HouseholdRole.MEMBER)));
+
+        assertThrows(BadRequestException.class, () -> service.accept(principal, 10L));
+
+        verify(invitationRepository, never()).delete(invitation);
     }
 
     @Test
     void cannotActOnAnInvitationForAnotherEmail() {
         InvitationService service = service();
         AppUser invitee = invitee("family@example.com");
-        HouseholdInvitation invitation = new HouseholdInvitation(
-                new Household("Our home"), "someone-else@example.com");
+        HouseholdInvitation invitation = new HouseholdInvitation(household(20L), "other@example.com");
         when(appUserService.getRequired(principal)).thenReturn(invitee);
         when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
 
         assertThrows(ResourceNotFoundException.class, () -> service.accept(principal, 10L));
-
-        verify(invitationRepository, never()).delete(invitation);
-        verify(userRepository, never()).save(invitee);
-        verify(appUserService, never()).getProfile(principal);
-    }
-
-    @Test
-    void cannotAcceptAnInvitationAfterAlreadyJoiningAHousehold() {
-        InvitationService service = service();
-        AppUser invitee = invitee("family@example.com");
-        invitee.joinHousehold(new Household("Current home"), HouseholdRole.MEMBER);
-        HouseholdInvitation invitation = new HouseholdInvitation(
-                new Household("Another home"), "family@example.com");
-        when(appUserService.getRequired(principal)).thenReturn(invitee);
-        when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
-
-        assertThrows(BadRequestException.class, () -> service.accept(principal, 10L));
-
-        verify(invitationRepository, never()).delete(invitation);
-        verify(userRepository, never()).save(invitee);
+        verify(membershipRepository, never()).save(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
     void cannotActOnAnInvitationThatNoLongerExists() {
-        InvitationService service = service();
-        AppUser invitee = invitee("family@example.com");
-        when(appUserService.getRequired(principal)).thenReturn(invitee);
+        when(appUserService.getRequired(principal)).thenReturn(invitee("family@example.com"));
         when(invitationRepository.findById(10L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () -> service.reject(principal, 10L));
-
-        verify(userRepository, never()).save(invitee);
+        assertThrows(ResourceNotFoundException.class, () -> service().reject(principal, 10L));
         verify(appUserService, never()).getProfile(principal);
     }
 
     private InvitationService service() {
-        return new InvitationService(appUserService, userRepository, invitationRepository);
+        return new InvitationService(
+                appUserService, userRepository, membershipRepository, invitationRepository);
     }
 
     private AppUser invitee(String email) {
-        return new AppUser("https://accounts.google.com", "subject", email, "Family Member", null);
+        AppUser user = new AppUser("https://accounts.google.com", "subject", email, "Family Member", null);
+        ReflectionTestUtils.setField(user, "id", 5L);
+        return user;
     }
 
-    private AuthenticatedUserResponse profile(HouseholdRole role) {
-        boolean member = role != null;
+    private Household household(Long id) {
+        Household household = new Household("Our home");
+        ReflectionTestUtils.setField(household, "id", id);
+        return household;
+    }
+
+    private AuthenticatedUserResponse profile(Long householdId, HouseholdRole role) {
         return new AuthenticatedUserResponse(
-                1L, "family@example.com", "Family Member", null,
-                member ? 2L : null, member ? "Our home" : null, role, null);
+                5L, "family@example.com", "Family Member", null,
+                householdId, "Our home", role, List.of(), List.of());
     }
 }

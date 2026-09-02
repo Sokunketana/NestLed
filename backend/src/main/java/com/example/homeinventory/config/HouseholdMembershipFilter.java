@@ -1,7 +1,6 @@
 package com.example.homeinventory.config;
 
-import com.example.homeinventory.entity.AppUser;
-import com.example.homeinventory.service.AppUserService;
+import com.example.homeinventory.service.HouseholdAccessService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,10 +15,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 @Component
 public class HouseholdMembershipFilter extends OncePerRequestFilter {
-    private final AppUserService appUserService;
+    private final HouseholdAccessService householdAccessService;
 
-    public HouseholdMembershipFilter(AppUserService appUserService) {
-        this.appUserService = appUserService;
+    public HouseholdMembershipFilter(HouseholdAccessService householdAccessService) {
+        this.householdAccessService = householdAccessService;
     }
 
     @Override
@@ -35,8 +34,9 @@ public class HouseholdMembershipFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof OidcUser oidcUser) {
-            AppUser user = appUserService.getRequired(oidcUser);
-            if (user.getHousehold() == null || user.getHouseholdRole() == null) {
+            try {
+                householdAccessService.getActiveMembership(oidcUser);
+            } catch (org.springframework.security.access.AccessDeniedException ex) {
                 response.sendError(HttpStatus.FORBIDDEN.value(), "This account is not a household member");
                 return;
             }

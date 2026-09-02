@@ -1,17 +1,22 @@
 package com.example.homeinventory.service;
 
-import com.example.homeinventory.config.AuthProperties;
 import com.example.homeinventory.dto.AuthenticatedUserResponse;
+import com.example.homeinventory.dto.HouseholdSummaryResponse;
 import com.example.homeinventory.dto.PendingHouseholdInvitationResponse;
 import com.example.homeinventory.entity.AppUser;
 import com.example.homeinventory.entity.Household;
-import com.example.homeinventory.entity.HouseholdInvitation;
+import com.example.homeinventory.entity.HouseholdMembership;
 import com.example.homeinventory.entity.HouseholdRole;
+import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.AppUserRepository;
 import com.example.homeinventory.repository.HouseholdInvitationRepository;
+import com.example.homeinventory.repository.HouseholdMembershipRepository;
 import com.example.homeinventory.repository.HouseholdRepository;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -25,15 +30,16 @@ public class AppUserService {
 
     private final AppUserRepository userRepository;
     private final HouseholdRepository householdRepository;
+    private final HouseholdMembershipRepository membershipRepository;
     private final HouseholdInvitationRepository invitationRepository;
-    private final AuthProperties authProperties;
 
     public AppUserService(AppUserRepository userRepository, HouseholdRepository householdRepository,
-                          HouseholdInvitationRepository invitationRepository, AuthProperties authProperties) {
+                          HouseholdMembershipRepository membershipRepository,
+                          HouseholdInvitationRepository invitationRepository) {
         this.userRepository = userRepository;
         this.householdRepository = householdRepository;
+        this.membershipRepository = membershipRepository;
         this.invitationRepository = invitationRepository;
-        this.authProperties = authProperties;
     }
 
     @Transactional
@@ -44,54 +50,14 @@ public class AppUserService {
         }
         String issuer = requireIssuer(oidcUser.getIssuer());
         String subject = requireClaim(oidcUser.getSubject(), "The identity provider did not supply a subject");
-        String displayName = normalizeOptional(oidcUser.getFullName());
-        String pictureUrl = normalizeOptional(oidcUser.getPicture());
 
-        AppUser appUser = userRepository.findByOidcIssuerAndOidcSubject(issuer, subject).orElse(null);
-        if (appUser != null && appUser.getHousehold() != null) {
-            appUser.updateProfile(email, displayName, pictureUrl);
-            return userRepository.save(appUser);
-        }
-
-        HouseholdInvitation invitation = invitationRepository
-                .findByEmailIgnoreCase(email).orElse(null);
-
-        Household bootstrapHousehold = null;
-        if (invitation == null) {
-            bootstrapHousehold = householdRepository.findFirstByOrderByIdAsc().orElse(null);
-            if (bootstrapHousehold != null || !isConfiguredBootstrapAccount(email)) {
-                throw denied("This account has not been invited to the household");
-            }
-        }
-
-        if (appUser == null) {
-            appUser = new AppUser(issuer, subject, email, displayName, pictureUrl);
-        }
-        appUser.updateProfile(email, displayName, pictureUrl);
-
-        if (invitation == null) {
-            Household household = householdRepository.save(new Household(defaultHouseholdName(displayName)));
-            appUser.joinHousehold(household, HouseholdRole.OWNER);
-        } else {
-            // Signing in proves ownership of the invited email, but the invitee must
-            // explicitly accept before gaining access to the household.
-            appUser.leaveHousehold();
-        }
+        AppUser appUser = userRepository.findByOidcIssuerAndOidcSubject(issuer, subject)
+                .orElseGet(() -> new AppUser(issuer, subject, email,
+                        normalizeOptional(oidcUser.getFullName()), normalizeOptional(oidcUser.getPicture())));
+        appUser.updateProfile(email, normalizeOptional(oidcUser.getFullName()), normalizeOptional(oidcUser.getPicture()));
+        appUser = userRepository.save(appUser);
+        ensurePersonalHousehold(appUser);
         return userRepository.save(appUser);
-    }
-
-    private boolean isConfiguredBootstrapAccount(String email) {
-        if (authProperties.allowAll()) {
-            return true;
-        }
-        if (authProperties.allowedEmails().isEmpty()) {
-            return false;
-        }
-        return authProperties.allowedEmails().contains(email);
-    }
-
-    private String defaultHouseholdName(String displayName) {
-        return StringUtils.hasText(displayName) ? displayName.trim() + "'s household" : "My household";
     }
 
     @Transactional(readOnly = true)
@@ -102,31 +68,97 @@ public class AppUserService {
                 .orElseThrow(() -> denied("The signed-in account is not registered"));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthenticatedUserResponse getProfile(OidcUser oidcUser) {
         AppUser appUser = getRequired(oidcUser);
-        Household household = appUser.getHousehold();
-        PendingHouseholdInvitationResponse pendingInvitation = null;
-        if (household == null || appUser.getHouseholdRole() == null) {
-            HouseholdInvitation invitation = invitationRepository
-                    .findByEmailIgnoreCase(appUser.getEmail()).orElse(null);
-            if (invitation != null) {
-                pendingInvitation = new PendingHouseholdInvitationResponse(
-                        invitation.getId(),
-                        invitation.getHousehold().getId(),
-                        invitation.getHousehold().getName(),
-                        invitation.getCreatedAt());
-            }
+        List<HouseholdMembership> memberships = ensurePersonalHousehold(appUser);
+        HouseholdMembership activeMembership = resolveActiveMembership(appUser, memberships);
+        return toResponse(appUser, activeMembership, memberships);
+    }
+
+    @Transactional
+    public AuthenticatedUserResponse activateHousehold(OidcUser oidcUser, Long householdId) {
+        AppUser appUser = getRequired(oidcUser);
+        HouseholdMembership membership = membershipRepository
+                .findByUserIdAndHouseholdId(appUser.getId(), householdId)
+                .orElseThrow(() -> new ResourceNotFoundException("Household was not found"));
+        appUser.joinHousehold(membership.getHousehold(), membership.getRole());
+        userRepository.save(appUser);
+        return toResponse(appUser, membership,
+                membershipRepository.findByUserIdOrderByHouseholdNameAsc(appUser.getId()));
+    }
+
+    private List<HouseholdMembership> ensurePersonalHousehold(AppUser appUser) {
+        if (appUser.getHousehold() != null
+                && membershipRepository.findByUserIdAndHouseholdId(
+                        appUser.getId(), appUser.getHousehold().getId()).isEmpty()) {
+            HouseholdRole legacyRole = appUser.getHouseholdRole() == null
+                    ? HouseholdRole.MEMBER : appUser.getHouseholdRole();
+            membershipRepository.save(new HouseholdMembership(appUser.getHousehold(), appUser, legacyRole));
         }
+
+        List<HouseholdMembership> memberships =
+                membershipRepository.findByUserIdOrderByHouseholdNameAsc(appUser.getId());
+        HouseholdMembership personalMembership = memberships.stream()
+                .filter(membership -> membership.getRole() == HouseholdRole.OWNER)
+                .findFirst()
+                .orElse(null);
+        if (personalMembership == null) {
+            Household personalHousehold = householdRepository.save(new Household(defaultHouseholdName(appUser)));
+            personalMembership = membershipRepository.save(
+                    new HouseholdMembership(personalHousehold, appUser, HouseholdRole.OWNER));
+            memberships = membershipRepository.findByUserIdOrderByHouseholdNameAsc(appUser.getId());
+        }
+
+        boolean activeIsValid = appUser.getHousehold() != null && memberships.stream()
+                .anyMatch(membership -> membership.getHousehold().getId().equals(appUser.getHousehold().getId()));
+        if (!activeIsValid) {
+            appUser.joinHousehold(personalMembership.getHousehold(), personalMembership.getRole());
+            userRepository.save(appUser);
+        }
+        return memberships;
+    }
+
+    private HouseholdMembership resolveActiveMembership(AppUser appUser, List<HouseholdMembership> memberships) {
+        HouseholdMembership active = memberships.stream()
+                .filter(membership -> appUser.getHousehold() != null
+                        && membership.getHousehold().getId().equals(appUser.getHousehold().getId()))
+                .findFirst()
+                .orElse(memberships.getFirst());
+        if (appUser.getHousehold() == null
+                || !active.getHousehold().getId().equals(appUser.getHousehold().getId())
+                || appUser.getHouseholdRole() != active.getRole()) {
+            appUser.joinHousehold(active.getHousehold(), active.getRole());
+            userRepository.save(appUser);
+        }
+        return active;
+    }
+
+    private AuthenticatedUserResponse toResponse(AppUser appUser, HouseholdMembership active,
+                                                 List<HouseholdMembership> memberships) {
+        Set<Long> householdIds = new HashSet<>();
+        List<HouseholdSummaryResponse> householdResponses = memberships.stream()
+                .peek(membership -> householdIds.add(membership.getHousehold().getId()))
+                .map(membership -> new HouseholdSummaryResponse(
+                        membership.getHousehold().getId(), membership.getHousehold().getName(), membership.getRole()))
+                .toList();
+        List<PendingHouseholdInvitationResponse> invitations = invitationRepository
+                .findByEmailIgnoreCaseOrderByCreatedAtAsc(appUser.getEmail()).stream()
+                .filter(invitation -> !householdIds.contains(invitation.getHousehold().getId()))
+                .map(invitation -> new PendingHouseholdInvitationResponse(
+                        invitation.getId(), invitation.getHousehold().getId(),
+                        invitation.getHousehold().getName(), invitation.getCreatedAt()))
+                .toList();
         return new AuthenticatedUserResponse(
-                appUser.getId(),
-                appUser.getEmail(),
-                appUser.getDisplayName(),
-                appUser.getPictureUrl(),
-                household == null ? null : household.getId(),
-                household == null ? null : household.getName(),
-                household == null ? null : appUser.getHouseholdRole(),
-                pendingInvitation);
+                appUser.getId(), appUser.getEmail(), appUser.getDisplayName(), appUser.getPictureUrl(),
+                active.getHousehold().getId(), active.getHousehold().getName(), active.getRole(),
+                householdResponses, invitations);
+    }
+
+    private String defaultHouseholdName(AppUser appUser) {
+        return StringUtils.hasText(appUser.getDisplayName())
+                ? appUser.getDisplayName().trim() + "'s household"
+                : "My household";
     }
 
     private String normalizeEmail(String email) {

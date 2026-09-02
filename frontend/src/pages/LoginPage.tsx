@@ -11,7 +11,7 @@ export default function LoginPage() {
       <h1 className="mt-2 text-4xl text-pine">Welcome to Nestled</h1>
       <p className="mt-3 text-stone-600">Sign in with Google to view and manage your home.</p>
       {(denied || error) && <p role="alert" className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
-        {denied ? 'This Google account has not been invited.' : error}
+        {denied ? 'Sign-in could not be completed. Use a Google account with a verified email and try again.' : error}
       </p>}
       <button type="button" className="btn-primary mt-7 w-full" onClick={login}>Sign in with Google</button>
     </section>

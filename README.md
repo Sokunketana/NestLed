@@ -24,6 +24,7 @@ It deliberately focuses on Spring Boot fundamentals. Authentication uses Google 
 - Optional item photos with camera/file upload, thumbnails, replacement, and removal
 - Room CRUD and storage-location CRUD
 - Category CRUD with a display color
+- Separate household inventories, household switching, and invitation-based sharing
 - Validation and consistent JSON error responses
 - DTO-only controller responses (JPA entities never become the API contract)
 - Responsive React interface and one centralized API layer
@@ -97,9 +98,9 @@ http://localhost:8080/login/oauth2/code/google
 
 For a deployed backend, register the corresponding HTTPS URI, such as `https://api.example.com/login/oauth2/code/google`.
 
-Then set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `APP_AUTH_ALLOWED_EMAILS` in `backend/.env`. `APP_AUTH_ALLOWED_EMAILS` is a comma-separated bootstrap list used only to decide who may create the first household, and it is intentionally deny-by-default. `APP_AUTH_ALLOW_ALL=true` can make that first-run bootstrap convenient during local development, but it does not let arbitrary accounts join an existing household. After the household exists, every new account must be invited by its owner. A verified Google account is persisted locally by its stable issuer and subject identifiers, while Spring Security keeps the browser signed in with an HTTP-only session cookie.
+Then set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `backend/.env`. Any Google account with a verified email can sign in. The account is persisted locally by its stable issuer and subject identifiers, while Spring Security keeps the browser signed in with an HTTP-only session cookie.
 
-The first configured account to sign in becomes the household owner. The owner can open **Household** in the sidebar, rename the shared home, and invite another person's Google email. A pending invitation permits that email to sign in, but it does not grant household access: the invitee must explicitly accept or decline it first. Accepted members share the installation's rooms, locations, categories, and items; only the owner can invite or remove people. Existing accounts are placed into the shared household automatically when upgrading, with the oldest account becoming its owner.
+Every user receives a personal household that they own. Owners can open **Household** in the sidebar, rename the selected household, and invite another person's Google email. The invitee keeps their personal household and must explicitly accept or decline; accepting adds a membership and switches them to the shared household. The household selector in the sidebar lets a user move between every household they own or have joined. Rooms, locations, categories, items, dashboard totals, searches, bulk actions, and photos are all restricted to the selected household. Existing records are migrated into the original household, while existing member accounts also receive their own personal household.
 
 Operating-system environment variables and command-line arguments can still override these local values, which is useful in deployment environments.
 
@@ -124,7 +125,7 @@ The model is `Room 1 → many StorageLocation`, while an `Item` has required man
 
 ### Stage 4 — Repositories
 
-Repositories belong to the data-access layer. For example, `ItemRepository` extends `JpaRepository<Item, Long>`. Spring creates its implementation at runtime and supplies `findAll()`, `findById()`, `save()`, and `delete()` without handwritten SQL. Method names such as `findByRoomIdOrderByNameAsc` are parsed into queries. `totalEstimatedValue()` demonstrates an explicit JPQL query.
+Repositories belong to the data-access layer. For example, `ItemRepository` extends `JpaRepository<Item, Long>`. Spring creates its implementation at runtime and supplies common persistence operations without handwritten SQL. Household-aware method names such as `findByIdAndHouseholdId` are parsed into tenant-scoped queries. `totalEstimatedValue(householdId)` demonstrates an explicit JPQL query with the same boundary.
 
 ### Stage 5 — DTOs
 
@@ -208,6 +209,7 @@ The API layer prevents network details from spreading across UI components. A pa
 | GET | `/api/auth/me` | Return the signed-in local user |
 | GET | `/api/auth/csrf` | Issue the CSRF token used by the React client |
 | POST | `/api/auth/logout` | End the current server-side session |
+| POST | `/api/auth/households/{id}/activate` | Switch to one of the signed-in user's households |
 | POST | `/api/invitations/{id}/accept` | Accept an invitation addressed to the signed-in email |
 | DELETE | `/api/invitations/{id}` | Decline an invitation addressed to the signed-in email |
 | GET | `/api/dashboard` | Totals and room summaries |
@@ -272,4 +274,4 @@ In short: **Controller → Service → Repository → database** separates trans
 
 ## Sensible future features
 
-After the fundamentals are comfortable: email delivery for household invitations, Flyway migrations, pagination and sorting, Testcontainers integration tests, object-storage-backed photos, CSV export, audit history, and multi-house support.
+After the fundamentals are comfortable: email delivery for household invitations, Flyway migrations, pagination and sorting, Testcontainers integration tests, object-storage-backed photos, CSV export, and audit history.

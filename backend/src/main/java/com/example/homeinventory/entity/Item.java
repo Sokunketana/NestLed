@@ -37,6 +37,11 @@ public class Item {
     @JoinColumn(name = "storage_location_id", nullable = false)
     private StorageLocation storageLocation;
 
+    // Nullable in the entity only so existing installations can be backfilled by schema.sql.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "household_id")
+    private Household household;
+
     @Column(precision = 12, scale = 2)
     private BigDecimal estimatedValue;
 
@@ -83,6 +88,8 @@ public class Item {
     public void setRoom(Room room) { this.room = room; }
     public StorageLocation getStorageLocation() { return storageLocation; }
     public void setStorageLocation(StorageLocation storageLocation) { this.storageLocation = storageLocation; }
+    public Household getHousehold() { return household; }
+    public void setHousehold(Household household) { this.household = household; }
     public BigDecimal getEstimatedValue() { return estimatedValue; }
     public void setEstimatedValue(BigDecimal estimatedValue) { this.estimatedValue = estimatedValue; }
     public LocalDate getPurchaseDate() { return purchaseDate; }

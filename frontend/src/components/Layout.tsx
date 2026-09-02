@@ -8,12 +8,26 @@ const links = [['/', 'Overview'], ['/items', 'Items'], ['/rooms', 'Rooms & Locat
 
 export default function Layout() {
   const [search, setSearch] = useState('')
+  const [switchingHousehold, setSwitchingHousehold] = useState(false)
+  const [householdError, setHouseholdError] = useState<string | null>(null)
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false)
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, activateHousehold } = useAuth()
   function submit(event: FormEvent) {
     event.preventDefault()
     if (search.trim()) navigate(`/items?q=${encodeURIComponent(search.trim())}`)
+  }
+  async function switchHousehold(id: number) {
+    if (!user || id === user.householdId) return
+    setSwitchingHousehold(true)
+    setHouseholdError(null)
+    try {
+      await activateHousehold(id)
+      window.location.assign('/')
+    } catch (cause) {
+      setHouseholdError(cause instanceof Error ? cause.message : 'Could not switch households')
+      setSwitchingHousehold(false)
+    }
   }
   return <div className="min-h-screen lg:flex">
     <aside className="bg-pine px-5 py-5 text-white lg:fixed lg:inset-y-0 lg:w-80 lg:overflow-hidden lg:px-6 lg:py-7">
@@ -27,6 +41,17 @@ export default function Layout() {
           {label}
         </NavLink>)}
       </nav>
+      <div className="mt-5 border-t border-white/15 pt-5">
+        <label className="block text-xs font-bold uppercase tracking-widest text-emerald-100" htmlFor="household-switcher">Current household</label>
+        <select id="household-switcher" className="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm text-white"
+          value={user?.householdId ?? ''} disabled={switchingHousehold}
+          onChange={event => void switchHousehold(Number(event.target.value))}>
+          {user?.households.map(household => <option className="text-stone-900" key={household.id} value={household.id}>
+            {household.name} ({household.role === 'OWNER' ? 'Owner' : 'Member'})
+          </option>)}
+        </select>
+        {householdError && <p role="alert" className="mt-2 text-xs text-red-200">{householdError}</p>}
+      </div>
       <details className="group mt-4 lg:contents" open>
         <summary className="cursor-pointer list-none rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold lg:hidden">Browse your home <span className="float-right group-open:rotate-180">⌄</span></summary>
         <HomeTree />

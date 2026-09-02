@@ -2,6 +2,7 @@ package com.example.homeinventory.service;
 
 import com.example.homeinventory.dto.StorageLocationRequest;
 import com.example.homeinventory.entity.Room;
+import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.StorageLocation;
 import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.repository.ItemRepository;
@@ -18,14 +19,18 @@ class StorageLocationServiceTest {
         StorageLocationRepository locations = mock(StorageLocationRepository.class);
         RoomService rooms = mock(RoomService.class);
         ItemRepository items = mock(ItemRepository.class);
-        StorageLocationService service = new StorageLocationService(locations, rooms, items);
+        Household household = mock(Household.class);
+        when(household.getId()).thenReturn(99L);
+        HouseholdAccessService access = mock(HouseholdAccessService.class);
+        when(access.getActiveHousehold()).thenReturn(household);
+        StorageLocationService service = new StorageLocationService(locations, rooms, items, access);
         StorageLocation location = mock(StorageLocation.class);
         Room currentRoom = mock(Room.class);
 
         when(currentRoom.getId()).thenReturn(1L);
         when(location.getRoom()).thenReturn(currentRoom);
-        when(locations.findById(10L)).thenReturn(Optional.of(location));
-        when(items.countByStorageLocationId(10L)).thenReturn(2L);
+        when(locations.findByIdAndHouseholdId(10L, 99L)).thenReturn(Optional.of(location));
+        when(items.countByHouseholdIdAndStorageLocationId(99L, 10L)).thenReturn(2L);
 
         var request = new StorageLocationRequest("Desk drawer", null, 2L);
 

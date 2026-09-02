@@ -11,6 +11,7 @@ type AuthContextValue = {
   error: string | null
   login: () => void
   logout: () => Promise<void>
+  activateHousehold: (id: number) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -44,6 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     error,
     login: () => window.location.assign(authApi.loginUrl),
+    activateHousehold: async (id: number) => {
+      setError(null)
+      try {
+        setUser(await authApi.activateHousehold(id))
+      } catch (cause) {
+        const activationError = cause instanceof Error ? cause : new Error('Could not switch households')
+        setError(activationError.message)
+        throw activationError
+      }
+    },
     logout: async () => {
       setError(null)
       try {

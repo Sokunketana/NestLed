@@ -7,6 +7,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,6 +24,12 @@ public class AuthController {
     @GetMapping("/me")
     AuthenticatedUserResponse me(@AuthenticationPrincipal OidcUser oidcUser) {
         return appUserService.getProfile(oidcUser);
+    }
+
+    @PostMapping("/households/{id}/activate")
+    AuthenticatedUserResponse activateHousehold(@AuthenticationPrincipal OidcUser oidcUser,
+                                                @PathVariable Long id) {
+        return appUserService.activateHousehold(oidcUser, id);
     }
 
     @GetMapping("/csrf")

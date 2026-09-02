@@ -4,6 +4,7 @@ import { invitationApi } from '../api/invitationApi'
 import { ApiRequestError } from '../api/http'
 import ConfirmationModal from '../components/ConfirmationModal'
 import { ErrorMessage, Loading } from '../components/PageState'
+import Icon from '../components/Icon'
 import { useAuth } from '../auth/AuthContext'
 
 export default function HouseholdPage() {
@@ -97,18 +98,17 @@ export default function HouseholdPage() {
 
   return <>
   <div className="space-y-7">
-    <div>
-      <p className="eyebrow">Shared home</p>
-      <h1 className="mt-2 text-4xl">Household</h1>
-      <p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p>
+    <div className="flex flex-wrap items-end justify-between gap-5">
+      <div><p className="eyebrow">Shared home</p><h1 className="mt-2 text-4xl">Household</h1><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></div>
+      <div className="flex items-center gap-2 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine"><Icon name="users" className="h-4 w-4" />Shared space</div>
     </div>
 
     {error && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
 
     <section className="card">
-      <h2 className="text-xl">Household details</h2>
+      <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-sage text-pine"><Icon name="home" className="h-4 w-4" /></span><div><h2 className="text-xl">Household details</h2><p className="mt-1 text-sm text-ink-soft">This is the shared space everyone sees.</p></div></div>
       {isOwner ? <>
-        <form onSubmit={rename} className="mt-4 flex max-w-xl gap-3">
+        <form onSubmit={rename} className="mt-5 flex max-w-xl flex-col gap-3 sm:flex-row">
           <input className="field" aria-label="Household name" maxLength={100} required value={name}
             onChange={event => { setName(event.target.value); setSaved(false) }} />
           <button className="btn-primary" disabled={busy || !name.trim()}>{busy ? 'Saving…' : 'Save'}</button>
@@ -143,17 +143,16 @@ export default function HouseholdPage() {
     </section>}
 
     {isOwner && <section className="card">
-      <h2 className="text-xl">Invite someone</h2>
-      <p className="mt-1 text-sm text-stone-500">Use the email address they use with Google. They can accept or decline after signing in.</p>
-      <form onSubmit={invite} className="mt-4 flex max-w-xl gap-3">
+      <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-coral/10 text-coral"><Icon name="users" className="h-4 w-4" /></span><div><h2 className="text-xl">Invite someone</h2><p className="mt-1 text-sm text-stone-500">Use the email address they use with Google. They can accept or decline after signing in.</p></div></div>
+      <form onSubmit={invite} className="mt-5 flex max-w-xl flex-col gap-3 sm:flex-row">
         <input className="field" type="email" aria-label="Email address" placeholder="family@example.com"
           maxLength={320} required value={email} onChange={event => setEmail(event.target.value)} />
-        <button className="btn-primary" disabled={busy || !email.trim()}>Invite</button>
+        <button className="btn-primary" disabled={busy || !email.trim()}><Icon name="plus" className="h-4 w-4" />Invite</button>
       </form>
     </section>}
 
     <section className="card">
-      <h2 className="text-xl">Members</h2>
+      <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-cream text-pine"><Icon name="users" className="h-4 w-4" /></span><div><h2 className="text-xl">Members</h2><p className="mt-1 text-sm text-ink-soft">People who can view and update this home.</p></div></div>
       <div className="mt-4 divide-y">
         {household.members.map(member => <div key={member.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
           {member.pictureUrl

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { itemMovementApi } from '../api/itemMovementApi'
 import { Empty, ErrorMessage, Loading } from '../components/PageState'
+import Icon from '../components/Icon'
 import type { ItemMovement } from '../types'
 
 const dateTime = new Intl.DateTimeFormat(undefined, {
@@ -69,7 +70,7 @@ export default function MovementHistoryPage() {
           See when belongings changed rooms or storage locations in this household.
         </p>
       </div>
-      {movements && <div className="rounded-2xl border bg-white px-5 py-3 text-right shadow-soft">
+      {movements && <div className="rounded-2xl border border-line bg-surface px-5 py-3 text-right shadow-card">
         <strong className="block text-2xl text-pine">{visibleMovements.length}</strong>
         <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
           {hasFilters ? `shown of ${movements.length}` : movements.length === 1 ? 'recorded move' : 'recorded moves'}
@@ -77,12 +78,13 @@ export default function MovementHistoryPage() {
       </div>}
     </div>
 
-    <div className="mt-7 rounded-2xl border bg-white p-4 shadow-soft">
+    <div className="mt-7 rounded-[1.35rem] border border-line bg-white/70 p-3 shadow-card sm:p-4">
+      <div className="mb-3 flex items-center gap-2 px-1 text-sm font-bold text-ink"><Icon name="history" className="h-4 w-4 text-pine" />Filter activity</div>
       <div className="grid gap-4 md:grid-cols-[minmax(16rem,1fr)_auto_auto_auto] md:items-end">
         <div>
           <label className="label" htmlFor="movement-search">Search history</label>
           <div className="relative">
-            <span className="absolute left-4 top-2.5 text-stone-400">⌕</span>
+            <Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
             <input
               id="movement-search"
               className="field pl-10"
@@ -116,7 +118,7 @@ export default function MovementHistoryPage() {
           />
         </div>
         <button type="button" className="btn-secondary" disabled={!hasFilters} onClick={clearFilters}>
-          Clear filters
+          <Icon name="x" className="h-4 w-4" />Clear filters
         </button>
       </div>
     </div>
@@ -129,10 +131,10 @@ export default function MovementHistoryPage() {
             : 'No movements yet. Moving an item to another room or storage location will add it here.'}
         </Empty>
       ) : (
-        <ol className="relative space-y-4 before:absolute before:bottom-6 before:left-6 before:top-6 before:w-px before:bg-stone-200">
+        <ol className="relative space-y-4 before:absolute before:bottom-6 before:left-6 before:top-6 before:w-px before:bg-line">
           {visibleMovements.map(movement => (
             <li className="card relative ml-0 pl-16" key={movement.id}>
-              <span className="absolute left-[1.15rem] top-6 grid h-7 w-7 place-items-center rounded-full border-4 border-white bg-pine text-xs text-white shadow-sm" aria-hidden="true">→</span>
+              <span className="absolute left-[1.15rem] top-6 grid h-7 w-7 place-items-center rounded-full border-4 border-cream bg-pine text-xs text-white shadow-sm" aria-hidden="true"><Icon name="arrow-right" className="h-3.5 w-3.5" /></span>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h2 className="text-lg">{movement.itemName}</h2>
@@ -147,7 +149,7 @@ export default function MovementHistoryPage() {
                   <span className="text-xs font-bold uppercase tracking-wider text-stone-400">From</span>
                   <p className="mt-1 font-semibold">{locationLabel(movement.fromRoomName, movement.fromLocationName)}</p>
                 </div>
-                <span className="text-center text-xl text-pine" aria-hidden="true">→</span>
+                <span className="text-center text-xl text-pine" aria-hidden="true"><Icon name="arrow-right" className="mx-auto h-5 w-5" /></span>
                 <div className="rounded-xl bg-sage/70 p-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-pine/70">To</span>
                   <p className="mt-1 font-semibold text-pine">{locationLabel(movement.toRoomName, movement.toLocationName)}</p>

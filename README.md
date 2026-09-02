@@ -210,6 +210,7 @@ The API layer prevents network details from spreading across UI components. A pa
 | GET | `/api/auth/csrf` | Issue the CSRF token used by the React client |
 | POST | `/api/auth/logout` | End the current server-side session |
 | POST | `/api/auth/households/{id}/activate` | Switch to one of the signed-in user's households |
+| DELETE | `/api/household/leave` | Leave the selected household as a non-owner member |
 | POST | `/api/invitations/{id}/accept` | Accept an invitation addressed to the signed-in email |
 | DELETE | `/api/invitations/{id}` | Decline an invitation addressed to the signed-in email |
 | GET | `/api/dashboard` | Totals and room summaries |

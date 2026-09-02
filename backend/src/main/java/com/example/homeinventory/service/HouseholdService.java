@@ -107,8 +107,35 @@ public class HouseholdService {
         return toResponse(owner);
     }
 
+    @Transactional
+    public void leave(OidcUser principal) {
+        AppUser user = appUserService.getRequired(principal);
+        HouseholdMembership membership = requiredMember(user);
+        if (membership.getRole() == HouseholdRole.OWNER) {
+            throw new BadRequestException("A household owner cannot leave the household");
+        }
+
+        List<HouseholdMembership> alternatives = membershipRepository
+                .findByUserIdOrderByHouseholdNameAsc(user.getId()).stream()
+                .filter(value -> !value.getHousehold().getId().equals(membership.getHousehold().getId()))
+                .toList();
+        membershipRepository.delete(membership);
+
+        HouseholdMembership replacement = alternatives.isEmpty() ? null : alternatives.getFirst();
+        if (replacement == null) {
+            user.leaveHousehold();
+        } else {
+            user.joinHousehold(replacement.getHousehold(), replacement.getRole());
+        }
+        userRepository.save(user);
+    }
+
     private HouseholdMembership requiredMember(OidcUser principal) {
         AppUser user = appUserService.getRequired(principal);
+        return requiredMember(user);
+    }
+
+    private HouseholdMembership requiredMember(AppUser user) {
         if (user.getHousehold() == null) {
             throw new AccessDeniedException("Select a household first");
         }

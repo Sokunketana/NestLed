@@ -81,7 +81,9 @@ export async function request<T>(path: string, options?: RequestInit): Promise<T
     credentials: 'include',
   })
   if (!response.ok) {
-    const error = (await response.json().catch(() => ({ message: 'Request failed' }))) as ApiError
+    const error = (await response.json().catch(() => ({
+      message: `Request failed (${response.status}${response.statusText ? ` ${response.statusText}` : ''})`,
+    }))) as ApiError
     const validation = error.fieldErrors ? Object.values(error.fieldErrors).join(', ') : ''
     throw new ApiRequestError(validation || error.message || 'Request failed', response.status, error)
   }

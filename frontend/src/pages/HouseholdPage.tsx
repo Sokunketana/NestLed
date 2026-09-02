@@ -16,6 +16,7 @@ export default function HouseholdPage() {
   const [saved, setSaved] = useState(false)
   const [busy, setBusy] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<HouseholdMember | null>(null)
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
   const [respondingInvitationId, setRespondingInvitationId] = useState<number | null>(null)
   const [invitationError, setInvitationError] = useState<string | null>(null)
 
@@ -72,6 +73,12 @@ export default function HouseholdPage() {
     setRemoveTarget(null)
   }
 
+  async function leaveHousehold() {
+    setError(null)
+    await householdApi.leave()
+    window.location.assign('/')
+  }
+
   async function respondToInvitation(id: number, decision: 'accept' | 'reject') {
     setRespondingInvitationId(id)
     setInvitationError(null)
@@ -114,7 +121,12 @@ export default function HouseholdPage() {
           <button className="btn-primary" disabled={busy || !name.trim()}>{busy ? 'Saving…' : 'Save'}</button>
         </form>
         {saved && <p role="status" className="mt-2 text-sm text-emerald-700">Household name saved.</p>}
-      </> : <p className="mt-3 text-stone-600">{household.name}</p>}
+      </> : <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-stone-600">{household.name}</p>
+        <button type="button" className="btn-danger" onClick={() => setShowLeaveConfirmation(true)}>
+          <Icon name="log-out" className="h-4 w-4" />Leave household
+        </button>
+      </div>}
     </section>
 
     {user && user.pendingInvitations.length > 0 && <section className="card">
@@ -190,6 +202,16 @@ export default function HouseholdPage() {
       errorMessage="Unable to remove this household member. Please try again."
       onClose={() => setRemoveTarget(null)}
       onConfirm={removeMember}
+    />}
+  {showLeaveConfirmation && <ConfirmationModal
+      title={`Leave ${household.name}?`}
+      description="You’ll lose access to this household, and your personal household will become active. The shared household and its items will not be deleted."
+      confirmLabel="Leave household"
+      confirmingLabel="Leaving…"
+      errorMessage="Unable to leave this household. Please try again."
+      intent="leave"
+      onClose={() => setShowLeaveConfirmation(false)}
+      onConfirm={leaveHousehold}
     />}
   </>
 }

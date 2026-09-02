@@ -4,7 +4,7 @@ import HomeTree from './HomeTree'
 import ConfirmationModal from './ConfirmationModal'
 import { useAuth } from '../auth/AuthContext'
 
-const links = [['/', 'Overview'], ['/items', 'Items'], ['/rooms', 'Rooms & Locations'], ['/categories', 'Categories'], ['/household', 'Household']]
+const links = [['/', 'Overview'], ['/items', 'Items'], ['/movements', 'Movement history'], ['/rooms', 'Rooms & Locations'], ['/categories', 'Categories'], ['/household', 'Household']]
 
 export default function Layout() {
   const [search, setSearch] = useState('')

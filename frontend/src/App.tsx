@@ -8,6 +8,7 @@ import RoomsPage from './pages/RoomsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import LoginPage from './pages/LoginPage'
 import HouseholdPage from './pages/HouseholdPage'
+import MovementHistoryPage from './pages/MovementHistoryPage'
 import { useAuth } from './auth/AuthContext'
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
       <Route path="/items/new" element={<ItemFormPage />} />
       <Route path="/items/:id" element={<ItemDetailsPage />} />
       <Route path="/items/:id/edit" element={<ItemFormPage />} />
+      <Route path="/movements" element={<MovementHistoryPage />} />
       <Route path="/rooms" element={<RoomsPage />} />
       <Route path="/categories" element={<CategoriesPage />} />
       <Route path="/household" element={<HouseholdPage />} />

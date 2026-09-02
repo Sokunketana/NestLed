@@ -34,7 +34,7 @@ class ItemPhotoServiceTest {
         HouseholdAccessService access = mock(HouseholdAccessService.class);
         when(access.getActiveHousehold()).thenReturn(household);
         service = new ItemService(items, mock(RoomService.class), mock(CategoryService.class),
-                mock(StorageLocationService.class), photos, access);
+                mock(StorageLocationService.class), photos, access, mock(ItemMovementService.class));
     }
 
     @AfterEach

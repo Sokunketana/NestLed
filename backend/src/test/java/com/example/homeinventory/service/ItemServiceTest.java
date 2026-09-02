@@ -86,10 +86,13 @@ class ItemServiceTest {
         ItemRepository items = mock(ItemRepository.class);
         RoomService rooms = mock(RoomService.class);
         StorageLocationService locations = mock(StorageLocationService.class);
+        ItemMovementService movements = mock(ItemMovementService.class);
         ItemService service = service(items, rooms, mock(CategoryService.class), locations,
-                mock(PhotoStorageService.class), household());
+                mock(PhotoStorageService.class), household(), movements);
         Room room = mock(Room.class);
         StorageLocation location = mock(StorageLocation.class);
+        Room previousRoom = mock(Room.class);
+        StorageLocation previousLocation = mock(StorageLocation.class);
         Item first = mock(Item.class);
         Item second = mock(Item.class);
         when(room.getId()).thenReturn(3L);
@@ -99,6 +102,10 @@ class ItemServiceTest {
         when(location.getRoom()).thenReturn(room);
         when(first.getId()).thenReturn(1L);
         when(second.getId()).thenReturn(2L);
+        when(first.getRoom()).thenReturn(previousRoom);
+        when(second.getRoom()).thenReturn(previousRoom);
+        when(first.getStorageLocation()).thenReturn(previousLocation);
+        when(second.getStorageLocation()).thenReturn(previousLocation);
         when(rooms.getEntity(3L)).thenReturn(room);
         when(locations.getEntity(30L)).thenReturn(location);
         when(items.findByIdInAndHouseholdId(any(), eq(99L))).thenReturn(List.of(first, second));
@@ -109,6 +116,8 @@ class ItemServiceTest {
         verify(items).findByIdInAndHouseholdId(argThat(ids -> ids.equals(java.util.Set.of(1L, 2L))), eq(99L));
         verify(first).setRoom(room);
         verify(second).setStorageLocation(location);
+        verify(movements).recordMove(first, previousRoom, previousLocation);
+        verify(movements).recordMove(second, previousRoom, previousLocation);
     }
 
     @Test
@@ -180,9 +189,16 @@ class ItemServiceTest {
     private ItemService service(ItemRepository items, RoomService rooms, CategoryService categories,
                                 StorageLocationService locations, PhotoStorageService photos,
                                 Household household) {
+        return service(items, rooms, categories, locations, photos, household,
+                mock(ItemMovementService.class));
+    }
+
+    private ItemService service(ItemRepository items, RoomService rooms, CategoryService categories,
+                                StorageLocationService locations, PhotoStorageService photos,
+                                Household household, ItemMovementService movements) {
         HouseholdAccessService access = mock(HouseholdAccessService.class);
         when(access.getActiveHousehold()).thenReturn(household);
-        return new ItemService(items, rooms, categories, locations, photos, access);
+        return new ItemService(items, rooms, categories, locations, photos, access, movements);
     }
 
     private Household household() {

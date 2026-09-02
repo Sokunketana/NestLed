@@ -1,8 +1,10 @@
 package com.example.homeinventory.config;
 
 import com.example.homeinventory.controller.AuthController;
-import com.example.homeinventory.entity.AppUser;
+import com.example.homeinventory.dto.AuthenticatedUserResponse;
 import com.example.homeinventory.service.AppUserService;
+import com.example.homeinventory.service.HouseholdAccessService;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -35,6 +37,9 @@ class SecurityConfigTest {
     @MockitoBean
     private AppUserService appUserService;
 
+    @MockitoBean
+    private HouseholdAccessService householdAccessService;
+
     @Test
     void rejectsAnonymousApiRequestWithUnauthorized() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
@@ -51,17 +56,28 @@ class SecurityConfigTest {
 
     @Test
     void returnsLocalProfileForAuthenticatedOidcUser() throws Exception {
-        when(appUserService.getRequired(any())).thenReturn(new AppUser(
-                "https://accounts.google.com",
-                "subject-123",
+        when(appUserService.getProfile(any())).thenReturn(new AuthenticatedUserResponse(
+                1L,
                 "person@example.com",
                 "Person Example",
-                null));
+                null,
+                1L,
+                "Our home",
+                com.example.homeinventory.entity.HouseholdRole.OWNER,
+                List.of(),
+                List.of()));
 
         mockMvc.perform(get("/api/auth/me").with(oidcLogin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value("person@example.com"))
-                .andExpect(jsonPath("$.displayName").value("Person Example"));
+                .andExpect(jsonPath("$.displayName").value("Person Example"))
+                .andExpect(jsonPath("$.householdName").value("Our home"));
+    }
+
+    @Test
+    void protectsHouseholdSwitchingWithCsrf() throws Exception {
+        mockMvc.perform(post("/api/auth/households/4/activate").with(oidcLogin()))
+                .andExpect(status().isForbidden());
     }
 
     @Test

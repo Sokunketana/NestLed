@@ -6,6 +6,7 @@ import com.example.homeinventory.dto.CreateItemRequest;
 import com.example.homeinventory.dto.ItemResponse;
 import com.example.homeinventory.dto.UpdateItemRequest;
 import com.example.homeinventory.entity.Item;
+import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.Room;
 import com.example.homeinventory.entity.StorageLocation;
 import com.example.homeinventory.exception.BadRequestException;
@@ -33,41 +34,49 @@ public class ItemService {
     private final CategoryService categoryService;
     private final StorageLocationService storageLocationService;
     private final PhotoStorageService photoStorageService;
+    private final HouseholdAccessService householdAccessService;
 
     public ItemService(ItemRepository itemRepository, RoomService roomService, CategoryService categoryService,
-                       StorageLocationService storageLocationService, PhotoStorageService photoStorageService) {
+                       StorageLocationService storageLocationService, PhotoStorageService photoStorageService,
+                       HouseholdAccessService householdAccessService) {
         this.itemRepository = itemRepository;
         this.roomService = roomService;
         this.categoryService = categoryService;
         this.storageLocationService = storageLocationService;
         this.photoStorageService = photoStorageService;
+        this.householdAccessService = householdAccessService;
     }
 
     public List<ItemResponse> findAll(Long roomId, Long categoryId, Long storageLocationId) {
+        Long householdId = activeHousehold().getId();
         List<Item> items;
         if (storageLocationId != null) {
             StorageLocation location = storageLocationService.getEntity(storageLocationId);
             if (roomId != null && !location.getRoom().getId().equals(roomId)) {
                 throw new BadRequestException("The storage location does not belong to the selected room");
             }
-            items = itemRepository.findByStorageLocationIdOrderByNameAsc(storageLocationId);
+            items = itemRepository.findByHouseholdIdAndStorageLocationIdOrderByNameAsc(
+                    householdId, storageLocationId);
             if (categoryId != null) {
                 items = items.stream().filter(item -> item.getCategory().getId().equals(categoryId)).toList();
             }
         } else if (roomId != null && categoryId != null) {
-            items = itemRepository.findByRoomIdAndCategoryIdOrderByNameAsc(roomId, categoryId);
+            items = itemRepository.findByHouseholdIdAndRoomIdAndCategoryIdOrderByNameAsc(
+                    householdId, roomId, categoryId);
         } else if (roomId != null) {
-            items = itemRepository.findByRoomIdOrderByNameAsc(roomId);
+            items = itemRepository.findByHouseholdIdAndRoomIdOrderByNameAsc(householdId, roomId);
         } else if (categoryId != null) {
-            items = itemRepository.findByCategoryIdOrderByNameAsc(categoryId);
+            items = itemRepository.findByHouseholdIdAndCategoryIdOrderByNameAsc(householdId, categoryId);
         } else {
-            items = itemRepository.findAll();
+            items = itemRepository.findByHouseholdIdOrderByNameAsc(householdId);
         }
         return items.stream().map(this::toResponse).toList();
     }
 
     public List<ItemResponse> search(String name) {
-        return itemRepository.findByNameContainingIgnoreCaseOrderByNameAsc(name.trim()).stream().map(this::toResponse).toList();
+        return itemRepository.findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAsc(
+                        activeHousehold().getId(), name.trim())
+                .stream().map(this::toResponse).toList();
     }
 
     public ItemResponse findById(Long id) {
@@ -95,10 +104,11 @@ public class ItemService {
     @Transactional
     public BulkMoveItemsResponse bulkMove(BulkMoveItemsRequest request) {
         Set<Long> itemIds = normalizedItemIds(request);
+        Long householdId = activeHousehold().getId();
         Room destinationRoom = roomService.getEntity(request.roomId());
         StorageLocation destinationLocation = resolveLocation(request.storageLocationId(), request.roomId());
 
-        List<Item> items = itemRepository.findAllById(itemIds);
+        List<Item> items = itemRepository.findByIdInAndHouseholdId(itemIds, householdId);
         Set<Long> foundIds = items.stream().map(Item::getId).collect(Collectors.toSet());
         List<Long> missingIds = itemIds.stream().filter(id -> !foundIds.contains(id)).toList();
         if (!missingIds.isEmpty()) {
@@ -167,7 +177,8 @@ public class ItemService {
     }
 
     private Item getEntity(Long id) {
-        return itemRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Item with id " + id + " was not found"));
+        return itemRepository.findByIdAndHouseholdId(id, activeHousehold().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Item with id " + id + " was not found"));
     }
 
     private Set<Long> normalizedItemIds(BulkMoveItemsRequest request) {
@@ -187,6 +198,7 @@ public class ItemService {
                       java.time.LocalDate purchaseDate, java.time.LocalDate warrantyDate,
                       com.example.homeinventory.entity.ItemCondition condition, String notes) {
         item.setName(name.trim());
+        item.setHousehold(activeHousehold());
         item.setDescription(description);
         item.setQuantity(quantity);
         item.setCategory(categoryService.getEntity(categoryId));
@@ -197,6 +209,10 @@ public class ItemService {
         item.setWarrantyExpirationDate(warrantyDate);
         item.setCondition(condition);
         item.setNotes(notes);
+    }
+
+    private Household activeHousehold() {
+        return householdAccessService.getActiveHousehold();
     }
 
     private StorageLocation resolveLocation(Long locationId, Long roomId) {

@@ -14,17 +14,23 @@ public class DashboardService {
     private final RoomRepository roomRepository;
     private final CategoryRepository categoryRepository;
     private final RoomService roomService;
+    private final HouseholdAccessService householdAccessService;
 
     public DashboardService(ItemRepository itemRepository, RoomRepository roomRepository,
-                            CategoryRepository categoryRepository, RoomService roomService) {
+                            CategoryRepository categoryRepository, RoomService roomService,
+                            HouseholdAccessService householdAccessService) {
         this.itemRepository = itemRepository;
         this.roomRepository = roomRepository;
         this.categoryRepository = categoryRepository;
         this.roomService = roomService;
+        this.householdAccessService = householdAccessService;
     }
 
     public DashboardResponse getDashboard() {
-        return new DashboardResponse(itemRepository.count(), roomRepository.count(), categoryRepository.count(),
-                itemRepository.totalEstimatedValue(), roomService.findAll());
+        Long householdId = householdAccessService.getActiveHousehold().getId();
+        return new DashboardResponse(itemRepository.countByHouseholdId(householdId),
+                roomRepository.countByHouseholdId(householdId),
+                categoryRepository.countByHouseholdId(householdId),
+                itemRepository.totalEstimatedValue(householdId), roomService.findAll());
     }
 }

@@ -18,6 +18,7 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
@@ -32,6 +33,7 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             AuthProperties authProperties,
+            HouseholdMembershipFilter householdMembershipFilter,
             OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService) throws Exception {
         CookieCsrfTokenRepository csrfRepository = new CookieCsrfTokenRepository();
         csrfRepository.setCookiePath("/");
@@ -58,6 +60,8 @@ public class SecurityConfig {
                         .logoutUrl("/api/auth/logout")
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
                         .deleteCookies("JSESSIONID"));
+
+        http.addFilterAfter(householdMembershipFilter, AuthorizationFilter.class);
 
         return http.build();
     }

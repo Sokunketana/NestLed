@@ -11,11 +11,16 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Column(length = 7)
     private String color;
+
+    // Nullable in the entity only so existing installations can be backfilled by schema.sql.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "household_id")
+    private Household household;
 
     @OneToMany(mappedBy = "category")
     private List<Item> items = new ArrayList<>();
@@ -27,5 +32,7 @@ public class Category {
     public void setName(String name) { this.name = name; }
     public String getColor() { return color; }
     public void setColor(String color) { this.color = color; }
+    public Household getHousehold() { return household; }
+    public void setHousehold(Household household) { this.household = household; }
     public List<Item> getItems() { return items; }
 }

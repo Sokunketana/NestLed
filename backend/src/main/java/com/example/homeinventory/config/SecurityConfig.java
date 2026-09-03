@@ -2,6 +2,7 @@ package com.example.homeinventory.config;
 
 import com.example.homeinventory.service.AppUserService;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,9 +35,17 @@ public class SecurityConfig {
             HttpSecurity http,
             AuthProperties authProperties,
             HouseholdMembershipFilter householdMembershipFilter,
-            OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService) throws Exception {
+            OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService,
+            @Value("${server.servlet.session.cookie.same-site:lax}") String sessionCookieSameSite,
+            @Value("${server.servlet.session.cookie.secure:false}") boolean sessionCookieSecure) throws Exception {
         CookieCsrfTokenRepository csrfRepository = new CookieCsrfTokenRepository();
         csrfRepository.setCookiePath("/");
+        // The frontend and backend are separate sites in production (Vercel + Render).
+        // Keep the CSRF cookie aligned with the session cookie so credentialed unsafe
+        // requests can include both cookies when SESSION_COOKIE_SAME_SITE=none.
+        csrfRepository.setCookieCustomizer(cookie -> cookie
+                .sameSite(sessionCookieSameSite)
+                .secure(sessionCookieSecure));
 
         http
                 .cors(Customizer.withDefaults())

@@ -104,6 +104,31 @@ Every user starts with a personal household that they own. Owners can open **Hou
 
 Operating-system environment variables and command-line arguments can still override these local values, which is useful in deployment environments.
 
+### Deploying the frontend and backend separately
+
+For a Vercel frontend and a Render backend, configure the frontend build variables in Vercel:
+
+```text
+VITE_API_URL=https://your-render-service.onrender.com/api
+VITE_BACKEND_URL=https://your-render-service.onrender.com
+```
+
+Configure these backend variables in Render:
+
+```text
+FRONTEND_URL=https://your-vercel-app.vercel.app
+SESSION_COOKIE_SECURE=true
+SESSION_COOKIE_SAME_SITE=none
+```
+
+Also set `DB_URL` to the JDBC form of Render's PostgreSQL connection URL (`jdbc:postgresql://...`), along with `DB_USERNAME`, `DB_PASSWORD`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`. The Google OAuth redirect URI must use the Render service URL:
+
+```text
+https://your-render-service.onrender.com/login/oauth2/code/google
+```
+
+`SESSION_COOKIE_SAME_SITE=none` is required because Vercel and Render are different sites. The application applies the same setting to its CSRF cookie; without it, read requests may work while room/item/category creation fails with a generic request error.
+
 `application.properties` uses these environment variables and supplies local defaults. `spring.jpa.hibernate.ddl-auto=update` asks Hibernate to compare the JPA entity model to the current schema and add/update schema objects. It is convenient for this first learning version, but it does not provide a reviewed, repeatable history. A production app should normally use Flyway or Liquibase migrations and `ddl-auto=validate`.
 
 Uploaded photos default to `backend/uploads/` when the backend is started from that directory. `PHOTO_STORAGE_LOCATION` can point at another writable directory. The backend accepts JPEG, PNG, WebP, and GIF images up to 5 MB, stores only generated filenames in PostgreSQL, and never uses a client filename as a disk path. This local filesystem setup is intended for local learning; a deployed multi-user version should add authentication and object storage.

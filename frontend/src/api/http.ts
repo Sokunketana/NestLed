@@ -49,6 +49,28 @@ export function clearCsrfToken() {
   csrfRequest = null
 }
 
+async function fetchWithSafeRetry(url: string, init: RequestInit, method: string) {
+  const retryable = ['GET', 'HEAD', 'OPTIONS'].includes(method)
+  const maxAttempts = retryable ? 3 : 1
+  let lastError: unknown
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    try {
+      const response = await fetch(url, init)
+      if (response.ok || !retryable || ![502, 503, 504].includes(response.status) || attempt === maxAttempts - 1) {
+        return response
+      }
+    } catch (cause) {
+      lastError = cause
+      if (!retryable || attempt === maxAttempts - 1) throw cause
+    }
+
+    await new Promise(resolve => window.setTimeout(resolve, 400 * (attempt + 1)))
+  }
+
+  throw lastError instanceof Error ? lastError : new Error('Could not contact the server')
+}
+
 /** Resolve backend-provided media paths without allowing executable URL schemes. */
 export function resolvePhotoUrl(photoUrl?: string | null): string | undefined {
   const value = photoUrl?.trim()
@@ -75,11 +97,11 @@ export async function request<T>(path: string, options?: RequestInit): Promise<T
     headers.set(csrf.headerName, csrf.token)
   }
 
-  const response = await fetch(endpointUrl(path), {
+  const response = await fetchWithSafeRetry(endpointUrl(path), {
     ...options,
     headers,
     credentials: 'include',
-  })
+  }, method)
   if (!response.ok) {
     const error = (await response.json().catch(() => ({
       message: `Request failed (${response.status}${response.statusText ? ` ${response.statusText}` : ''})`,

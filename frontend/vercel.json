@@ -2,6 +2,22 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://nestled-0axk.onrender.com/api/:path*"
+    },
+    {
+      "source": "/oauth2/:path*",
+      "destination": "https://nestled-0axk.onrender.com/oauth2/:path*"
+    },
+    {
+      "source": "/login/:path*",
+      "destination": "https://nestled-0axk.onrender.com/login/:path*"
+    },
+    {
+      "source": "/error",
+      "destination": "https://nestled-0axk.onrender.com/error"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

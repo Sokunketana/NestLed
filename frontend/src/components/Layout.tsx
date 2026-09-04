@@ -29,7 +29,7 @@ export default function Layout() {
   }
 
   const avatar = (user?.displayName || user?.email || 'N').slice(0, 1).toUpperCase()
-  const accountName = user?.displayName || user?.email || 'Your account'
+  const accountName = user?.displayName || 'Your account'
 
   useEffect(() => {
     setAvatarImageFailed(false)
@@ -100,7 +100,7 @@ export default function Layout() {
           <div ref={profileMenuRef} className="relative order-1 ml-auto shrink-0 sm:order-none lg:translate-x-24">
             <button
               type="button"
-              className="group flex h-11 items-center gap-2 rounded-full border border-line bg-surface p-1.5 pr-2.5 transition hover:border-stone-300 hover:bg-white"
+              className="group grid h-11 w-11 place-items-center rounded-full border border-line bg-surface p-1.5 transition hover:border-stone-300 hover:bg-white"
               aria-label={`Open account menu for ${accountName}`}
               aria-expanded={showProfileMenu}
               aria-haspopup="menu"
@@ -111,17 +111,12 @@ export default function Layout() {
                   ? <img src={user.pictureUrl} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" onError={() => setAvatarImageFailed(true)} />
                   : avatar}
               </span>
-              <span className="hidden w-44 min-w-0 text-left xl:block" title={accountName}>
-                <span className="block truncate text-sm font-semibold text-ink">{accountName}</span>
-                {user?.displayName && <span className="block truncate text-xs text-ink-soft">{user.email}</span>}
-              </span>
-              <Icon name="chevron-down" className={`h-4 w-4 text-ink-soft transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
             </button>
 
             {showProfileMenu && <div role="menu" aria-label="Account menu" className="absolute right-0 top-[calc(100%+0.75rem)] z-30 w-[min(16rem,calc(100vw-1.5rem))] rounded-2xl border border-line bg-surface p-2 shadow-card">
               <div className="border-b border-line px-3 py-2.5">
                 <p className="break-words text-sm font-semibold text-ink">{accountName}</p>
-                {user?.displayName && <p className="mt-0.5 break-all text-xs text-ink-soft">{user.email}</p>}
+                {user?.email && <p className="mt-0.5 break-all text-xs text-ink-soft">{user.email}</p>}
               </div>
               <button
                 type="button"

@@ -64,7 +64,6 @@ export default function ItemsPage() {
   const [actionError, setActionError] = useState('')
   const [success, setSuccess] = useState('')
   const [isSelecting, setIsSelecting] = useState(false)
-  const [showFilters, setShowFilters] = useState(() => Boolean(q || roomId || categoryId || storageLocationId))
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set())
   const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false)
 
@@ -72,7 +71,6 @@ export default function ItemsPage() {
     setActionError('')
     setSuccess('')
     setIsSelecting(false)
-    setShowFilters(Boolean(q || roomId || categoryId || storageLocationId))
     setSelectedIds(new Set())
     setIsMoveDialogOpen(false)
   }, [itemKey])
@@ -118,7 +116,6 @@ export default function ItemsPage() {
 
   const selectedCount = selectedIds.size
   const allVisibleSelected = items != null && items.length > 0 && items.every(item => selectedIds.has(item.id))
-  const activeFilterCount = [roomId, storageLocationId, categoryId].filter(Boolean).length
   const title = q
     ? `Results for “${q}”`
     : storageLocationId
@@ -147,36 +144,27 @@ export default function ItemsPage() {
       </div>
     </div>
 
-    <div className="mt-7 rounded-2xl border border-line bg-white/65 p-3 sm:p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 px-1 text-sm font-bold text-ink">
-          <Icon name="sliders" className="h-4 w-4 text-pine" />
-          <span>Filter items</span>
-          {activeFilterCount > 0 && <span className="rounded-full bg-sage px-2 py-0.5 text-xs text-pine">{activeFilterCount} active</span>}
-        </div>
-        <button type="button" className="btn-secondary px-3 py-2" aria-expanded={showFilters} onClick={() => setShowFilters(current => !current)}>
-          {showFilters ? 'Hide filters' : 'Show filters'}
-        </button>
+    <div className="mt-7 rounded-[1.35rem] border border-line bg-white/65 p-3 sm:p-4">
+      <div className="mb-3 flex items-center gap-2 px-1 text-sm font-bold text-ink"><Icon name="sliders" className="h-4 w-4 text-pine" />Filter your inventory</div>
+      <div className="grid gap-3 sm:flex sm:flex-wrap">
+      <select aria-label="Filter by room" className="field w-full bg-white sm:w-auto sm:min-w-44" value={roomId} onChange={event => filter('roomId', event.target.value)}>
+        <option value="">Every room</option>
+        {roomList.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
+      </select>
+      <select aria-label="Filter by storage location" className="field w-full bg-white sm:w-auto sm:min-w-44" value={storageLocationId} onChange={event => filter('storageLocationId', event.target.value)}>
+        <option value="">Every location</option>
+        {locationList.filter(location => !roomId || String(location.roomId) === roomId).map(location => (
+          <option key={location.id} value={location.id}>{location.name}</option>
+        ))}
+      </select>
+      <select aria-label="Filter by category" className="field w-full bg-white sm:w-auto sm:min-w-44" value={categoryId} onChange={event => filter('categoryId', event.target.value)}>
+        <option value="">Every category</option>
+        {categoryList.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+      </select>
+      {(q || roomId || categoryId || storageLocationId) && (
+        <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => setParams({})}><Icon name="x" className="h-4 w-4" />Clear filters</button>
+      )}
       </div>
-      {showFilters && <div className="mt-3 grid gap-3 sm:flex sm:flex-wrap">
-        <select aria-label="Filter by room" className="field w-full bg-white sm:w-auto sm:min-w-44" value={roomId} onChange={event => filter('roomId', event.target.value)}>
-          <option value="">Every room</option>
-          {roomList.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
-        </select>
-        <select aria-label="Filter by storage location" className="field w-full bg-white sm:w-auto sm:min-w-44" value={storageLocationId} onChange={event => filter('storageLocationId', event.target.value)}>
-          <option value="">Every location</option>
-          {locationList.filter(location => !roomId || String(location.roomId) === roomId).map(location => (
-            <option key={location.id} value={location.id}>{location.name}</option>
-          ))}
-        </select>
-        <select aria-label="Filter by category" className="field w-full bg-white sm:w-auto sm:min-w-44" value={categoryId} onChange={event => filter('categoryId', event.target.value)}>
-          <option value="">Every category</option>
-          {categoryList.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
-        </select>
-        {(q || roomId || categoryId || storageLocationId) && (
-          <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => setParams({})}><Icon name="x" className="h-4 w-4" />Clear filters</button>
-        )}
-      </div>}
     </div>
 
     {success && (

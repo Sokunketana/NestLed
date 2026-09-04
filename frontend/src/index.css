@@ -8,7 +8,7 @@
   html { min-width: 280px; background: #f5f2eb; }
   body { @apply m-0 bg-cream text-ink antialiased; min-width: 280px; overflow-x: hidden; font-family: 'DM Sans', sans-serif; }
   img, svg, video, canvas { max-width: 100%; }
-  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .14; background-image: radial-gradient(rgba(20, 82, 71, .07) .7px, transparent .7px); background-size: 18px 18px; mask-image: linear-gradient(to bottom, black, transparent 75%); }
+  body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .35; background-image: radial-gradient(rgba(20, 82, 71, .07) .7px, transparent .7px); background-size: 18px 18px; mask-image: linear-gradient(to bottom, black, transparent 75%); }
   h1, h2, h3 { font-family: 'Fraunces', serif; letter-spacing: -0.025em; }
   h1, h2, h3, p { overflow-wrap: anywhere; }
   ::selection { background: #dcebe3; color: #123f38; }
@@ -16,7 +16,7 @@
   button, input, select, textarea { font: inherit; }
 }
 @layer components {
-  .card { @apply rounded-2xl p-5; background: #fffdf9; border: 1px solid #e5dfd4; box-shadow: 0 1px 2px rgba(31, 49, 43, 0.045); }
+  .card { @apply rounded-[1.35rem] p-5; background: #fffdf9; border: 1px solid #e5dfd4; box-shadow: 0 2px 0 rgba(31, 49, 43, 0.03), 0 12px 28px rgba(31, 49, 43, 0.055); }
   .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50; }
   .btn-primary { @apply btn text-white shadow-sm hover:shadow-md; background: #145247; }
   .btn-primary:hover { background: #123f38; }
@@ -27,8 +27,6 @@
   .label { @apply mb-1.5 block text-sm font-semibold text-stone-700; }
   .eyebrow { @apply text-[0.68rem] font-bold uppercase tracking-[0.2em]; color: #145247; }
   .page-title { @apply leading-tight; font-size: clamp(2rem, 7vw, 2.5rem); }
-  summary { list-style: none; }
-  summary::-webkit-details-marker { display: none; }
 }
 
 @layer utilities {
@@ -45,7 +43,7 @@
   .bg-gold\/10 { background-color: rgb(216 165 43 / .1); }
   .bg-gold\/15 { background-color: rgb(216 165 43 / .15); }
   .text-deep\/60 { color: rgb(18 63 56 / .6); }
-  .shadow-card { box-shadow: 0 1px 2px rgba(31, 49, 43, .045); }
+  .shadow-card { box-shadow: 0 2px 0 rgba(31, 49, 43, .03), 0 12px 28px rgba(31, 49, 43, .055); }
 }
 
 @media (prefers-reduced-motion: reduce) {

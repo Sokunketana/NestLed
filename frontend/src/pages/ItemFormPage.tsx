@@ -167,60 +167,44 @@ export default function ItemFormPage() {
       onConfirm={createConfirmedDuplicate}
     />}
     <Link to={editing ? `/items/${id}` : '/items'} className="inline-flex items-center gap-2 text-sm font-bold text-pine"><Icon name="arrow-left" className="h-4 w-4" />Cancel</Link>
-    <div className="mt-5 max-w-3xl"><p className="eyebrow">{editing ? 'Update record' : 'New record'}</p><h1 className="page-title mt-2">{editing ? 'Edit item' : 'Add an item'}</h1><p className="mt-2 text-stone-500">Start with the item’s name and place. Add extra details only when they’re useful.</p></div>
+    <div className="mt-5 max-w-3xl"><p className="eyebrow">{editing ? 'Update record' : 'New record'}</p><h1 className="page-title mt-2">{editing ? 'Edit item' : 'Add an item'}</h1><p className="mt-2 text-stone-500">Record what it is, what it is worth, and exactly where it lives.</p></div>
     {!roomList.length || !locationList.length || !categoryList.length ? <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Create at least one <Link className="underline" to="/rooms">room and storage location</Link> and <Link className="underline" to="/categories">category</Link> before adding an item.</div> : null}
     <form onSubmit={submit} className="mt-8 space-y-6">
       {error && <ErrorMessage message={error} />}
+      <section className="card grid gap-5 md:grid-cols-2"><div className="mb-1 flex items-start gap-3 md:col-span-2"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sage text-pine"><Icon name="box" className="h-4 w-4" /></span><div className="min-w-0"><h2 className="text-xl">The basics</h2><p className="text-sm text-ink-soft">Start with the details you’ll use to recognize it.</p></div></div><div className="md:col-span-2"><label className="label">Item name *</label><input className="field" required maxLength={150} value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Passport" /></div>
+        <div className="md:col-span-2"><label className="label">Description</label><textarea className="field min-h-24" maxLength={1000} value={form.description ?? ''} onChange={e => set('description', e.target.value)} placeholder="Helpful identifying details" /></div>
+        <div><label className="label">Quantity *</label><input className="field" type="number" required min="1" value={form.quantity} onChange={e => set('quantity', Number(e.target.value))} /></div>
+        <div><label className="label">Condition *</label><select className="field" value={form.condition} onChange={e => set('condition', e.target.value as ItemCondition)}>{['NEW','GOOD','FAIR','DAMAGED'].map(x => <option key={x}>{x}</option>)}</select></div>
+      </section>
       <section className="card">
-        <div className="flex items-start gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sage text-pine"><Icon name="box" className="h-4 w-4" /></span><div className="min-w-0"><h2 className="text-xl">Start here</h2><p className="text-sm text-ink-soft">Give the item a name and a place.</p></div></div>
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
-          <div className="md:col-span-2"><label className="label">Item name *</label><input className="field" required maxLength={150} value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Passport" /></div>
-          <div><label className="label">Room *</label><select className="field" required value={form.roomId || ''} onChange={e => { set('roomId', Number(e.target.value)); set('storageLocationId', 0) }}><option value="">Select room</option>{roomList.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></div>
-          <div><label className="label">Storage location *</label><select className="field" required value={form.storageLocationId || ''} onChange={e => set('storageLocationId', Number(e.target.value))} disabled={!form.roomId}><option value="">{form.roomId && !roomLocations.length ? 'Add a location to this room first' : 'Select location'}</option>{roomLocations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select>{form.roomId > 0 && !roomLocations.length && <p className="mt-2 text-sm text-amber-700">This room has no storage locations. <Link className="font-semibold underline" to="/rooms">Add one first</Link>.</p>}</div>
-          <div><label className="label">Category *</label><select className="field" required value={form.categoryId || ''} onChange={e => set('categoryId', Number(e.target.value))}><option value="">Select category</option>{categoryList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+        <div className="flex items-start gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-coral/10 text-coral"><Icon name="camera" className="h-4 w-4" /></span><div className="min-w-0"><h2 className="text-xl">Item photo</h2><p id="photo-help" className="mt-1 text-sm text-stone-500">Optional · JPG, PNG, WebP, or GIF · 5 MB maximum</p></div></div>
+        <div className="mt-5 grid items-start gap-5 sm:grid-cols-[16rem_1fr]">
+          <ItemPhoto photoUrl={removePhoto ? null : existingPhotoUrl} previewUrl={photoPreviewUrl} cacheKey={existingPhotoVersion} alt={`Photo of ${form.name || 'item'}`} fallbackLabel="No item photo selected" className="aspect-[4/3] w-full rounded-2xl border" loading="eager" />
+          <div>
+            <input ref={photoInput} id="item-photo" className="sr-only" type="file" tabIndex={-1} aria-label="Item photo" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" capture="environment" disabled={saving} onChange={choosePhoto} />
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn-secondary" onClick={() => photoInput.current?.click()} disabled={saving} aria-controls="item-photo" aria-describedby={`photo-help${photoError ? ' photo-error' : ''}`} aria-invalid={Boolean(photoError)}><Icon name="camera" className="h-4 w-4" />{hasDisplayedPhoto ? 'Replace photo' : 'Choose photo'}</button>
+              {photoFile && existingPhotoUrl && <button type="button" className="btn-secondary" onClick={keepCurrentPhoto} disabled={saving}>Use current photo</button>}
+              {hasDisplayedPhoto && <button type="button" className="btn-danger" onClick={removeSelectedPhoto} disabled={saving}><Icon name="trash" className="h-4 w-4" />Remove photo</button>}
+              {removePhoto && existingPhotoUrl && <button type="button" className="btn-secondary" onClick={keepCurrentPhoto} disabled={saving}>Keep current photo</button>}
+            </div>
+            {photoFile && <p className="mt-3 break-all text-sm text-stone-600">{photoFile.name} · {(photoFile.size / 1024 / 1024).toFixed(1)} MB</p>}
+            {removePhoto && existingPhotoUrl && <p className="mt-3 text-sm text-stone-600">The current photo will be removed when you save.</p>}
+            {photoError && <p id="photo-error" className="mt-3 text-sm font-semibold text-red-700" role="alert">{photoError}</p>}
+          </div>
         </div>
       </section>
-      <details className="card group" open={editing || undefined}>
-        <summary className="flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-cream text-pine"><Icon name="sliders" className="h-4 w-4" /></span>
-          <span className="min-w-0 flex-1"><span className="block text-xl">More details</span><span className="mt-0.5 block text-sm text-ink-soft">Optional photo, description, condition, quantity, value, and dates.</span></span>
-          <Icon name="chevron-down" className="h-5 w-5 shrink-0 text-stone-400 transition group-open:rotate-180" />
-        </summary>
-        <div className="mt-6 space-y-6">
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="md:col-span-2"><label className="label">Description</label><textarea className="field min-h-24" maxLength={1000} value={form.description ?? ''} onChange={e => set('description', e.target.value)} placeholder="Helpful identifying details" /></div>
-            <div><label className="label">Quantity</label><input className="field" type="number" required min="1" value={form.quantity} onChange={e => set('quantity', Number(e.target.value))} /></div>
-            <div><label className="label">Condition</label><select className="field" value={form.condition} onChange={e => set('condition', e.target.value as ItemCondition)}>{['NEW','GOOD','FAIR','DAMAGED'].map(x => <option key={x}>{x}</option>)}</select></div>
-          </div>
-          <div className="border-t border-line pt-6">
-            <div className="flex items-start gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-coral/10 text-coral"><Icon name="camera" className="h-4 w-4" /></span><div className="min-w-0"><h3 className="text-lg">Item photo</h3><p id="photo-help" className="mt-1 text-sm text-stone-500">Optional · JPG, PNG, WebP, or GIF · 5 MB maximum</p></div></div>
-            <div className="mt-5 grid items-start gap-5 sm:grid-cols-[14rem_1fr]">
-              <ItemPhoto photoUrl={removePhoto ? null : existingPhotoUrl} previewUrl={photoPreviewUrl} cacheKey={existingPhotoVersion} alt={`Photo of ${form.name || 'item'}`} fallbackLabel="No item photo selected" className="aspect-[4/3] w-full rounded-2xl border" loading="eager" />
-              <div>
-                <input ref={photoInput} id="item-photo" className="sr-only" type="file" tabIndex={-1} aria-label="Item photo" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" capture="environment" disabled={saving} onChange={choosePhoto} />
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" className="btn-secondary" onClick={() => photoInput.current?.click()} disabled={saving} aria-controls="item-photo" aria-describedby={`photo-help${photoError ? ' photo-error' : ''}`} aria-invalid={Boolean(photoError)}><Icon name="camera" className="h-4 w-4" />{hasDisplayedPhoto ? 'Replace photo' : 'Choose photo'}</button>
-                  {photoFile && existingPhotoUrl && <button type="button" className="btn-secondary" onClick={keepCurrentPhoto} disabled={saving}>Use current photo</button>}
-                  {hasDisplayedPhoto && <button type="button" className="btn-danger" onClick={removeSelectedPhoto} disabled={saving}><Icon name="trash" className="h-4 w-4" />Remove photo</button>}
-                  {removePhoto && existingPhotoUrl && <button type="button" className="btn-secondary" onClick={keepCurrentPhoto} disabled={saving}>Keep current photo</button>}
-                </div>
-                {photoFile && <p className="mt-3 break-all text-sm text-stone-600">{photoFile.name} · {(photoFile.size / 1024 / 1024).toFixed(1)} MB</p>}
-                {removePhoto && existingPhotoUrl && <p className="mt-3 text-sm text-stone-600">The current photo will be removed when you save.</p>}
-                {photoError && <p id="photo-error" className="mt-3 text-sm font-semibold text-red-700" role="alert">{photoError}</p>}
-              </div>
-            </div>
-          </div>
-          <div className="border-t border-line pt-6">
-            <div className="mb-5 flex items-center gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sage text-pine"><Icon name="calendar" className="h-4 w-4" /></span><div><h3 className="text-lg">Value & dates</h3><p className="text-sm text-ink-soft">Useful for planning, warranties, and insurance.</p></div></div>
-            <div className="grid gap-5 md:grid-cols-3">
-              <div><label className="label">Estimated value each</label><input className="field" type="number" min="0" step="0.01" value={form.estimatedValue ?? ''} onChange={e => set('estimatedValue', e.target.value === '' ? undefined : Number(e.target.value))} /></div>
-              <div><label className="label">Purchase date</label><input className="field" type="date" value={form.purchaseDate ?? ''} onChange={e => set('purchaseDate', e.target.value || undefined)} /></div>
-              <div><label className="label">Warranty expiration</label><input className="field" type="date" value={form.warrantyExpirationDate ?? ''} onChange={e => set('warrantyExpirationDate', e.target.value || undefined)} /></div>
-              <div className="md:col-span-3"><label className="label">Notes</label><textarea className="field min-h-24" maxLength={2000} value={form.notes ?? ''} onChange={e => set('notes', e.target.value)} placeholder="Serial number, warranty details, or anything else useful" /></div>
-            </div>
-          </div>
-        </div>
-      </details>
+      <section className="card"><div className="mb-5 flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-gold/15 text-amber-700"><Icon name="map" className="h-4 w-4" /></span><div><h2 className="text-xl">Where is it?</h2><p className="text-sm text-ink-soft">A precise location makes it easy to find later.</p></div></div><div className="grid gap-5 md:grid-cols-3">
+        <div><label className="label">Room *</label><select className="field" required value={form.roomId || ''} onChange={e => { set('roomId', Number(e.target.value)); set('storageLocationId', 0) }}><option value="">Select room</option>{roomList.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select></div>
+        <div><label className="label">Storage location *</label><select className="field" required value={form.storageLocationId || ''} onChange={e => set('storageLocationId', Number(e.target.value))} disabled={!form.roomId}><option value="">{form.roomId && !roomLocations.length ? 'Add a location to this room first' : 'Select location'}</option>{roomLocations.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}</select>{form.roomId > 0 && !roomLocations.length && <p className="mt-2 text-sm text-amber-700">This room has no storage locations. <Link className="font-semibold underline" to="/rooms">Add one first</Link>.</p>}</div>
+        <div><label className="label">Category *</label><select className="field" required value={form.categoryId || ''} onChange={e => set('categoryId', Number(e.target.value))}><option value="">Select category</option>{categoryList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+      </div></section>
+      <section className="card"><div className="mb-5 flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-sage text-pine"><Icon name="calendar" className="h-4 w-4" /></span><div><h2 className="text-xl">Value & dates</h2><p className="text-sm text-ink-soft">Optional details for planning and peace of mind.</p></div></div><div className="grid gap-5 md:grid-cols-3">
+        <div><label className="label">Estimated value each</label><input className="field" type="number" min="0" step="0.01" value={form.estimatedValue ?? ''} onChange={e => set('estimatedValue', e.target.value === '' ? undefined : Number(e.target.value))} /></div>
+        <div><label className="label">Purchase date</label><input className="field" type="date" value={form.purchaseDate ?? ''} onChange={e => set('purchaseDate', e.target.value || undefined)} /></div>
+        <div><label className="label">Warranty expiration</label><input className="field" type="date" value={form.warrantyExpirationDate ?? ''} onChange={e => set('warrantyExpirationDate', e.target.value || undefined)} /></div>
+        <div className="md:col-span-3"><label className="label">Notes</label><textarea className="field min-h-24" maxLength={2000} value={form.notes ?? ''} onChange={e => set('notes', e.target.value)} placeholder="Serial number, warranty details, or anything else useful" /></div>
+      </div></section>
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><Link to={editing ? `/items/${id}` : '/items'} className="btn-secondary w-full sm:w-auto">Cancel</Link><button className="btn-primary w-full sm:w-auto" disabled={saving || !roomList.length || !categoryList.length || !form.storageLocationId}><Icon name={saving ? 'history' : editing ? 'check' : 'plus'} className="h-4 w-4" />{saving ? (photoFile ? 'Uploading photo…' : 'Saving…') : editing ? 'Save changes' : 'Add item'}</button></div>
     </form>
   </>

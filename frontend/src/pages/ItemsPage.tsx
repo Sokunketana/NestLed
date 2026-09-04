@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import useSWR from 'swr'
 import { categoryApi } from '../api/categoryApi'
+import { cacheKeys, revalidateInventory } from '../api/cache'
 import { itemApi } from '../api/itemApi'
 import { roomApi } from '../api/roomApi'
 import { storageLocationApi } from '../api/storageLocationApi'
@@ -39,51 +41,39 @@ function ItemCardContent({ item }: { item: Item }) {
 
 export default function ItemsPage() {
   const [params, setParams] = useSearchParams()
-  const [items, setItems] = useState<Item[]>()
-  const [rooms, setRooms] = useState<Room[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [locations, setLocations] = useState<StorageLocation[]>([])
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [isSelecting, setIsSelecting] = useState(false)
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set())
-  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false)
-
   const q = params.get('q') ?? ''
   const roomId = params.get('roomId') ?? ''
   const categoryId = params.get('categoryId') ?? ''
   const storageLocationId = params.get('storageLocationId') ?? ''
 
-  const loadItems = useCallback(
-    () => q ? itemApi.search(q) : itemApi.list({ roomId, categoryId, storageLocationId }),
-    [q, roomId, categoryId, storageLocationId],
+  const itemKey = q
+    ? cacheKeys.itemSearch(q)
+    : cacheKeys.itemList({ roomId, categoryId, storageLocationId })
+  const { data: items, error: itemError } = useSWR<Item[]>(
+    itemKey,
+    q ? () => itemApi.search(q) : () => itemApi.list({ roomId, categoryId, storageLocationId }),
   )
+  const { data: rooms, error: roomsError } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
+  const { data: categories, error: categoriesError } = useSWR<Category[]>(cacheKeys.categories, categoryApi.list)
+  const { data: locations, error: locationsError } = useSWR<StorageLocation[]>(cacheKeys.locations, storageLocationApi.list)
+
+  const roomList = rooms ?? []
+  const categoryList = categories ?? []
+  const locationList = locations ?? []
+  const loadError = itemError || roomsError || categoriesError || locationsError
+  const [actionError, setActionError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [isSelecting, setIsSelecting] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set())
+  const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false)
 
   useEffect(() => {
-    Promise.all([roomApi.list(), categoryApi.list(), storageLocationApi.list()])
-      .then(([nextRooms, nextCategories, nextLocations]) => {
-        setRooms(nextRooms)
-        setCategories(nextCategories)
-        setLocations(nextLocations)
-      })
-      .catch(cause => setError(cause instanceof Error ? cause.message : 'Unable to load filters.'))
-  }, [])
-
-  useEffect(() => {
-    let ignore = false
-    setItems(undefined)
-    setError('')
+    setActionError('')
     setSuccess('')
     setIsSelecting(false)
     setSelectedIds(new Set())
     setIsMoveDialogOpen(false)
-
-    loadItems()
-      .then(nextItems => { if (!ignore) setItems(nextItems) })
-      .catch(cause => { if (!ignore) setError(cause instanceof Error ? cause.message : 'Unable to load items.') })
-
-    return () => { ignore = true }
-  }, [loadItems])
+  }, [itemKey])
 
   function filter(key: string, value: string) {
     const next = new URLSearchParams(params)
@@ -116,14 +106,11 @@ export default function ItemsPage() {
     setIsMoveDialogOpen(false)
     stopSelecting()
     setSuccess(`${result.movedCount} ${result.movedCount === 1 ? 'item' : 'items'} moved to ${result.roomName} → ${result.storageLocationName}.`)
-    setError('')
-    setItems(undefined)
-    window.dispatchEvent(new Event('inventory-changed'))
-
+    setActionError('')
     try {
-      setItems(await loadItems())
+      await revalidateInventory({ dashboard: true, items: true, itemDetails: true, locations: true, movements: true, rooms: true })
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'The items moved, but this view could not be refreshed.')
+      setActionError(cause instanceof Error ? cause.message : 'The items moved, but this view could not be refreshed.')
     }
   }
 
@@ -132,9 +119,9 @@ export default function ItemsPage() {
   const title = q
     ? `Results for “${q}”`
     : storageLocationId
-      ? locations.find(location => String(location.id) === storageLocationId)?.name ?? 'Storage location'
+      ? locationList.find(location => String(location.id) === storageLocationId)?.name ?? 'Storage location'
       : roomId
-        ? rooms.find(room => String(room.id) === roomId)?.name ?? 'Room items'
+        ? roomList.find(room => String(room.id) === roomId)?.name ?? 'Room items'
         : 'All items'
 
   return <>
@@ -162,17 +149,17 @@ export default function ItemsPage() {
       <div className="grid gap-3 sm:flex sm:flex-wrap">
       <select aria-label="Filter by room" className="field w-full bg-white sm:w-auto sm:min-w-44" value={roomId} onChange={event => filter('roomId', event.target.value)}>
         <option value="">Every room</option>
-        {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
+        {roomList.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
       </select>
       <select aria-label="Filter by storage location" className="field w-full bg-white sm:w-auto sm:min-w-44" value={storageLocationId} onChange={event => filter('storageLocationId', event.target.value)}>
         <option value="">Every location</option>
-        {locations.filter(location => !roomId || String(location.roomId) === roomId).map(location => (
+        {locationList.filter(location => !roomId || String(location.roomId) === roomId).map(location => (
           <option key={location.id} value={location.id}>{location.name}</option>
         ))}
       </select>
       <select aria-label="Filter by category" className="field w-full bg-white sm:w-auto sm:min-w-44" value={categoryId} onChange={event => filter('categoryId', event.target.value)}>
         <option value="">Every category</option>
-        {categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+        {categoryList.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
       </select>
       {(q || roomId || categoryId || storageLocationId) && (
         <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => setParams({})}><Icon name="x" className="h-4 w-4" />Clear filters</button>
@@ -204,7 +191,7 @@ export default function ItemsPage() {
     ) : null}
 
     <div className="mt-6">
-      {error ? <ErrorMessage message={error} /> : !items ? <Loading /> : !items.length ? (
+      {actionError || loadError ? <ErrorMessage message={actionError || (loadError instanceof Error ? loadError.message : 'Unable to load items.')} /> : !items ? <Loading /> : !items.length ? (
         <Empty>No items match this view. Add one or try different filters.</Empty>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
@@ -234,8 +221,8 @@ export default function ItemsPage() {
     {isMoveDialogOpen && selectedCount > 0 && (
       <BulkMoveItemsModal
         itemIds={[...selectedIds]}
-        rooms={rooms}
-        locations={locations}
+        rooms={roomList}
+        locations={locationList}
         onClose={() => setIsMoveDialogOpen(false)}
         onMoved={finishMove}
       />

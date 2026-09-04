@@ -1,20 +1,19 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { Link } from 'react-router-dom'
+import useSWR from 'swr'
 import { categoryApi } from '../api/categoryApi'
+import { cacheKeys, revalidateInventory } from '../api/cache'
 import ConfirmationModal from '../components/ConfirmationModal'
 import Icon from '../components/Icon'
 import { ErrorMessage, Loading } from '../components/PageState'
 import type { Category } from '../types'
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>()
+  const { data: categories, error: loadError } = useSWR<Category[]>(cacheKeys.categories, categoryApi.list)
   const [form, setForm] = useState({ name: '', color: '#145247' })
   const [editing, setEditing] = useState<number>()
   const [error, setError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Category>()
-
-  const load = () => categoryApi.list().then(setCategories).catch(cause => setError(cause instanceof Error ? cause.message : 'Unable to load categories.'))
-  useEffect(() => { void load() }, [])
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -23,7 +22,7 @@ export default function CategoriesPage() {
       editing ? await categoryApi.update(editing, form) : await categoryApi.create(form)
       setForm({ name: '', color: '#145247' })
       setEditing(undefined)
-      await load()
+      await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to save category.')
     }
@@ -33,7 +32,7 @@ export default function CategoriesPage() {
     if (!deleteTarget) return
     try {
       await categoryApi.remove(deleteTarget.id)
-      await load()
+      await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
       setDeleteTarget(undefined)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to delete category.')
@@ -45,6 +44,7 @@ export default function CategoriesPage() {
     setForm({ name: '', color: '#145247' })
   }
 
+  if (!categories && loadError) return <ErrorMessage message={loadError instanceof Error ? loadError.message : 'Unable to load categories.'} />
   if (!categories) return <Loading />
 
   return <>
@@ -52,7 +52,7 @@ export default function CategoriesPage() {
       <div><p className="eyebrow">Group related things</p><h1 className="page-title mt-2">Categories</h1><p className="mt-2 max-w-2xl text-stone-500">Simple labels make a growing inventory easy to scan and filter.</p></div>
       <div className="flex shrink-0 items-center gap-2 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine"><Icon name="tag" className="h-4 w-4" />{categories.length} {categories.length === 1 ? 'category' : 'categories'}</div>
     </div>
-    {error && <div className="mt-6"><ErrorMessage message={error} /></div>}
+    {(error || loadError) && <div className="mt-6"><ErrorMessage message={error || (loadError instanceof Error ? loadError.message : 'Unable to load categories.')} /></div>}
 
     <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_24rem]">
       <section className="grid content-start gap-4 sm:grid-cols-2" aria-label="Categories">

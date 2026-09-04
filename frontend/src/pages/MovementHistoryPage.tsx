@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import useSWR from 'swr'
 import { itemMovementApi } from '../api/itemMovementApi'
+import { cacheKeys } from '../api/cache'
 import { Empty, ErrorMessage, Loading } from '../components/PageState'
 import Icon from '../components/Icon'
 import type { ItemMovement } from '../types'
@@ -22,21 +24,10 @@ function localDateKey(value: string) {
 }
 
 export default function MovementHistoryPage() {
-  const [movements, setMovements] = useState<ItemMovement[]>()
+  const { data: movements, error } = useSWR<ItemMovement[]>(cacheKeys.movements, itemMovementApi.list)
   const [search, setSearch] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    let ignore = false
-    itemMovementApi.list()
-      .then(nextMovements => { if (!ignore) setMovements(nextMovements) })
-      .catch(cause => {
-        if (!ignore) setError(cause instanceof Error ? cause.message : 'Unable to load movement history.')
-      })
-    return () => { ignore = true }
-  }, [])
 
   const visibleMovements = useMemo(() => {
     const query = search.trim().toLocaleLowerCase()
@@ -124,7 +115,7 @@ export default function MovementHistoryPage() {
     </div>
 
     <div className="mt-7">
-      {error ? <ErrorMessage message={error} /> : !movements ? <Loading /> : !visibleMovements.length ? (
+      {error ? <ErrorMessage message={error instanceof Error ? error.message : 'Unable to load movement history.'} /> : !movements ? <Loading /> : !visibleMovements.length ? (
         <Empty>
           {hasFilters
             ? 'No movements match that filter.'

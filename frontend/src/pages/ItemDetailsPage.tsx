@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import useSWR from 'swr'
 import { itemApi } from '../api/itemApi'
+import { cacheKeys, revalidateInventory } from '../api/cache'
 import ConfirmationModal from '../components/ConfirmationModal'
 import ItemPhoto from '../components/ItemPhoto'
 import { ErrorMessage, Loading } from '../components/PageState'
@@ -11,15 +13,15 @@ const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD
 
 export default function ItemDetailsPage() {
   const { id } = useParams(); const navigate = useNavigate()
-  const [item, setItem] = useState<Item>(); const [error, setError] = useState('')
+  const { data: item, error } = useSWR<Item>(id ? cacheKeys.item(Number(id)) : null, () => itemApi.get(Number(id)))
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
-  useEffect(() => { itemApi.get(Number(id)).then(setItem).catch(e => setError(e.message)) }, [id])
   async function remove() {
     if (!item) return
     await itemApi.remove(item.id)
+    await revalidateInventory({ dashboard: true, items: true, locations: true, movements: true, rooms: true })
     navigate('/items')
   }
-  if (error) return <ErrorMessage message={error} />
+  if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Unable to load this item.'} />
   if (!item) return <Loading />
   const valueEach = item.estimatedValue == null ? 'Not recorded' : money.format(item.estimatedValue)
   const totalValue = item.estimatedValue == null ? 'Not recorded' : money.format(item.estimatedValue * item.quantity)

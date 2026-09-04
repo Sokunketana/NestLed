@@ -111,7 +111,7 @@ export default function Layout() {
                   ? <img src={user.pictureUrl} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" onError={() => setAvatarImageFailed(true)} />
                   : avatar}
               </span>
-              <span className="hidden max-w-44 text-left xl:block">
+              <span className="hidden w-44 min-w-0 text-left xl:block" title={accountName}>
                 <span className="block truncate text-sm font-semibold text-ink">{accountName}</span>
                 {user?.displayName && <span className="block truncate text-xs text-ink-soft">{user.email}</span>}
               </span>
@@ -120,8 +120,8 @@ export default function Layout() {
 
             {showProfileMenu && <div role="menu" aria-label="Account menu" className="absolute right-0 top-[calc(100%+0.75rem)] z-30 w-[min(16rem,calc(100vw-1.5rem))] rounded-2xl border border-line bg-surface p-2 shadow-card">
               <div className="border-b border-line px-3 py-2.5">
-                <p className="truncate text-sm font-semibold text-ink">{accountName}</p>
-                {user?.displayName && <p className="mt-0.5 truncate text-xs text-ink-soft">{user.email}</p>}
+                <p className="break-words text-sm font-semibold text-ink">{accountName}</p>
+                {user?.displayName && <p className="mt-0.5 break-all text-xs text-ink-soft">{user.email}</p>}
               </div>
               <button
                 type="button"

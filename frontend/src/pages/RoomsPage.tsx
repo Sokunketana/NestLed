@@ -1,7 +1,9 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useState } from 'react'
 import { Link } from 'react-router-dom'
+import useSWR from 'swr'
 import { roomApi } from '../api/roomApi'
 import { storageLocationApi } from '../api/storageLocationApi'
+import { cacheKeys, revalidateInventory } from '../api/cache'
 import ConfirmationModal from '../components/ConfirmationModal'
 import Icon from '../components/Icon'
 import { ErrorMessage, Loading } from '../components/PageState'
@@ -11,24 +13,20 @@ import type { Room, StorageLocation } from '../types'
 type DeleteTarget = { type: 'room'; value: Room } | { type: 'location'; value: StorageLocation }
 
 export default function RoomsPage() {
-  const [rooms, setRooms] = useState<Room[]>()
-  const [locations, setLocations] = useState<StorageLocation[]>([])
+  const { data: rooms, error: roomsError } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
+  const { data: locations, error: locationsError } = useSWR<StorageLocation[]>(cacheKeys.locations, storageLocationApi.list)
   const [roomForm, setRoomForm] = useState({ name: '', description: '' })
   const [locationForm, setLocationForm] = useState({ name: '', description: '', roomId: 0 })
   const [editingTarget, setEditingTarget] = useState<SpaceEditTarget>()
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>()
   const [error, setError] = useState('')
 
-  const load = () => Promise.all([roomApi.list(), storageLocationApi.list()])
-    .then(([nextRooms, nextLocations]) => {
-      setRooms(nextRooms)
-      setLocations(nextLocations)
-      window.dispatchEvent(new Event('inventory-changed'))
-    })
+  const locationList = locations ?? []
+  const loadError = roomsError || locationsError
 
-  useEffect(() => {
-    void load().catch(cause => setError(cause instanceof Error ? cause.message : 'Unable to load rooms.'))
-  }, [])
+  async function refreshInventory() {
+    await revalidateInventory({ dashboard: true, itemDetails: true, items: true, locations: true, rooms: true })
+  }
 
   async function saveRoom(event: FormEvent) {
     event.preventDefault()
@@ -36,7 +34,7 @@ export default function RoomsPage() {
     try {
       await roomApi.create(roomForm)
       setRoomForm({ name: '', description: '' })
-      await load()
+      await refreshInventory()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to save room.')
     }
@@ -48,7 +46,7 @@ export default function RoomsPage() {
     try {
       await storageLocationApi.create(locationForm)
       setLocationForm({ name: '', description: '', roomId: 0 })
-      await load()
+      await refreshInventory()
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to save storage location.')
     }
@@ -58,7 +56,7 @@ export default function RoomsPage() {
     if (!deleteTarget) return
     try {
       deleteTarget.type === 'room' ? await roomApi.remove(deleteTarget.value.id) : await storageLocationApi.remove(deleteTarget.value.id)
-      await load()
+      await refreshInventory()
       setDeleteTarget(undefined)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to delete this entry.')
@@ -79,9 +77,10 @@ export default function RoomsPage() {
       })
     }
 
-    await load()
+    await refreshInventory()
   }
 
+  if (!rooms && loadError) return <ErrorMessage message={loadError instanceof Error ? loadError.message : 'Unable to load rooms.'} />
   if (!rooms) return <Loading />
 
   return <>
@@ -93,7 +92,7 @@ export default function RoomsPage() {
       </div>
       <div className="flex shrink-0 items-center gap-2 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine"><Icon name="map" className="h-4 w-4" />{rooms.length} {rooms.length === 1 ? 'room' : 'rooms'}</div>
     </div>
-    {error && <div className="mt-6"><ErrorMessage message={error} /></div>}
+    {(error || loadError) && <div className="mt-6"><ErrorMessage message={error || (loadError instanceof Error ? loadError.message : 'Unable to load rooms.')} /></div>}
 
     <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_24rem]">
       <section className="space-y-4" aria-label="Rooms">
@@ -112,12 +111,12 @@ export default function RoomsPage() {
           <div className="p-5">
             <p className="text-sm text-ink-soft">{room.description || 'No description yet.'} <span className="mx-1 text-stone-300">·</span> <Link className="font-semibold text-pine hover:text-deep" to={`/items?roomId=${room.id}`}>Browse items <Icon name="arrow-right" className="inline h-3.5 w-3.5" /></Link></p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {locations.filter(location => location.roomId === room.id).map(location => <div className="group flex max-w-full items-center gap-2 rounded-xl border border-line bg-cream px-3 py-2 text-sm" key={location.id}>
+              {locationList.filter(location => location.roomId === room.id).map(location => <div className="group flex max-w-full items-center gap-2 rounded-xl border border-line bg-cream px-3 py-2 text-sm" key={location.id}>
                 <Icon name="map" className="h-3.5 w-3.5 shrink-0 text-pine" /><span className="min-w-0 max-w-[14rem] truncate">{location.name} <span className="text-stone-400">·</span> {location.itemCount}</span>
                 <button type="button" title={`Edit ${location.name}`} aria-label={`Edit ${location.name}`} className="ml-1 text-pine hover:text-deep" onClick={() => setEditingTarget({ type: 'location', value: location })}><Icon name="edit" className="h-3.5 w-3.5" /></button>
                 <button type="button" title={`Delete ${location.name}`} aria-label={`Delete ${location.name}`} className="text-red-600 hover:text-red-800" onClick={() => setDeleteTarget({ type: 'location', value: location })}><Icon name="x" className="h-3.5 w-3.5" /></button>
               </div>)}
-              {!locations.some(location => location.roomId === room.id) && <span className="rounded-xl border border-dashed border-line px-3 py-2 text-sm text-stone-400">No storage locations yet</span>}
+              {!locationList.some(location => location.roomId === room.id) && <span className="rounded-xl border border-dashed border-line px-3 py-2 text-sm text-stone-400">No storage locations yet</span>}
             </div>
           </div>
         </article>)}

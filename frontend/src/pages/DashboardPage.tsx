@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import useSWR from 'swr'
 import { dashboardApi } from '../api/dashboardApi'
+import { cacheKeys } from '../api/cache'
 import { Loading, ErrorMessage } from '../components/PageState'
 import Icon, { type IconName } from '../components/Icon'
 import type { Dashboard } from '../types'
@@ -8,9 +9,7 @@ import type { Dashboard } from '../types'
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
 export default function DashboardPage() {
-  const [data, setData] = useState<Dashboard>()
-  const [error, setError] = useState('')
-  useEffect(() => { dashboardApi.get().then(setData).catch(e => setError(e.message)) }, [])
+  const { data, error } = useSWR<Dashboard>(cacheKeys.dashboard, dashboardApi.get)
   if (error) return <ErrorMessage message={error} />
   if (!data) return <Loading />
   const stats: Array<{ label: string; value: string | number; note: string; icon: IconName }> = [

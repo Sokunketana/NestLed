@@ -1,6 +1,8 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useContext, useMemo } from 'react'
 import type { ReactNode } from 'react'
+import useSWR from 'swr'
 import { authApi, type AuthenticatedUser } from '../api/authApi'
+import { cacheKeys } from '../api/cache'
 import { ApiRequestError } from '../api/http'
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
@@ -17,53 +19,37 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [status, setStatus] = useState<AuthStatus>('loading')
-  const [user, setUser] = useState<AuthenticatedUser | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let active = true
-    authApi.me()
-      .then(currentUser => {
-        if (!active) return
-        setUser(currentUser)
-        setStatus('authenticated')
-      })
-      .catch(cause => {
-        if (!active) return
-        setUser(null)
-        setStatus('anonymous')
-        if (!(cause instanceof ApiRequestError && cause.status === 401)) {
-          setError(cause instanceof Error ? cause.message : 'Could not contact the server')
-        }
-      })
-    return () => { active = false }
-  }, [])
+  const { data: user, error: requestError, isLoading, mutate } = useSWR<AuthenticatedUser, ApiRequestError>(
+    cacheKeys.authMe,
+    authApi.me,
+    { revalidateOnFocus: false, shouldRetryOnError: false },
+  )
+  const status: AuthStatus = isLoading ? 'loading' : user ? 'authenticated' : 'anonymous'
+  const error = requestError && !(requestError instanceof ApiRequestError && requestError.status === 401)
+    ? requestError.message
+    : null
 
   const value = useMemo<AuthContextValue>(() => ({
     status,
-    user,
+    user: user ?? null,
     error,
     login: () => window.location.assign(authApi.loginUrl),
     updateHouseholdName: (id: number, name: string) => {
-      setUser(currentUser => currentUser ? {
+      void mutate(currentUser => currentUser ? {
         ...currentUser,
         householdName: currentUser.householdId === id ? name : currentUser.householdName,
-      } : null)
+      } : currentUser, { revalidate: false })
     },
     logout: async () => {
-      setError(null)
       try {
         await authApi.logout()
-        setUser(null)
-        setStatus('anonymous')
+        await mutate(undefined, { revalidate: false })
       } catch (cause) {
         const logoutError = cause instanceof Error ? cause : new Error('Could not sign out')
-        setError(logoutError.message)
         throw logoutError
       }
     },
-  }), [error, status, user])
+  }), [error, mutate, status, user])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import useSWR from 'swr'
 import { itemApi } from '../api/itemApi'
+import { cacheKeys } from '../api/cache'
 import { roomApi } from '../api/roomApi'
 import { storageLocationApi } from '../api/storageLocationApi'
 import Icon from './Icon'
@@ -9,34 +11,22 @@ import type { Item, Room, StorageLocation } from '../types'
 export default function HomeTree() {
   const route = useLocation()
   const [params] = useSearchParams()
-  const [rooms, setRooms] = useState<Room[]>([])
-  const [locations, setLocations] = useState<StorageLocation[]>([])
-  const [items, setItems] = useState<Item[]>([])
+  const { data: rooms, error: roomsError } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
+  const { data: locations, error: locationsError } = useSWR<StorageLocation[]>(cacheKeys.locations, storageLocationApi.list)
+  const { data: items, error: itemsError } = useSWR<Item[]>(cacheKeys.itemList(), itemApi.list)
   const [expandedRooms, setExpandedRooms] = useState<Set<number>>(new Set())
   const [expandedLocations, setExpandedLocations] = useState<Set<number>>(new Set())
-  const [error, setError] = useState(false)
 
-  useEffect(() => {
-    let active = true
-    const load = () => {
-      setError(false)
-      Promise.all([roomApi.list(), storageLocationApi.list(), itemApi.list()])
-        .then(([nextRooms, nextLocations, nextItems]) => {
-          if (!active) return
-          setRooms(nextRooms); setLocations(nextLocations); setItems(nextItems)
-        })
-        .catch(() => { if (active) setError(true) })
-    }
-    load()
-    window.addEventListener('inventory-changed', load)
-    return () => { active = false; window.removeEventListener('inventory-changed', load) }
-  }, [route.key])
+  const roomList = rooms ?? []
+  const locationList = locations ?? []
+  const itemList = items ?? []
+  const error = roomsError || locationsError || itemsError
 
   const activeItemId = route.pathname.match(/^\/items\/(\d+)(?:\/edit)?$/)?.[1]
   const activeRoomId = Number(params.get('roomId')) || undefined
   const activeLocationId = Number(params.get('storageLocationId')) || undefined
-  const activeItem = items.find(item => item.id === Number(activeItemId))
-  const activeLocation = locations.find(location => location.id === activeLocationId)
+  const activeItem = itemList.find(item => item.id === Number(activeItemId))
+  const activeLocation = locationList.find(location => location.id === activeLocationId)
 
   useEffect(() => {
     const roomId = activeItem?.roomId ?? activeRoomId ?? activeLocation?.roomId
@@ -47,15 +37,15 @@ export default function HomeTree() {
 
   const locationsByRoom = useMemo(() => {
     const grouped = new Map<number, StorageLocation[]>()
-    locations.forEach(location => grouped.set(location.roomId, [...(grouped.get(location.roomId) ?? []), location]))
+    locationList.forEach(location => grouped.set(location.roomId, [...(grouped.get(location.roomId) ?? []), location]))
     return grouped
-  }, [locations])
+  }, [locationList])
 
   const itemsByLocation = useMemo(() => {
     const grouped = new Map<number, Item[]>()
-    items.forEach(item => grouped.set(item.storageLocationId, [...(grouped.get(item.storageLocationId) ?? []), item]))
+    itemList.forEach(item => grouped.set(item.storageLocationId, [...(grouped.get(item.storageLocationId) ?? []), item]))
     return grouped
-  }, [items])
+  }, [itemList])
 
   function toggle(setter: Dispatch<SetStateAction<Set<number>>>, id: number) {
     setter(old => {
@@ -72,8 +62,8 @@ export default function HomeTree() {
     </div>
     <div className="mt-2 max-h-[35vh] space-y-1 overflow-y-auto overscroll-contain pr-1 text-sm lg:max-h-[calc(100vh-20rem)]">
       {error && <p className="rounded-lg bg-red-950/30 px-3 py-2 text-xs text-red-100">Could not load the home tree.</p>}
-      {!error && !rooms.length && <p className="px-3 py-2 text-xs text-emerald-100">Add a room and storage location to begin.</p>}
-      {rooms.map(room => {
+      {!error && !roomList.length && <p className="px-3 py-2 text-xs text-emerald-100">Add a room and storage location to begin.</p>}
+      {roomList.map(room => {
         const roomOpen = expandedRooms.has(room.id)
         const roomLocations = locationsByRoom.get(room.id) ?? []
         const roomActive = activeRoomId === room.id && !activeLocationId

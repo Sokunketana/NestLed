@@ -15,7 +15,8 @@
     "typescript": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "react-router-dom": "latest"
+    "react-router-dom": "latest",
+    "swr": "^2.5.1"
   },
   "devDependencies": {
     "@eslint/js": "latest",

@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react'
+import useSWR from 'swr'
 import { householdApi, type Household, type HouseholdMember } from '../api/householdApi'
 import { invitationApi } from '../api/invitationApi'
+import { cacheKeys } from '../api/cache'
 import { ApiRequestError } from '../api/http'
 import ConfirmationModal from '../components/ConfirmationModal'
 import { ErrorMessage, Loading } from '../components/PageState'
@@ -9,7 +11,7 @@ import { useAuth } from '../auth/AuthContext'
 
 export default function HouseholdPage() {
   const { user, updateHouseholdName } = useAuth()
-  const [household, setHousehold] = useState<Household | null>(null)
+  const { data: household, error: loadError, mutate } = useSWR<Household>(cacheKeys.household, householdApi.get)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -21,16 +23,14 @@ export default function HouseholdPage() {
   const [invitationError, setInvitationError] = useState<string | null>(null)
 
   useEffect(() => {
-    householdApi.get()
-      .then(value => { setHousehold(value); setName(value.name) })
-      .catch(cause => setError(cause instanceof Error ? cause.message : 'Could not load your household'))
-  }, [])
+    if (household) setName(current => current || household.name)
+  }, [household])
 
   async function run(action: () => Promise<Household>) {
     setBusy(true)
     setError(null)
     try {
-      setHousehold(await action())
+      await mutate(await action(), { revalidate: false })
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'The household could not be updated')
     } finally {
@@ -45,7 +45,7 @@ export default function HouseholdPage() {
     setSaved(false)
     try {
       const updated = await householdApi.rename(name)
-      setHousehold(updated)
+      await mutate(updated, { revalidate: false })
       setName(updated.name)
       updateHouseholdName(updated.id, updated.name)
       setSaved(true)
@@ -69,7 +69,7 @@ export default function HouseholdPage() {
     if (!removeTarget) return
     setError(null)
     const updated = await householdApi.removeMember(removeTarget.id)
-    setHousehold(updated)
+    await mutate(updated, { revalidate: false })
     setRemoveTarget(null)
   }
 
@@ -99,8 +99,9 @@ export default function HouseholdPage() {
     }
   }
 
-  if (!household && !error) return <Loading />
-  if (!household) return <ErrorMessage message={error || 'Could not load your household'} />
+  const loadMessage = loadError instanceof Error ? loadError.message : 'Could not load your household'
+  if (!household && !error && !loadError) return <Loading />
+  if (!household) return <ErrorMessage message={error || loadMessage} />
   const isOwner = household.currentUserRole === 'OWNER'
 
   return <>
@@ -110,7 +111,7 @@ export default function HouseholdPage() {
       <div className="flex shrink-0 items-center gap-2 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine"><Icon name="users" className="h-4 w-4" />Shared space</div>
     </div>
 
-    {error && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+    {(error || loadError) && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error || loadMessage}</p>}
 
     <section className="card">
       <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-sage text-pine"><Icon name="home" className="h-4 w-4" /></span><div><h2 className="text-xl">Household details</h2><p className="mt-1 text-sm text-ink-soft">This is the shared space everyone sees.</p></div></div>

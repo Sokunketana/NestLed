@@ -72,17 +72,17 @@ export default function SpaceEditModal({ target, rooms, onClose, onSave }: Space
       ref={dialogRef}
       aria-labelledby={titleId}
       aria-describedby={`${descriptionId}${error ? ` ${errorId}` : ''}`}
-      className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm"
+      className="m-auto max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100%-2rem)]"
       onCancel={event => { event.preventDefault(); close() }}
       onClick={event => { if (event.target === event.currentTarget) close() }}
     >
-      <form className="p-6 sm:p-7" onSubmit={save}>
+      <form className="p-5 sm:p-7" onSubmit={save}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${isLocation ? 'bg-sage text-pine' : 'bg-coral/10 text-coral'}`} aria-hidden="true">
               <Icon name={isLocation ? 'map' : 'home'} className="h-6 w-6" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h2 id={titleId} className="text-2xl">{title}</h2>
               <p id={descriptionId} className="mt-1 leading-relaxed text-stone-600">
                 Update the details for “{target.value.name}”.

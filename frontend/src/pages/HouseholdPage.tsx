@@ -106,8 +106,8 @@ export default function HouseholdPage() {
   return <>
   <div className="space-y-7">
     <div className="flex flex-wrap items-end justify-between gap-5">
-      <div><p className="eyebrow">Shared home</p><h1 className="mt-2 text-4xl">Household</h1><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></div>
-      <div className="flex items-center gap-2 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine"><Icon name="users" className="h-4 w-4" />Shared space</div>
+      <div><p className="eyebrow">Shared home</p><h1 className="page-title mt-2">Household</h1><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></div>
+      <div className="flex shrink-0 items-center gap-2 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine"><Icon name="users" className="h-4 w-4" />Shared space</div>
     </div>
 
     {error && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
@@ -166,11 +166,11 @@ export default function HouseholdPage() {
     <section className="card">
       <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-cream text-pine"><Icon name="users" className="h-4 w-4" /></span><div><h2 className="text-xl">Members</h2><p className="mt-1 text-sm text-ink-soft">People who can view and update this home.</p></div></div>
       <div className="mt-4 divide-y">
-        {household.members.map(member => <div key={member.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+        {household.members.map(member => <div key={member.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0 sm:flex-nowrap">
           {member.pictureUrl
             ? <img src={member.pictureUrl} alt="" referrerPolicy="no-referrer" className="h-10 w-10 rounded-full object-cover" />
             : <span className="grid h-10 w-10 place-items-center rounded-full bg-stone-100 font-semibold">{(member.displayName || member.email)[0].toUpperCase()}</span>}
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 basis-[calc(100%-3.25rem)] sm:basis-auto">
             <p className="truncate font-semibold">{member.displayName || member.email}</p>
             <p className="truncate text-sm text-stone-500">{member.email}</p>
           </div>

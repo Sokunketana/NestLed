@@ -77,11 +77,11 @@ export default function BulkMoveItemsModal({
       ref={dialogRef}
       aria-labelledby={titleId}
       aria-describedby={`${descriptionId}${error ? ` ${errorId}` : ''}`}
-      className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm"
+      className="m-auto max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100%-2rem)]"
       onCancel={event => { event.preventDefault(); close() }}
       onClick={event => { if (event.target === event.currentTarget) close() }}
     >
-      <form className="p-6 sm:p-7" onSubmit={moveItems}>
+      <form className="p-5 sm:p-7" onSubmit={moveItems}>
         <div className="grid h-12 w-12 place-items-center rounded-full bg-sage text-pine" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12m0 0-3-3m3 3-3 3m-1.5 7.5h-12m0 0 3 3m-3-3 3-3" />
@@ -131,7 +131,7 @@ export default function BulkMoveItemsModal({
         </div>
 
         {destinationRoom && destinationLocation && (
-          <div className="mt-5 rounded-2xl bg-sage/60 px-4 py-3 text-sm text-pine">
+          <div className="mt-5 break-words rounded-2xl bg-sage/60 px-4 py-3 text-sm text-pine">
             <span className="font-semibold">Ready to move:</span> {itemLabel} to {destinationRoom.name} → {destinationLocation.name}
           </div>
         )}

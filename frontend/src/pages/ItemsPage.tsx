@@ -19,16 +19,16 @@ function ItemCardContent({ item }: { item: Item }) {
       cacheKey={item.updatedAt}
       alt={`Photo of ${item.name}`}
       fallbackLabel={`No photo available for ${item.name}`}
-      className="h-28 w-28 shrink-0 rounded-2xl border"
+      className="h-24 w-24 shrink-0 rounded-2xl border sm:h-28 sm:w-28"
     />
     <div className="min-w-0 flex-1">
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="truncate text-xl group-hover:text-pine">{item.name}</h2>
-        <span className="shrink-0 text-right text-sm font-bold text-pine">
+      <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <h2 className="min-w-0 max-w-full truncate text-xl group-hover:text-pine">{item.name}</h2>
+        <span className="shrink-0 text-left text-sm font-bold text-pine sm:text-right">
           {item.estimatedValue == null ? 'Value not recorded' : money.format(item.estimatedValue * item.quantity)}
         </span>
       </div>
-      <p className="mt-2 flex items-center gap-1.5 text-sm text-ink-soft"><Icon name="map" className="h-3.5 w-3.5 shrink-0" />{item.roomName} <span className="text-stone-400">/</span> {item.storageLocationName}</p>
+      <p className="mt-2 flex min-w-0 items-start gap-1.5 text-sm text-ink-soft"><Icon name="map" className="mt-0.5 h-3.5 w-3.5 shrink-0" /><span className="min-w-0 break-words">{item.roomName} <span className="text-stone-400">/</span> {item.storageLocationName}</span></p>
       <div className="mt-4 flex flex-wrap gap-2 text-xs">
         <span className="rounded-full bg-coral/10 px-2.5 py-1 font-semibold text-[#a64d39]">{item.categoryName}</span>
         <span className="rounded-full bg-stone-100 px-2.5 py-1 font-semibold text-stone-600">Qty {item.quantity}</span>
@@ -141,7 +141,7 @@ export default function ItemsPage() {
     <div className="flex flex-wrap items-end justify-between gap-5">
       <div>
         <p className="eyebrow">Your belongings</p>
-        <div className="mt-2 flex flex-wrap items-center gap-3"><h1 className="text-4xl">{title}</h1>{items && <span className="rounded-full bg-sage px-2.5 py-1 text-xs font-bold text-pine">{items.length} {items.length === 1 ? 'entry' : 'entries'}</span>}</div>
+        <div className="mt-2 flex flex-wrap items-center gap-3"><h1 className="page-title">{title}</h1>{items && <span className="rounded-full bg-sage px-2.5 py-1 text-xs font-bold text-pine">{items.length} {items.length === 1 ? 'entry' : 'entries'}</span>}</div>
       </div>
       <div className="flex flex-wrap gap-2">
         {items?.length ? (
@@ -159,44 +159,44 @@ export default function ItemsPage() {
 
     <div className="mt-7 rounded-[1.35rem] border border-line bg-white/65 p-3 sm:p-4">
       <div className="mb-3 flex items-center gap-2 px-1 text-sm font-bold text-ink"><Icon name="sliders" className="h-4 w-4 text-pine" />Filter your inventory</div>
-      <div className="flex flex-wrap gap-3">
-      <select aria-label="Filter by room" className="field w-auto min-w-44 bg-white" value={roomId} onChange={event => filter('roomId', event.target.value)}>
+      <div className="grid gap-3 sm:flex sm:flex-wrap">
+      <select aria-label="Filter by room" className="field w-full bg-white sm:w-auto sm:min-w-44" value={roomId} onChange={event => filter('roomId', event.target.value)}>
         <option value="">Every room</option>
         {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
       </select>
-      <select aria-label="Filter by storage location" className="field w-auto min-w-44 bg-white" value={storageLocationId} onChange={event => filter('storageLocationId', event.target.value)}>
+      <select aria-label="Filter by storage location" className="field w-full bg-white sm:w-auto sm:min-w-44" value={storageLocationId} onChange={event => filter('storageLocationId', event.target.value)}>
         <option value="">Every location</option>
         {locations.filter(location => !roomId || String(location.roomId) === roomId).map(location => (
           <option key={location.id} value={location.id}>{location.name}</option>
         ))}
       </select>
-      <select aria-label="Filter by category" className="field w-auto min-w-44 bg-white" value={categoryId} onChange={event => filter('categoryId', event.target.value)}>
+      <select aria-label="Filter by category" className="field w-full bg-white sm:w-auto sm:min-w-44" value={categoryId} onChange={event => filter('categoryId', event.target.value)}>
         <option value="">Every category</option>
         {categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
       </select>
       {(q || roomId || categoryId || storageLocationId) && (
-        <button type="button" className="btn-secondary" onClick={() => setParams({})}><Icon name="x" className="h-4 w-4" />Clear filters</button>
+        <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => setParams({})}><Icon name="x" className="h-4 w-4" />Clear filters</button>
       )}
       </div>
     </div>
 
     {success && (
-      <div role="status" className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-emerald-200 bg-mint px-4 py-3 text-sm text-emerald-800">
+      <div role="status" className="mt-6 flex flex-col items-start gap-2 rounded-2xl border border-emerald-200 bg-mint px-4 py-3 text-sm text-emerald-800 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <span>{success}</span>
         <button type="button" className="rounded-lg p-1 font-semibold hover:bg-emerald-100" aria-label="Dismiss move confirmation" onClick={() => setSuccess('')}><Icon name="x" className="h-4 w-4" /></button>
       </div>
     )}
 
     {isSelecting && items?.length ? (
-      <section aria-label="Bulk item actions" className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-pine/20 bg-sage/60 px-4 py-3.5">
+      <section aria-label="Bulk item actions" className="mt-6 flex flex-col items-stretch gap-3 rounded-2xl border border-pine/20 bg-sage/60 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between">
         <p role="status" className="text-sm font-semibold text-pine">
           {selectedCount ? `${selectedCount} ${selectedCount === 1 ? 'item' : 'items'} selected` : 'Choose the items you want to move'}
         </p>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" className="btn-secondary" onClick={toggleAllVisible}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <button type="button" className="btn-secondary w-full sm:w-auto" onClick={toggleAllVisible}>
             {allVisibleSelected ? 'Clear selection' : 'Select all visible'}
           </button>
-          <button type="button" className="btn-primary" disabled={!selectedCount} onClick={() => setIsMoveDialogOpen(true)}>
+          <button type="button" className="btn-primary w-full sm:w-auto" disabled={!selectedCount} onClick={() => setIsMoveDialogOpen(true)}>
             {selectedCount ? `Move ${selectedCount} ${selectedCount === 1 ? 'item' : 'items'}` : 'Move items'}
           </button>
         </div>

@@ -89,15 +89,15 @@ export default function Layout() {
     </aside>
 
     <main className="min-w-0 flex-1 overflow-x-clip lg:ml-[17rem]">
-      <header className="sticky top-0 z-10 border-b border-line/80 bg-cream/90 px-4 py-3 backdrop-blur-md sm:px-5 lg:px-10">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 sm:flex-nowrap sm:gap-5 lg:gap-4">
-          <form onSubmit={submit} className="order-2 flex min-w-0 basis-full gap-2 sm:order-none sm:flex-1 sm:basis-auto sm:gap-3">
+      <header className="sticky top-0 z-10 border-b border-line/80 bg-cream/90 backdrop-blur-md">
+        <div className="relative mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:gap-5 sm:px-5 lg:gap-4 lg:px-10">
+          <form onSubmit={submit} className="order-2 flex min-w-0 basis-full gap-2 sm:order-none sm:flex-1 sm:basis-auto sm:gap-3 lg:w-full">
             <div className="relative flex-1"><Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
               <input aria-label="Global item search" className="field h-11 pl-10" placeholder="Search your home…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <button className="btn-primary h-11 shrink-0 px-3 sm:px-4"><Icon name="search" className="h-4 w-4 sm:hidden" /><span className="hidden sm:inline">Search</span></button>
           </form>
-          <div ref={profileMenuRef} className="relative order-1 ml-auto shrink-0 sm:order-none lg:translate-x-3">
+          <div ref={profileMenuRef} className="relative order-1 ml-auto shrink-0 sm:order-none lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2 lg:translate-x-20">
             <button
               type="button"
               className="group grid h-11 w-11 place-items-center rounded-full border border-line bg-surface p-1.5 transition hover:border-stone-300 hover:bg-white"

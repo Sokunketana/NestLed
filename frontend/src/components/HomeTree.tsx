@@ -70,7 +70,7 @@ export default function HomeTree() {
       <p className="text-[0.64rem] font-bold uppercase tracking-[0.2em] text-emerald-200/75">Your home</p>
       <Link to="/rooms" className="rounded-lg px-2 py-1 text-xs font-semibold text-emerald-100 hover:bg-white/10">Manage</Link>
     </div>
-    <div className="mt-2 max-h-[calc(100vh-23rem)] space-y-1 overflow-y-auto pr-1 text-sm lg:max-h-[calc(100vh-20rem)]">
+    <div className="mt-2 max-h-[35vh] space-y-1 overflow-y-auto overscroll-contain pr-1 text-sm lg:max-h-[calc(100vh-20rem)]">
       {error && <p className="rounded-lg bg-red-950/30 px-3 py-2 text-xs text-red-100">Could not load the home tree.</p>}
       {!error && !rooms.length && <p className="px-3 py-2 text-xs text-emerald-100">Add a room and storage location to begin.</p>}
       {rooms.map(room => {

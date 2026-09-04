@@ -62,11 +62,11 @@ export default function ConfirmationModal({
       ref={dialogRef}
       aria-labelledby={titleId}
       aria-describedby={`${descriptionId}${error ? ` ${errorId}` : ''}`}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm"
+      className="m-auto max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md overflow-y-auto rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100%-2rem)]"
       onCancel={event => { event.preventDefault(); close() }}
       onClick={event => { if (event.target === event.currentTarget) close() }}
     >
-      <div className="p-6 sm:p-7">
+      <div className="p-5 sm:p-7">
         <div className="grid h-12 w-12 place-items-center rounded-full bg-red-50 text-red-700" aria-hidden="true">
           {intent === 'logout' || intent === 'leave'
             ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">

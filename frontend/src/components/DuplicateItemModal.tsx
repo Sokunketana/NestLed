@@ -46,11 +46,11 @@ export default function DuplicateItemModal({ items, onClose, onConfirm }: Duplic
     ref={dialogRef}
     aria-labelledby={titleId}
     aria-describedby={`${descriptionId}${error ? ` ${errorId}` : ''}`}
-    className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm"
+    className="m-auto max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-lg overflow-y-auto rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100%-2rem)]"
     onCancel={event => { event.preventDefault(); close() }}
     onClick={event => { if (event.target === event.currentTarget) close() }}
   >
-    <div className="p-6 sm:p-7">
+    <div className="p-5 sm:p-7">
       <div className="grid h-12 w-12 place-items-center rounded-full bg-amber-100 text-amber-800" aria-hidden="true">
         <span className="text-2xl font-bold">!</span>
       </div>
@@ -61,7 +61,7 @@ export default function DuplicateItemModal({ items, onClose, onConfirm }: Duplic
       <ul className="mt-5 max-h-64 space-y-3 overflow-y-auto">
         {items.map(item => <li key={item.id} className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
           <p className="font-semibold text-ink">{item.name}</p>
-          <p className="mt-1 text-sm text-stone-600">{item.roomName} → {item.storageLocationName} · {item.categoryName} · Quantity {item.quantity}</p>
+          <p className="mt-1 break-words text-sm text-stone-600">{item.roomName} → {item.storageLocationName} · {item.categoryName} · Quantity {item.quantity}</p>
         </li>)}
       </ul>
       {error && <p id={errorId} role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}

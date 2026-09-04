@@ -88,19 +88,19 @@ export default function RoomsPage() {
     <div className="flex flex-wrap items-end justify-between gap-5">
       <div>
         <p className="eyebrow">Organize your home</p>
-        <h1 className="mt-2 text-4xl">Rooms & storage</h1>
+        <h1 className="page-title mt-2">Rooms & storage</h1>
         <p className="mt-2 max-w-2xl text-stone-500">Give every belonging a clear path from room to storage location.</p>
       </div>
-      <div className="flex items-center gap-2 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine"><Icon name="map" className="h-4 w-4" />{rooms.length} {rooms.length === 1 ? 'room' : 'rooms'}</div>
+      <div className="flex shrink-0 items-center gap-2 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine"><Icon name="map" className="h-4 w-4" />{rooms.length} {rooms.length === 1 ? 'room' : 'rooms'}</div>
     </div>
     {error && <div className="mt-6"><ErrorMessage message={error} /></div>}
 
     <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_24rem]">
       <section className="space-y-4" aria-label="Rooms">
-        <div className="flex items-center justify-between px-1"><p className="text-sm font-bold text-ink">Your rooms</p><span className="text-xs text-ink-soft">Storage locations sit inside each room</span></div>
+        <div className="flex flex-wrap items-start justify-between gap-2 px-1 sm:items-center"><p className="text-sm font-bold text-ink">Your rooms</p><span className="text-xs text-ink-soft">Storage locations sit inside each room</span></div>
         {rooms.map((room, index) => <article className="card overflow-hidden p-0" key={room.id}>
-          <div className={`flex items-start justify-between gap-4 border-b border-line/70 p-5 ${['bg-coral/10','bg-gold/10','bg-pine/10'][index % 3]}`}>
-            <div className="flex min-w-0 items-center gap-3">
+          <div className={`flex flex-wrap items-start justify-between gap-3 border-b border-line/70 p-4 sm:gap-4 sm:p-5 ${['bg-coral/10','bg-gold/10','bg-pine/10'][index % 3]}`}>
+            <div className="flex min-w-0 flex-1 items-center gap-3">
               <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/80 ${['text-coral','text-amber-700','text-pine'][index % 3]}`}><Icon name="home" className="h-5 w-5" /></span>
               <div className="min-w-0"><h2 className="truncate text-xl">{room.name}</h2><p className="mt-0.5 text-sm text-stone-600">{room.itemCount} {room.itemCount === 1 ? 'item' : 'items'} in this room</p></div>
             </div>
@@ -112,8 +112,8 @@ export default function RoomsPage() {
           <div className="p-5">
             <p className="text-sm text-ink-soft">{room.description || 'No description yet.'} <span className="mx-1 text-stone-300">·</span> <Link className="font-semibold text-pine hover:text-deep" to={`/items?roomId=${room.id}`}>Browse items <Icon name="arrow-right" className="inline h-3.5 w-3.5" /></Link></p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {locations.filter(location => location.roomId === room.id).map(location => <div className="group flex items-center gap-2 rounded-xl border border-line bg-cream px-3 py-2 text-sm" key={location.id}>
-                <Icon name="map" className="h-3.5 w-3.5 text-pine" /><span>{location.name} <span className="text-stone-400">·</span> {location.itemCount}</span>
+              {locations.filter(location => location.roomId === room.id).map(location => <div className="group flex max-w-full items-center gap-2 rounded-xl border border-line bg-cream px-3 py-2 text-sm" key={location.id}>
+                <Icon name="map" className="h-3.5 w-3.5 shrink-0 text-pine" /><span className="min-w-0 max-w-[14rem] truncate">{location.name} <span className="text-stone-400">·</span> {location.itemCount}</span>
                 <button type="button" title={`Edit ${location.name}`} aria-label={`Edit ${location.name}`} className="ml-1 text-pine hover:text-deep" onClick={() => setEditingTarget({ type: 'location', value: location })}><Icon name="edit" className="h-3.5 w-3.5" /></button>
                 <button type="button" title={`Delete ${location.name}`} aria-label={`Delete ${location.name}`} className="text-red-600 hover:text-red-800" onClick={() => setDeleteTarget({ type: 'location', value: location })}><Icon name="x" className="h-3.5 w-3.5" /></button>
               </div>)}

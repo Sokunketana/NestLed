@@ -65,12 +65,12 @@ export default function MovementHistoryPage() {
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <p className="eyebrow">Inventory activity</p>
-        <h1 className="mt-2 text-4xl">Movement history</h1>
+        <h1 className="page-title mt-2">Movement history</h1>
         <p className="mt-2 max-w-2xl text-stone-500">
           See when belongings changed rooms or storage locations in this household.
         </p>
       </div>
-      {movements && <div className="rounded-2xl border border-line bg-surface px-5 py-3 text-right shadow-card">
+      {movements && <div className="shrink-0 rounded-2xl border border-line bg-surface px-5 py-3 text-right shadow-card">
         <strong className="block text-2xl text-pine">{visibleMovements.length}</strong>
         <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
           {hasFilters ? `shown of ${movements.length}` : movements.length === 1 ? 'recorded move' : 'recorded moves'}
@@ -99,7 +99,7 @@ export default function MovementHistoryPage() {
           <label className="label" htmlFor="movement-from-date">From</label>
           <input
             id="movement-from-date"
-            className="field md:w-auto"
+            className="field w-full sm:w-auto"
             type="date"
             max={toDate || undefined}
             value={fromDate}
@@ -110,14 +110,14 @@ export default function MovementHistoryPage() {
           <label className="label" htmlFor="movement-to-date">To</label>
           <input
             id="movement-to-date"
-            className="field md:w-auto"
+            className="field w-full sm:w-auto"
             type="date"
             min={fromDate || undefined}
             value={toDate}
             onChange={event => setToDate(event.target.value)}
           />
         </div>
-        <button type="button" className="btn-secondary" disabled={!hasFilters} onClick={clearFilters}>
+        <button type="button" className="btn-secondary w-full md:w-auto" disabled={!hasFilters} onClick={clearFilters}>
           <Icon name="x" className="h-4 w-4" />Clear filters
         </button>
       </div>
@@ -131,10 +131,10 @@ export default function MovementHistoryPage() {
             : 'No movements yet. Moving an item to another room or storage location will add it here.'}
         </Empty>
       ) : (
-        <ol className="relative space-y-4 before:absolute before:bottom-6 before:left-6 before:top-6 before:w-px before:bg-line">
+        <ol className="relative space-y-4 before:absolute before:bottom-6 before:left-5 before:top-6 before:w-px before:bg-line sm:before:left-6">
           {visibleMovements.map(movement => (
-            <li className="card relative ml-0 pl-16" key={movement.id}>
-              <span className="absolute left-[1.15rem] top-6 grid h-7 w-7 place-items-center rounded-full border-4 border-cream bg-pine text-xs text-white shadow-sm" aria-hidden="true"><Icon name="arrow-right" className="h-3.5 w-3.5" /></span>
+            <li className="card relative ml-0 pl-12 sm:pl-16" key={movement.id}>
+              <span className="absolute left-2.5 top-5 grid h-7 w-7 place-items-center rounded-full border-4 border-cream bg-pine text-xs text-white shadow-sm sm:left-[1.15rem] sm:top-6" aria-hidden="true"><Icon name="arrow-right" className="h-3.5 w-3.5" /></span>
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h2 className="text-lg">{movement.itemName}</h2>
@@ -147,12 +147,12 @@ export default function MovementHistoryPage() {
               <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto_1fr] md:items-center">
                 <div className="rounded-xl bg-stone-50 p-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-stone-400">From</span>
-                  <p className="mt-1 font-semibold">{locationLabel(movement.fromRoomName, movement.fromLocationName)}</p>
+                  <p className="mt-1 break-words font-semibold">{locationLabel(movement.fromRoomName, movement.fromLocationName)}</p>
                 </div>
                 <span className="text-center text-xl text-pine" aria-hidden="true"><Icon name="arrow-right" className="mx-auto h-5 w-5" /></span>
                 <div className="rounded-xl bg-sage/70 p-3">
                   <span className="text-xs font-bold uppercase tracking-wider text-pine/70">To</span>
-                  <p className="mt-1 font-semibold text-pine">{locationLabel(movement.toRoomName, movement.toLocationName)}</p>
+                  <p className="mt-1 break-words font-semibold text-pine">{locationLabel(movement.toRoomName, movement.toLocationName)}</p>
                 </div>
               </div>
             </li>

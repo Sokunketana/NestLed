@@ -4,11 +4,13 @@
 @tailwind utilities;
 
 @layer base {
-  * { border-color: #e5dfd4; }
-  html { background: #f5f2eb; }
-  body { @apply m-0 bg-cream text-ink antialiased; font-family: 'DM Sans', sans-serif; }
+  *, *::before, *::after { box-sizing: border-box; border-color: #e5dfd4; }
+  html { min-width: 280px; background: #f5f2eb; }
+  body { @apply m-0 bg-cream text-ink antialiased; min-width: 280px; overflow-x: hidden; font-family: 'DM Sans', sans-serif; }
+  img, svg, video, canvas { max-width: 100%; }
   body::before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .35; background-image: radial-gradient(rgba(20, 82, 71, .07) .7px, transparent .7px); background-size: 18px 18px; mask-image: linear-gradient(to bottom, black, transparent 75%); }
   h1, h2, h3 { font-family: 'Fraunces', serif; letter-spacing: -0.025em; }
+  h1, h2, h3, p { overflow-wrap: anywhere; }
   ::selection { background: #dcebe3; color: #123f38; }
   :focus-visible { outline: 2px solid #145247; outline-offset: 2px; }
   button, input, select, textarea { font: inherit; }
@@ -24,6 +26,7 @@
   .field:focus { border-color: #145247; box-shadow: 0 0 0 3px rgba(20, 82, 71, 0.1); }
   .label { @apply mb-1.5 block text-sm font-semibold text-stone-700; }
   .eyebrow { @apply text-[0.68rem] font-bold uppercase tracking-[0.2em]; color: #145247; }
+  .page-title { @apply leading-tight; font-size: clamp(2rem, 7vw, 2.5rem); }
 }
 
 @layer utilities {
@@ -41,4 +44,13 @@
   .bg-gold\/15 { background-color: rgb(216 165 43 / .15); }
   .text-deep\/60 { color: rgb(18 63 56 / .6); }
   .shadow-card { box-shadow: 0 2px 0 rgba(31, 49, 43, .03), 0 12px 28px rgba(31, 49, 43, .055); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

@@ -26,7 +26,7 @@ export default function DashboardPage() {
         <div className="absolute -bottom-20 right-16 h-44 w-44 rounded-full bg-white/[0.04]" aria-hidden="true" />
         <div className="relative">
           <p className="eyebrow text-emerald-200">At a glance</p>
-          <h1 className="mt-2 text-4xl text-white sm:text-[2.7rem]">Welcome home.</h1>
+          <h1 className="page-title mt-2 text-white sm:text-[2.7rem]">Welcome home.</h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-emerald-100/80 sm:text-base">A calm, searchable place for everything you own. Keep the little details close so they’re easy to find when you need them.</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/items/new" className="btn bg-coral text-white shadow-sm hover:bg-[#c9614a]"><Icon name="plus" className="h-4 w-4" />Add an item</Link>
@@ -51,7 +51,7 @@ export default function DashboardPage() {
       </div>)}
     </section>
     <section className="mt-10">
-      <div className="flex items-end justify-between gap-4"><div><p className="eyebrow">Your spaces</p><h2 className="mt-2 text-2xl">Rooms at a glance</h2></div><Link to="/rooms" className="inline-flex items-center gap-2 text-sm font-bold text-pine">Manage rooms <Icon name="arrow-right" className="h-4 w-4" /></Link></div>
+      <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="eyebrow">Your spaces</p><h2 className="mt-2 text-2xl">Rooms at a glance</h2></div><Link to="/rooms" className="inline-flex items-center gap-2 text-sm font-bold text-pine">Manage rooms <Icon name="arrow-right" className="h-4 w-4" /></Link></div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.rooms.map((room, index) => <Link to={`/items?roomId=${room.id}`} className="card group overflow-hidden p-0 transition hover:-translate-y-0.5 hover:shadow-soft" key={room.id}>
           <div className={`flex h-24 items-start justify-between p-5 ${['bg-coral/15','bg-gold/15','bg-pine/10'][index % 3]}`}>

@@ -73,7 +73,10 @@ export default function HomeTree() {
               className="grid h-9 w-8 shrink-0 place-items-center" onClick={() => toggle(setExpandedRooms, room.id)}>
               {roomLocations.length ? <Icon name={roomOpen ? 'chevron-down' : 'chevron-right'} className="h-3.5 w-3.5" /> : <span className="text-xs opacity-60">•</span>}
             </button>
-            <Link className="min-w-0 flex-1 truncate py-2 pr-2 font-semibold" to={`/items?roomId=${room.id}`}>{room.name}</Link>
+            <button type="button" aria-label={`${roomOpen ? 'Collapse' : 'Expand'} ${room.name}`} aria-expanded={roomOpen}
+              className="min-w-0 flex-1 truncate py-2 pr-2 text-left font-semibold" onClick={() => toggle(setExpandedRooms, room.id)}>
+              {room.name}
+            </button>
             <span className={`mr-3 text-xs ${roomActive ? 'text-deep/60' : 'text-emerald-200'}`}>{room.itemCount}</span>
           </div>
           {roomOpen && <div className="ml-4 border-l border-white/20 pl-2">

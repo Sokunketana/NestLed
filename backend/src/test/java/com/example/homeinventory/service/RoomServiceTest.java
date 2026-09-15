@@ -66,6 +66,20 @@ class RoomServiceTest {
     }
 
     @Test
+    void creatingRoomPersistsTheSelectedColor() {
+        RoomRepository rooms = mock(RoomRepository.class);
+        ItemRepository items = mock(ItemRepository.class);
+        Household household = household();
+        when(rooms.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var response = service(rooms, items, household)
+                .create(new RoomRequest("Office", "Work area", "#4f83cc"));
+
+        verify(rooms).save(org.mockito.ArgumentMatchers.argThat(room -> "#4F83CC".equals(room.getColor())));
+        assertEquals("#4F83CC", response.color());
+    }
+
+    @Test
     void deletingRoomWithItemsAndLocationsExplainsWhatMustBeClearedFirst() {
         RoomRepository rooms = mock(RoomRepository.class);
         ItemRepository items = mock(ItemRepository.class);

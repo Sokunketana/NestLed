@@ -1,11 +1,21 @@
 -- Existing installations created this column as NOT NULL. New installations get
--- the nullable definition directly from the Item entity.
+-- the nullable definition directly from the Item entity so this backfill can run
+-- after Hibernate creates the table.
 ALTER TABLE IF EXISTS items
     ALTER COLUMN estimated_value DROP NOT NULL^^^
 
--- Seed optimistic-lock versions for installations created before versioning was added.
+-- Add the version column without a constraint first. A NOT NULL column cannot be
+-- added to a populated table until its existing rows have been backfilled.
 ALTER TABLE IF EXISTS items
-    ADD COLUMN IF NOT EXISTS version BIGINT NOT NULL DEFAULT 0^^^
+    ADD COLUMN IF NOT EXISTS version BIGINT^^^
+
+UPDATE items SET version = 0 WHERE version IS NULL^^^
+
+ALTER TABLE IF EXISTS items
+    ALTER COLUMN version SET DEFAULT 0^^^
+
+ALTER TABLE IF EXISTS items
+    ALTER COLUMN version SET NOT NULL^^^
 
 -- Give rooms and storage locations their own visual identity. Existing records
 -- keep working with the defaults and can be recolored from the UI.

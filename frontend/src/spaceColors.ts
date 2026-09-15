@@ -15,10 +15,14 @@ export const spaceColorOptions: SpaceColorOption[] = [
 export const defaultRoomColor = spaceColorOptions[0].value
 export const defaultLocationColor = spaceColorOptions[1].value
 
-export function getSpaceColor(color: string | undefined, fallbackIndex = 0) {
-  return color && /^#[0-9A-Fa-f]{6}$/.test(color)
-    ? color
-    : spaceColorOptions[Math.abs(fallbackIndex) % spaceColorOptions.length].value
+export function isSpaceColor(color: string | undefined | null): color is string {
+  return typeof color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(color)
+}
+
+export function getSpaceColor(color: string | undefined | null, fallbackColor = defaultRoomColor) {
+  return isSpaceColor(color)
+    ? color.toUpperCase()
+    : fallbackColor
 }
 
 export function withColorAlpha(color: string, alpha: string) {

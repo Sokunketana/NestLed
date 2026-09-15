@@ -30,6 +30,10 @@ export default function RoomsPage() {
   const locationList = locations ?? []
   const loadError = roomsError || locationsError
   const totalItems = (rooms ?? []).reduce((sum, room) => sum + room.itemCount, 0)
+  const quickAddColor = getSpaceColor(
+    addMode === 'room' ? roomForm.color : locationForm.color,
+    addMode === 'room' ? defaultRoomColor : defaultLocationColor,
+  )
 
   async function refreshInventory() {
     await revalidateInventory({ dashboard: true, itemDetails: true, items: true, locations: true, movements: true, rooms: true })
@@ -130,9 +134,9 @@ export default function RoomsPage() {
         </div>
 
         <div className="divide-y divide-line">
-          {rooms.map((room, roomIndex) => {
+          {rooms.map(room => {
             const roomLocations = locationList.filter(location => location.roomId === room.id)
-            const roomColor = getSpaceColor(room.color, roomIndex)
+            const roomColor = getSpaceColor(room.color, defaultRoomColor)
 
             return <article className="relative overflow-hidden" key={room.id}>
               <div className="h-1.5" style={{ backgroundColor: withColorAlpha(roomColor, '35') }} aria-hidden="true" />
@@ -155,8 +159,8 @@ export default function RoomsPage() {
                 </div>
 
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                  {roomLocations.map((location, locationIndex) => {
-                    const locationColor = getSpaceColor(location.color, roomIndex + locationIndex + 1)
+                  {roomLocations.map(location => {
+                    const locationColor = getSpaceColor(location.color, defaultLocationColor)
                     return <div className="group flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2.5" style={{ backgroundColor: withColorAlpha(locationColor, '0D'), borderColor: withColorAlpha(locationColor, '33') }} key={location.id}>
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: locationColor }} aria-hidden="true" />
                       <Link to={`/items?roomId=${room.id}&storageLocationId=${location.id}`} className="min-w-0 flex-1 truncate text-sm font-semibold hover:text-pine">{location.name}</Link>
@@ -178,7 +182,7 @@ export default function RoomsPage() {
 
       <section id="quick-add" className="card h-fit scroll-mt-24 xl:sticky xl:top-24">
         <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: withColorAlpha(addMode === 'room' ? defaultRoomColor : defaultLocationColor, '20'), color: addMode === 'room' ? defaultRoomColor : defaultLocationColor }}><Icon name={addMode === 'room' ? 'home' : 'map'} className="h-5 w-5" /></span>
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: withColorAlpha(quickAddColor, '20'), color: quickAddColor }}><Icon name={addMode === 'room' ? 'home' : 'map'} className="h-5 w-5" /></span>
           <div><p className="eyebrow">Quick add</p><h2 className="mt-1 text-xl">Add to your map</h2><p className="mt-1 text-sm leading-relaxed text-ink-soft">Keep the setup light and focused.</p></div>
         </div>
 
@@ -189,22 +193,22 @@ export default function RoomsPage() {
 
         {addMode === 'room' ? <form className="mt-5" onSubmit={saveRoom}>
           <label className="label" htmlFor="new-room-name">Room name *</label>
-          <input id="new-room-name" className="field" required maxLength={100} value={roomForm.name} onChange={event => setRoomForm({ ...roomForm, name: event.target.value })} placeholder="Bedroom" />
+          <input id="new-room-name" className="field" required maxLength={100} value={roomForm.name} onChange={event => setRoomForm(current => ({ ...current, name: event.target.value }))} placeholder="Bedroom" />
           <label className="label mt-4" htmlFor="new-room-description">Description <span className="font-normal text-stone-400">(optional)</span></label>
-          <input id="new-room-description" className="field" maxLength={500} value={roomForm.description} onChange={event => setRoomForm({ ...roomForm, description: event.target.value })} placeholder="Main bedroom" />
-          <div className="mt-5"><SpaceColorPicker value={roomForm.color} onChange={color => setRoomForm({ ...roomForm, color })} /></div>
+          <input id="new-room-description" className="field" maxLength={500} value={roomForm.description} onChange={event => setRoomForm(current => ({ ...current, description: event.target.value }))} placeholder="Main bedroom" />
+          <div className="mt-5"><SpaceColorPicker value={roomForm.color} onChange={color => setRoomForm(current => ({ ...current, color }))} /></div>
           <button className="btn-primary mt-5 w-full"><Icon name="plus" className="h-4 w-4" />Add room</button>
         </form> : <form className="mt-5" onSubmit={saveLocation}>
           <label className="label" htmlFor="new-location-room">Room *</label>
-          <select id="new-location-room" className="field" required value={locationForm.roomId || ''} onChange={event => setLocationForm({ ...locationForm, roomId: Number(event.target.value) })} disabled={!rooms.length}>
+          <select id="new-location-room" className="field" required value={locationForm.roomId || ''} onChange={event => setLocationForm(current => ({ ...current, roomId: Number(event.target.value) }))} disabled={!rooms.length}>
             <option value="">Select room</option>
             {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
           </select>
           <label className="label mt-4" htmlFor="new-location-name">Location name *</label>
-          <input id="new-location-name" className="field" required maxLength={100} value={locationForm.name} onChange={event => setLocationForm({ ...locationForm, name: event.target.value })} placeholder="Top drawer" />
+          <input id="new-location-name" className="field" required maxLength={100} value={locationForm.name} onChange={event => setLocationForm(current => ({ ...current, name: event.target.value }))} placeholder="Top drawer" />
           <label className="label mt-4" htmlFor="new-location-description">Description <span className="font-normal text-stone-400">(optional)</span></label>
-          <input id="new-location-description" className="field" maxLength={500} value={locationForm.description} onChange={event => setLocationForm({ ...locationForm, description: event.target.value })} placeholder="Optional note" />
-          <div className="mt-5"><SpaceColorPicker value={locationForm.color} onChange={color => setLocationForm({ ...locationForm, color })} /></div>
+          <input id="new-location-description" className="field" maxLength={500} value={locationForm.description} onChange={event => setLocationForm(current => ({ ...current, description: event.target.value }))} placeholder="Optional note" />
+          <div className="mt-5"><SpaceColorPicker value={locationForm.color} onChange={color => setLocationForm(current => ({ ...current, color }))} /></div>
           {!rooms.length && <p className="mt-3 text-sm text-amber-700">Add a room first, then you can place a location inside it.</p>}
           <button className="btn-primary mt-5 w-full" disabled={!rooms.length}><Icon name="plus" className="h-4 w-4" />Add location</button>
         </form>}

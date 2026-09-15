@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useId, useRef, useState } from 'react'
 import Icon from './Icon'
 import SpaceColorPicker from './SpaceColorPicker'
-import { defaultLocationColor, defaultRoomColor } from '../spaceColors'
+import { defaultLocationColor, defaultRoomColor, getSpaceColor } from '../spaceColors'
 import type { Room, StorageLocation } from '../types'
 
 export type SpaceEditTarget =
@@ -33,7 +33,7 @@ export default function SpaceEditModal({ target, rooms, onClose, onSave }: Space
   const [form, setForm] = useState<SpaceEditForm>(() => ({
     name: target.value.name,
     description: target.value.description ?? '',
-    color: target.value.color ?? (target.type === 'location' ? defaultLocationColor : defaultRoomColor),
+    color: getSpaceColor(target.value.color, target.type === 'location' ? defaultLocationColor : defaultRoomColor),
     ...(target.type === 'location' ? { roomId: target.value.roomId } : {}),
   }))
 

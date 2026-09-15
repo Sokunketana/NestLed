@@ -35,7 +35,7 @@ export default function CategoriesPage() {
       await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
       setDeleteTarget(undefined)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to delete category.')
+      throw cause
     }
   }
 

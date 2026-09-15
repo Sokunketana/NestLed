@@ -143,6 +143,15 @@ export default function Layout() {
                 <p className="break-words text-sm font-semibold text-ink">{accountName}</p>
                 {user?.email && <p className="mt-0.5 break-all text-xs text-ink-soft">{user.email}</p>}
               </div>
+              <Link
+                to="/profile"
+                role="menuitem"
+                className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-ink transition hover:bg-cream"
+                onClick={() => setShowProfileMenu(false)}
+              >
+                <Icon name="sliders" className="h-4 w-4 text-ink-soft" />
+                Profile & settings
+              </Link>
               <button
                 type="button"
                 role="menuitem"

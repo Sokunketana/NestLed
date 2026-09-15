@@ -129,3 +129,38 @@ test('an authenticated user can browse items and open item details', async ({ pa
   await expect(page.getByRole('heading', { name: 'Passport', exact: true })).toBeVisible()
   await expect(page.getByText('Bedroom → Top drawer')).toBeVisible()
 })
+
+test('an owner can export household data from profile settings', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+  await page.route(/\/api\/household\/export/, route => {
+    const url = new URL(route.request().url())
+    if (url.pathname.endsWith('/preview')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          format: 'json', householdName: 'Our home', roomCount: 1, storageLocationCount: 1,
+          categoryCount: 1, itemCount: 1, movementCount: 0, photoCount: 0, movementHistoryIncluded: true,
+        }),
+      })
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Content-Disposition': 'attachment; filename=our-home-inventory.json' },
+      body: JSON.stringify({ format: 'nestled-household-export', version: 1, items: [] }),
+    })
+  })
+
+  await page.goto('/')
+  await page.getByRole('button', { name: /Open account menu/ }).click()
+  await page.getByRole('menuitem', { name: 'Profile & settings' }).click()
+  await expect(page.getByRole('heading', { name: 'Profile & settings' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Export JSON' }).click()
+  await expect(page.getByRole('heading', { name: 'Review JSON export' })).toBeVisible()
+  await expect(page.getByText('Movement history: 0 records will be included.')).toBeVisible()
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download JSON' }).click()
+  await expect((await download).suggestedFilename()).toBe('our-home-inventory.json')
+})

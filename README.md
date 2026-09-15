@@ -25,6 +25,7 @@ It deliberately focuses on Spring Boot fundamentals. Authentication uses Google 
 - Room CRUD and storage-location CRUD
 - Category CRUD with a display color
 - Separate household inventories with one household per account and invitation-based sharing
+- Owner-only household inventory export as portable JSON or spreadsheet-friendly CSV
 - Validation and consistent JSON error responses
 - DTO-only controller responses (JPA entities never become the API contract)
 - Responsive React interface and one centralized API layer
@@ -251,6 +252,8 @@ The end-to-end tests use mocked API responses, so they do not require Google OAu
 | GET | `/api/auth/me` | Return the signed-in local user |
 | GET | `/api/auth/csrf` | Issue the CSRF token used by the React client |
 | POST | `/api/auth/logout` | End the current server-side session |
+| GET | `/api/household/export/preview?format=json` or `?format=csv` | Preview the owner’s household inventory export |
+| GET | `/api/household/export?format=json` or `?format=csv` | Download the owner’s household inventory export |
 | DELETE | `/api/household/leave` | Leave the current household as a non-owner member |
 | POST | `/api/invitations/{id}/accept` | Accept an invitation addressed to the signed-in email |
 | DELETE | `/api/invitations/{id}` | Decline an invitation addressed to the signed-in email |
@@ -317,4 +320,4 @@ In short: **Controller → Service → Repository → database** separates trans
 
 ## Sensible future features
 
-After the fundamentals are comfortable: email delivery for household invitations, Flyway migrations, pagination and sorting, Testcontainers integration tests, object-storage-backed photos, CSV export, and audit history.
+After the fundamentals are comfortable: email delivery for household invitations, Flyway migrations, pagination and sorting, Testcontainers integration tests, object-storage-backed photos, household data import, and audit history.

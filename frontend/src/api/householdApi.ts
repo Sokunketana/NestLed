@@ -1,4 +1,4 @@
-import { request } from './http'
+import { download, request } from './http'
 
 export type HouseholdRole = 'OWNER' | 'MEMBER'
 
@@ -24,6 +24,18 @@ export interface Household {
   pendingInvitations: HouseholdInvitation[]
 }
 
+export interface HouseholdExportPreview {
+  format: 'json' | 'csv'
+  householdName: string
+  roomCount: number
+  storageLocationCount: number
+  categoryCount: number
+  itemCount: number
+  movementCount: number
+  photoCount: number
+  movementHistoryIncluded: boolean
+}
+
 export const householdApi = {
   get: () => request<Household>('/household'),
   rename: (name: string) => request<Household>('/household', {
@@ -41,4 +53,6 @@ export const householdApi = {
   leave: () => request<void>('/household/leave', {
     method: 'DELETE',
   }),
+  exportPreview: (format: 'json' | 'csv') => request<HouseholdExportPreview>(`/household/export/preview?format=${format}`),
+  exportData: (format: 'json' | 'csv') => download(`/household/export?format=${format}`),
 }

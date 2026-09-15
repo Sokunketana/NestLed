@@ -23,6 +23,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     long countByHouseholdIdAndRoomId(Long householdId, Long roomId);
     long countByHouseholdIdAndCategoryId(Long householdId, Long categoryId);
     long countByHouseholdIdAndStorageLocationId(Long householdId, Long storageLocationId);
+    long countByHouseholdIdAndPhotoFilenameIsNotNull(Long householdId);
 
     @Query("select coalesce(sum(i.estimatedValue * i.quantity), 0) from Item i where i.household.id = :householdId")
     BigDecimal totalEstimatedValue(Long householdId);

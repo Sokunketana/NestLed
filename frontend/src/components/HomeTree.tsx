@@ -90,7 +90,10 @@ export default function HomeTree() {
                     className="grid h-8 w-7 shrink-0 place-items-center" onClick={() => toggle(setExpandedLocations, storage.id)}>
                     {locationItems.length ? <Icon name={locationOpen ? 'chevron-down' : 'chevron-right'} className="h-3 w-3" /> : <span className="text-xs opacity-60">•</span>}
                   </button>
-                  <Link className="min-w-0 flex-1 truncate py-1.5 pr-2" to={`/items?roomId=${room.id}&storageLocationId=${storage.id}`}>{storage.name}</Link>
+                  <button type="button" aria-label={`${locationOpen ? 'Collapse' : 'Expand'} ${storage.name}`} aria-expanded={locationOpen}
+                    className="min-w-0 flex-1 truncate py-1.5 pr-2 text-left" onClick={() => toggle(setExpandedLocations, storage.id)}>
+                    {storage.name}
+                  </button>
                   <span className={`mr-3 text-xs ${locationActive ? 'text-deep/60' : 'text-emerald-200'}`}>{storage.itemCount}</span>
                 </div>
                 {locationOpen && <div className="ml-3 border-l border-white/20 py-1 pl-2">

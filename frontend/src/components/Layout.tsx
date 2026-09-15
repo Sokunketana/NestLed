@@ -117,7 +117,7 @@ export default function Layout() {
           <Link to="/items/new" className="btn-primary order-1 h-11 shrink-0 px-3 sm:order-none sm:px-4" aria-label="Add item">
             <Icon name="plus" className="h-4 w-4" /><span className="hidden sm:inline">Add item</span>
           </Link>
-          <div ref={profileMenuRef} className="relative order-1 ml-auto shrink-0 sm:order-none lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2 lg:translate-x-20">
+          <div ref={profileMenuRef} className="relative order-1 ml-auto shrink-0 sm:order-none">
             <button
               type="button"
               className="group grid h-11 w-11 place-items-center rounded-full border border-line bg-surface p-1.5 transition hover:border-stone-300 hover:bg-white"

@@ -50,7 +50,7 @@ export default function ItemFormPage() {
       setExistingPhotoVersion(undefined)
       setRemovePhoto(false)
     }
-  }, [editing, id])
+  }, [editing, id, itemId])
 
   useEffect(() => {
     if (!item || initializedItemId.current === item.id) return
@@ -101,8 +101,7 @@ export default function ItemFormPage() {
 
   async function persist(payload: ItemPayload, allowDuplicate = false) {
     const creating = persistedItemId.current == null
-    let saved
-    saved = creating
+    const saved = creating
       ? await itemApi.create(payload, allowDuplicate)
       : await itemApi.update(persistedItemId.current!, payload)
     persistedItemId.current = saved.id
@@ -113,7 +112,7 @@ export default function ItemFormPage() {
     } catch (e) {
       const action = photoFile ? 'uploaded' : 'removed'
       if (creating) navigate(`/items/${saved.id}/edit`, { replace: true })
-      throw new Error(`Item details were saved, but the photo could not be ${action}. ${(e as Error).message} Your item is safe; save again to retry without creating a duplicate.`)
+      throw new Error(`Item details were saved, but the photo could not be ${action}. ${(e as Error).message} Your item is safe; save again to retry without creating a duplicate.`, { cause: e })
     }
 
     await revalidateInventory({ dashboard: true, items: true, itemDetails: true, locations: true, movements: true, rooms: true })

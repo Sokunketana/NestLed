@@ -27,6 +27,7 @@ export default function Layout() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const manageRouteActive = manageLinks.some(link => location.pathname.startsWith(link.to))
+  const [manageOpen, setManageOpen] = useState(manageRouteActive)
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -39,6 +40,10 @@ export default function Layout() {
   useEffect(() => {
     setAvatarImageFailed(false)
   }, [user?.pictureUrl])
+
+  useEffect(() => {
+    if (manageRouteActive) setManageOpen(true)
+  }, [manageRouteActive])
 
   useEffect(() => {
     function closeProfileMenu(event: PointerEvent) {
@@ -76,7 +81,7 @@ export default function Layout() {
               <span>{label}</span>
             </NavLink>)}
           </nav>
-          <details className="group mt-3" open={manageRouteActive || undefined}>
+          <details className="group mt-3" open={manageOpen} onToggle={event => setManageOpen(event.currentTarget.open)}>
             <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-emerald-50/85 transition hover:bg-white/10 hover:text-white">
               <Icon name="sliders" className="h-[1.05rem] w-[1.05rem] shrink-0 opacity-80" />
               <span className="flex-1">Manage</span>

@@ -26,6 +26,7 @@
     "eslint-plugin-react-hooks": "latest",
     "eslint-plugin-react-refresh": "latest",
     "globals": "latest",
+    "typescript-eslint": "latest",
     "tailwindcss": "^3.4.17",
     "postcss": "latest",
     "autoprefixer": "latest"

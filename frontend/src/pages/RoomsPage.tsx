@@ -75,12 +75,13 @@ export default function RoomsPage() {
 
   async function removeTarget() {
     if (!deleteTarget) return
-    const target = deleteTarget
+      const target = deleteTarget
     try {
-      target.type === 'room' ? await roomApi.remove(target.value.id) : await storageLocationApi.remove(target.value.id)
+      if (target.type === 'room') await roomApi.remove(target.value.id)
+      else await storageLocationApi.remove(target.value.id)
     } catch (cause) {
       if (target.type === 'room' && cause instanceof ApiRequestError && cause.status === 409) {
-        throw new Error(roomDeleteConflictMessage)
+        throw new Error(roomDeleteConflictMessage, { cause })
       }
       throw cause
     }

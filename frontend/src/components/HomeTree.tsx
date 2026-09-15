@@ -8,6 +8,10 @@ import { storageLocationApi } from '../api/storageLocationApi'
 import Icon from './Icon'
 import type { Item, Room, StorageLocation } from '../types'
 
+const EMPTY_ROOMS: Room[] = []
+const EMPTY_LOCATIONS: StorageLocation[] = []
+const EMPTY_ITEMS: Item[] = []
+
 export default function HomeTree() {
   const route = useLocation()
   const [params] = useSearchParams()
@@ -17,9 +21,9 @@ export default function HomeTree() {
   const [expandedRooms, setExpandedRooms] = useState<Set<number>>(new Set())
   const [expandedLocations, setExpandedLocations] = useState<Set<number>>(new Set())
 
-  const roomList = rooms ?? []
-  const locationList = locations ?? []
-  const itemList = items ?? []
+  const roomList = rooms ?? EMPTY_ROOMS
+  const locationList = locations ?? EMPTY_LOCATIONS
+  const itemList = items ?? EMPTY_ITEMS
   const error = roomsError || locationsError || itemsError
 
   const activeItemId = route.pathname.match(/^\/items\/(\d+)(?:\/edit)?$/)?.[1]
@@ -50,7 +54,8 @@ export default function HomeTree() {
   function toggle(setter: Dispatch<SetStateAction<Set<number>>>, id: number) {
     setter(old => {
       const next = new Set(old)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }

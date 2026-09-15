@@ -4,6 +4,11 @@ backend/.env
 frontend/node_modules/
 frontend/dist/
 frontend/.env
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+frontend/playwright-report/
+frontend/test-results/
 .idea/
 .vscode/
 *.iml

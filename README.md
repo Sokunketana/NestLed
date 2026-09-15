@@ -228,6 +228,22 @@ Open `http://localhost:5173`. Vite reads `VITE_API_URL` and `VITE_BACKEND_URL`; 
 
 The API layer prevents network details from spreading across UI components. A page asks `itemApi.create(payload)` to save an item; `itemApi` owns the URL, HTTP method, JSON encoding, and shared error behavior. This makes components easier to read, endpoints easier to change, and API functions easier to test.
 
+### Quality checks
+
+The frontend has a pinned dependency lockfile, ESLint configuration, Vitest unit tests, and Playwright browser smoke tests. From `frontend/`, run:
+
+```powershell
+npm ci
+npm run lint
+npm run typecheck
+npm test
+npm run build
+npx playwright install chromium # first run only
+npm run test:e2e
+```
+
+The end-to-end tests use mocked API responses, so they do not require Google OAuth or a running backend. The GitHub Actions workflow runs these frontend checks alongside `mvn --batch-mode test` for the backend on pushes and pull requests.
+
 ## API reference
 
 | Method | Path | Purpose |

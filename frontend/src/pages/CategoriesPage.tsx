@@ -19,7 +19,8 @@ export default function CategoriesPage() {
     event.preventDefault()
     setError('')
     try {
-      editing ? await categoryApi.update(editing, form) : await categoryApi.create(form)
+      if (editing) await categoryApi.update(editing, form)
+      else await categoryApi.create(form)
       setForm({ name: '', color: '#145247' })
       setEditing(undefined)
       await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
@@ -30,13 +31,9 @@ export default function CategoriesPage() {
 
   async function remove() {
     if (!deleteTarget) return
-    try {
-      await categoryApi.remove(deleteTarget.id)
-      await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
-      setDeleteTarget(undefined)
-    } catch (cause) {
-      throw cause
-    }
+    await categoryApi.remove(deleteTarget.id)
+    await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
+    setDeleteTarget(undefined)
   }
 
   function cancelEdit() {

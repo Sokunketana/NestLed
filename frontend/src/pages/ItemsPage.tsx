@@ -75,11 +75,12 @@ export default function ItemsPage() {
     setShowFilters(Boolean(q || roomId || categoryId || storageLocationId))
     setSelectedIds(new Set())
     setIsMoveDialogOpen(false)
-  }, [itemKey])
+  }, [categoryId, itemKey, q, roomId, storageLocationId])
 
   function filter(key: string, value: string) {
     const next = new URLSearchParams(params)
-    value ? next.set(key, value) : next.delete(key)
+    if (value) next.set(key, value)
+    else next.delete(key)
     if (key === 'roomId') next.delete('storageLocationId')
     next.delete('q')
     setParams(next)
@@ -93,7 +94,8 @@ export default function ItemsPage() {
   function toggleItem(itemId: number) {
     setSelectedIds(current => {
       const next = new Set(current)
-      next.has(itemId) ? next.delete(itemId) : next.add(itemId)
+      if (next.has(itemId)) next.delete(itemId)
+      else next.add(itemId)
       return next
     })
   }

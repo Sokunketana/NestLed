@@ -10,11 +10,12 @@ import LoginPage from './pages/LoginPage'
 import HouseholdPage from './pages/HouseholdPage'
 import MovementHistoryPage from './pages/MovementHistoryPage'
 import { useAuth } from './auth/AuthContext'
+import LoadingScreen from './components/LoadingScreen'
 
 export default function App() {
   const { status } = useAuth()
   if (status === 'loading') {
-    return <main className="grid min-h-screen place-items-center text-stone-600">Checking your session…</main>
+    return <LoadingScreen />
   }
   if (status === 'anonymous') return <LoginPage />
 

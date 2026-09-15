@@ -31,6 +31,220 @@
   summary::-webkit-details-marker { display: none; }
 }
 
+.loading-screen {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  overflow: hidden;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at 50% 25%, rgba(220, 235, 227, .85), transparent 34%),
+    #f5f2eb;
+}
+
+.loading-screen__glow {
+  position: absolute;
+  z-index: -1;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 999px;
+  filter: blur(2px);
+  opacity: .45;
+  pointer-events: none;
+}
+
+.loading-screen__glow--top {
+  top: -13rem;
+  right: -7rem;
+  background: rgba(238, 184, 157, .42);
+}
+
+.loading-screen__glow--bottom {
+  bottom: -15rem;
+  left: -9rem;
+  background: rgba(178, 211, 193, .52);
+}
+
+.loading-spinner {
+  position: relative;
+}
+
+.loading-spinner::before {
+  position: absolute;
+  inset: .35rem;
+  content: '';
+  border: 2px solid rgba(20, 82, 71, .16);
+  border-top-color: #145247;
+  border-radius: 50%;
+  animation: loading-spin 1.25s linear infinite;
+}
+
+.loading-spinner svg {
+  position: relative;
+  animation: loading-breathe 2.2s ease-in-out infinite;
+}
+
+.loading-card {
+  width: min(100%, 28rem);
+  padding: clamp(2rem, 7vw, 3.25rem) clamp(1.5rem, 7vw, 3.5rem) 2rem;
+  text-align: center;
+  background: rgba(255, 253, 249, .86);
+  border: 1px solid rgba(229, 223, 212, .92);
+  border-radius: 2rem;
+  box-shadow: 0 24px 70px rgba(31, 49, 43, .12), 0 2px 5px rgba(31, 49, 43, .05);
+  backdrop-filter: blur(12px);
+}
+
+.loading-visual {
+  position: relative;
+  width: 7.5rem;
+  height: 7.5rem;
+  margin: 0 auto 1.75rem;
+}
+
+.loading-ring {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(20, 82, 71, .17);
+  border-radius: 50%;
+  animation: loading-spin 4s linear infinite;
+}
+
+.loading-ring::before {
+  position: absolute;
+  top: -.3rem;
+  left: 50%;
+  width: .6rem;
+  height: .6rem;
+  content: '';
+  background: #ee9f7d;
+  border: 2px solid #fffdf9;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(20, 82, 71, .12);
+  transform: translateX(-50%);
+}
+
+.loading-ring--outer {
+  border-top-color: #145247;
+  border-right-color: rgba(20, 82, 71, .48);
+}
+
+.loading-ring--inner {
+  inset: .9rem;
+  border-color: rgba(20, 82, 71, .12);
+  border-bottom-color: #d8a52b;
+  animation-duration: 2.5s;
+  animation-direction: reverse;
+}
+
+.loading-ring--inner::before {
+  top: auto;
+  right: 50%;
+  bottom: -.3rem;
+  left: auto;
+  width: .45rem;
+  height: .45rem;
+  background: #d8a52b;
+  transform: translateX(50%);
+}
+
+.loading-mark {
+  position: absolute;
+  inset: 1.9rem;
+  display: grid;
+  place-items: center;
+  color: #145247;
+  background: #dcebe3;
+  border: 1px solid rgba(20, 82, 71, .12);
+  border-radius: 1.65rem;
+  box-shadow: 0 10px 24px rgba(20, 82, 71, .12);
+  animation: loading-breathe 2.6s ease-in-out infinite;
+}
+
+.loading-title {
+  margin: .45rem 0 0;
+  color: #123f38;
+  font-size: clamp(1.65rem, 7vw, 2.15rem);
+  line-height: 1.08;
+}
+
+.loading-description {
+  max-width: 19rem;
+  margin: .85rem auto 0;
+  color: #6d7974;
+  font-size: .93rem;
+  line-height: 1.55;
+}
+
+.loading-progress {
+  position: relative;
+  height: .35rem;
+  margin: 2rem auto 0;
+  overflow: hidden;
+  background: #edf1ec;
+  border-radius: 999px;
+}
+
+.loading-progress span {
+  position: absolute;
+  inset: 0 auto 0 -42%;
+  width: 42%;
+  background: linear-gradient(90deg, #145247, #75aa91, #ee9f7d);
+  border-radius: inherit;
+  animation: loading-progress 2.2s ease-in-out infinite;
+}
+
+.loading-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  margin-top: .85rem;
+  color: #84908b;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.loading-dots {
+  display: inline-flex;
+  gap: .2rem;
+}
+
+.loading-dots i {
+  display: block;
+  width: .3rem;
+  height: .3rem;
+  background: #145247;
+  border-radius: 50%;
+  animation: loading-dot 1.2s ease-in-out infinite;
+}
+
+.loading-dots i:nth-child(2) { animation-delay: .15s; }
+.loading-dots i:nth-child(3) { animation-delay: .3s; }
+
+@keyframes loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loading-breathe {
+  0%, 100% { transform: scale(.94); box-shadow: 0 10px 24px rgba(20, 82, 71, .1); }
+  50% { transform: scale(1); box-shadow: 0 14px 30px rgba(20, 82, 71, .18); }
+}
+
+@keyframes loading-progress {
+  0% { transform: translateX(0); }
+  55%, 100% { transform: translateX(340%); }
+}
+
+@keyframes loading-dot {
+  0%, 60%, 100% { opacity: .3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-.2rem); }
+}
+
 @layer utilities {
   /* Keep the design tokens available to the dev server even when Tailwind's
      config cache has not been refreshed yet. */

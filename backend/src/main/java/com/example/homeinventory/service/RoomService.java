@@ -8,6 +8,7 @@ import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.ItemRepository;
 import com.example.homeinventory.repository.RoomRepository;
+import com.example.homeinventory.repository.StorageLocationRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,12 +18,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class RoomService {
     private final RoomRepository roomRepository;
     private final ItemRepository itemRepository;
+    private final StorageLocationRepository storageLocationRepository;
     private final HouseholdAccessService householdAccessService;
 
     public RoomService(RoomRepository roomRepository, ItemRepository itemRepository,
+                       StorageLocationRepository storageLocationRepository,
                        HouseholdAccessService householdAccessService) {
         this.roomRepository = roomRepository;
         this.itemRepository = itemRepository;
+        this.storageLocationRepository = storageLocationRepository;
         this.householdAccessService = householdAccessService;
     }
 
@@ -51,7 +55,26 @@ public class RoomService {
     }
 
     @Transactional
-    public void delete(Long id) { roomRepository.delete(getEntity(id)); }
+    public void delete(Long id) {
+        Room room = getEntity(id);
+        long itemCount = itemRepository.countByHouseholdIdAndRoomId(activeHousehold().getId(), id);
+        long storageLocationCount = storageLocationRepository.countByRoomIdAndHouseholdId(
+                id, activeHousehold().getId());
+
+        if (itemCount > 0 && storageLocationCount > 0) {
+            throw new BadRequestException(
+                    "This room still has items and storage locations. Move or delete its items, "
+                            + "then delete its storage locations before deleting the room");
+        }
+        if (itemCount > 0) {
+            throw new BadRequestException("This room still has items. Move or delete them before deleting the room");
+        }
+        if (storageLocationCount > 0) {
+            throw new BadRequestException("This room still has storage locations. Delete them before deleting the room");
+        }
+
+        roomRepository.delete(room);
+    }
 
     public Room getEntity(Long id) {
         return roomRepository.findByIdAndHouseholdId(id, activeHousehold().getId())

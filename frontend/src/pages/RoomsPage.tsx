@@ -8,9 +8,11 @@ import ConfirmationModal from '../components/ConfirmationModal'
 import Icon from '../components/Icon'
 import { ErrorMessage, Loading } from '../components/PageState'
 import SpaceEditModal, { SpaceEditForm, SpaceEditTarget } from '../components/SpaceEditModal'
+import { ApiRequestError } from '../api/http'
 import type { Room, StorageLocation } from '../types'
 
 type DeleteTarget = { type: 'room'; value: Room } | { type: 'location'; value: StorageLocation }
+const roomDeleteConflictMessage = 'This room cannot be deleted while it contains items or storage locations. Move or delete the items, then delete the storage locations first.'
 
 export default function RoomsPage() {
   const { data: rooms, error: roomsError } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
@@ -54,13 +56,17 @@ export default function RoomsPage() {
 
   async function removeTarget() {
     if (!deleteTarget) return
+    const target = deleteTarget
     try {
-      deleteTarget.type === 'room' ? await roomApi.remove(deleteTarget.value.id) : await storageLocationApi.remove(deleteTarget.value.id)
-      await refreshInventory()
-      setDeleteTarget(undefined)
+      target.type === 'room' ? await roomApi.remove(target.value.id) : await storageLocationApi.remove(target.value.id)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to delete this entry.')
+      if (target.type === 'room' && cause instanceof ApiRequestError && cause.status === 409) {
+        throw new Error(roomDeleteConflictMessage)
+      }
+      throw cause
     }
+    await refreshInventory()
+    setDeleteTarget(undefined)
   }
 
   async function saveEdit(form: SpaceEditForm) {
@@ -168,6 +174,7 @@ export default function RoomsPage() {
     {deleteTarget && <ConfirmationModal
       title={`Delete “${deleteTarget.value.name}”?`}
       description={deleteTarget.type === 'room' ? 'This room can only be deleted when it contains no storage locations or items.' : 'This storage location can only be deleted when it contains no items.'}
+      errorMessage={deleteTarget.type === 'room' ? roomDeleteConflictMessage : undefined}
       onClose={() => setDeleteTarget(undefined)}
       onConfirm={removeTarget}
     />}

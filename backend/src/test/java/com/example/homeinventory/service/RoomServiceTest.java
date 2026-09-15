@@ -3,9 +3,11 @@ package com.example.homeinventory.service;
 import com.example.homeinventory.dto.RoomRequest;
 import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.Room;
+import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.ItemRepository;
 import com.example.homeinventory.repository.RoomRepository;
+import com.example.homeinventory.repository.StorageLocationRepository;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -62,10 +65,35 @@ class RoomServiceTest {
         verify(rooms).existsByHouseholdIdAndNameIgnoreCase(99L, "Office");
     }
 
+    @Test
+    void deletingRoomWithItemsAndLocationsExplainsWhatMustBeClearedFirst() {
+        RoomRepository rooms = mock(RoomRepository.class);
+        ItemRepository items = mock(ItemRepository.class);
+        StorageLocationRepository locations = mock(StorageLocationRepository.class);
+        Household household = household();
+        Room room = new Room();
+        ReflectionTestUtils.setField(room, "id", 4L);
+        when(rooms.findByIdAndHouseholdId(4L, 99L)).thenReturn(Optional.of(room));
+        when(items.countByHouseholdIdAndRoomId(99L, 4L)).thenReturn(2L);
+        when(locations.countByRoomIdAndHouseholdId(4L, 99L)).thenReturn(1L);
+
+        var exception = assertThrows(BadRequestException.class,
+                () -> service(rooms, items, locations, household).delete(4L));
+
+        assertEquals("This room still has items and storage locations. Move or delete its items, "
+                + "then delete its storage locations before deleting the room", exception.getMessage());
+        verify(rooms, never()).delete(any());
+    }
+
     private RoomService service(RoomRepository rooms, ItemRepository items, Household household) {
+        return service(rooms, items, mock(StorageLocationRepository.class), household);
+    }
+
+    private RoomService service(RoomRepository rooms, ItemRepository items,
+                                StorageLocationRepository locations, Household household) {
         HouseholdAccessService access = mock(HouseholdAccessService.class);
         when(access.getActiveHousehold()).thenReturn(household);
-        return new RoomService(rooms, items, access);
+        return new RoomService(rooms, items, locations, access);
     }
 
     private Household household() {

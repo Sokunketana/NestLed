@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record UpdateItemRequest(
+        @NotNull @PositiveOrZero Long version,
         @NotBlank @Size(max = 150) String name,
         @Size(max = 1000) String description,
         @NotNull @Min(1) Integer quantity,

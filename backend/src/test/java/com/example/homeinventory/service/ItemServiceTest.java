@@ -2,6 +2,7 @@ package com.example.homeinventory.service;
 
 import com.example.homeinventory.dto.BulkMoveItemsRequest;
 import com.example.homeinventory.dto.CreateItemRequest;
+import com.example.homeinventory.dto.UpdateItemRequest;
 import com.example.homeinventory.entity.Category;
 import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.Item;
@@ -15,6 +16,7 @@ import com.example.homeinventory.repository.ItemRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -222,6 +224,23 @@ class ItemServiceTest {
 
         assertThrows(ResourceNotFoundException.class, () -> service.findById(42L));
         verify(items).findByIdAndHouseholdId(42L, 99L);
+    }
+
+    @Test
+    void updateRejectsAStaleVersionBeforeChangingTheItem() {
+        ItemRepository items = mock(ItemRepository.class);
+        ItemService service = service(items, mock(RoomService.class), mock(CategoryService.class),
+                mock(StorageLocationService.class), mock(PhotoStorageService.class), household());
+        Item item = mock(Item.class);
+        when(items.findByIdAndHouseholdId(42L, 99L)).thenReturn(java.util.Optional.of(item));
+        when(item.getVersion()).thenReturn(3L);
+
+        UpdateItemRequest request = new UpdateItemRequest(2L, "Passport", null, 1, 1L, 1L,
+                10L, null, null, null, ItemCondition.GOOD, null);
+
+        assertThrows(ObjectOptimisticLockingFailureException.class, () -> service.update(42L, request));
+        verify(item, never()).setName(any());
+        verify(items, never()).save(any());
     }
 
     @Test

@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 public record ItemResponse(
         Long id,
+        Long version,
         String name,
         String description,
         Integer quantity,

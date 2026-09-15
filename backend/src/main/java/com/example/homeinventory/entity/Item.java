@@ -76,6 +76,7 @@ public class Item {
     void beforeUpdate() { updatedAt = LocalDateTime.now(); }
 
     public Long getId() { return id; }
+    public Long getVersion() { return version; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }

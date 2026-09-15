@@ -6,14 +6,15 @@ export interface StorageLocation {
   id: number; name: string; description?: string; color?: string; roomId: number; roomName: string; itemCount: number
 }
 export interface Item {
-  id: number; name: string; description?: string; quantity: number
+  id: number; version: number; name: string; description?: string; quantity: number
   categoryId: number; categoryName: string; categoryColor?: string
   roomId: number; roomName: string; storageLocationId: number; storageLocationName: string
   estimatedValue?: number | null; purchaseDate?: string; warrantyExpirationDate?: string
   condition: ItemCondition; notes?: string; photoUrl?: string | null; createdAt: string; updatedAt: string
 }
-export type ItemPayload = Omit<Item, 'id' | 'categoryName' | 'categoryColor' | 'roomName' |
+export type ItemPayload = Omit<Item, 'id' | 'version' | 'categoryName' | 'categoryColor' | 'roomName' |
   'storageLocationName' | 'photoUrl' | 'createdAt' | 'updatedAt'>
+export type ItemUpdatePayload = ItemPayload & { version: number }
 export interface BulkMoveItemsPayload {
   itemIds: number[]
   roomId: number

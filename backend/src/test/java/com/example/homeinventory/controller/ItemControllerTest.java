@@ -122,6 +122,7 @@ class ItemControllerTest {
     void updateAcceptsMissingEstimatedValue() throws Exception {
         String request = """
                 {
+                  "version": 0,
                   "name": "Passport",
                   "quantity": 1,
                   "categoryId": 1,

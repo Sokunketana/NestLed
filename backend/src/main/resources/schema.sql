@@ -7,6 +7,23 @@ ALTER TABLE IF EXISTS items
 ALTER TABLE IF EXISTS items
     ADD COLUMN IF NOT EXISTS version BIGINT NOT NULL DEFAULT 0^^^
 
+-- Give rooms and storage locations their own visual identity. Existing records
+-- keep working with the defaults and can be recolored from the UI.
+ALTER TABLE IF EXISTS rooms
+    ADD COLUMN IF NOT EXISTS color VARCHAR(7)^^^
+
+ALTER TABLE IF EXISTS storage_locations
+    ADD COLUMN IF NOT EXISTS color VARCHAR(7)^^^
+
+UPDATE rooms SET color = '#D96F55' WHERE color IS NULL^^^
+UPDATE storage_locations SET color = '#D8A52B' WHERE color IS NULL^^^
+
+ALTER TABLE IF EXISTS rooms
+    ALTER COLUMN color SET DEFAULT '#D96F55'^^^
+
+ALTER TABLE IF EXISTS storage_locations
+    ALTER COLUMN color SET DEFAULT '#D8A52B'^^^
+
 -- Put accounts from pre-household installations into the one shared household.
 DO $$
 DECLARE

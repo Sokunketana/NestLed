@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class RoomService {
+    private static final String DEFAULT_ROOM_COLOR = "#D96F55";
     private final RoomRepository roomRepository;
     private final ItemRepository itemRepository;
     private final StorageLocationRepository storageLocationRepository;
@@ -83,12 +84,16 @@ public class RoomService {
 
     public RoomResponse toResponse(Room room) {
         return new RoomResponse(room.getId(), room.getName(), room.getDescription(),
+                room.getColor() == null ? DEFAULT_ROOM_COLOR : room.getColor(),
                 itemRepository.countByHouseholdIdAndRoomId(room.getHousehold().getId(), room.getId()));
     }
 
     private void copy(RoomRequest request, Room room) {
         room.setName(request.name().trim());
         room.setDescription(request.description());
+        room.setColor(request.color() == null
+                ? (room.getColor() == null ? DEFAULT_ROOM_COLOR : room.getColor())
+                : request.color().toUpperCase());
     }
 
     private void ensureUniqueName(String name, String currentName) {

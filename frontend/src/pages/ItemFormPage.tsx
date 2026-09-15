@@ -23,9 +23,9 @@ const PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif
 export default function ItemFormPage() {
   const { id } = useParams(); const editing = Boolean(id); const navigate = useNavigate()
   const itemId = editing ? Number(id) : null
-  const { data: rooms } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
-  const { data: categories } = useSWR<Category[]>(cacheKeys.categories, categoryApi.list)
-  const { data: locations } = useSWR<StorageLocation[]>(cacheKeys.locations, storageLocationApi.list)
+  const { data: rooms, error: roomsError } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
+  const { data: categories, error: categoriesError } = useSWR<Category[]>(cacheKeys.categories, categoryApi.list)
+  const { data: locations, error: locationsError } = useSWR<StorageLocation[]>(cacheKeys.locations, storageLocationApi.list)
   const { data: item, error: itemError } = useSWR<Item>(itemId ? cacheKeys.item(itemId) : null, () => itemApi.get(itemId!))
   const [form, setForm] = useState<ItemPayload>(initial)
   const [saving, setSaving] = useState(false); const [error, setError] = useState('')
@@ -150,9 +150,9 @@ export default function ItemFormPage() {
     }
   }
 
-  const loading = !rooms || !categories || !locations || (editing && !item && !itemError)
-  if (loading) return <Loading />
-  if (itemError) return <ErrorMessage message={itemError instanceof Error ? itemError.message : 'Unable to load this item.'} />
+  const loadError = roomsError || categoriesError || locationsError || itemError
+  if (loadError) return <ErrorMessage message={loadError instanceof Error ? loadError.message : 'Unable to load the item form.'} />
+  if (!rooms || !categories || !locations || (editing && !item)) return <Loading />
   const roomList = rooms ?? []
   const categoryList = categories ?? []
   const locationList = locations ?? []

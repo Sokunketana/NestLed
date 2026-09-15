@@ -1,9 +1,9 @@
 export type ItemCondition = 'NEW' | 'GOOD' | 'FAIR' | 'DAMAGED'
 
-export interface Room { id: number; name: string; description?: string; itemCount: number }
+export interface Room { id: number; name: string; description?: string; color?: string; itemCount: number }
 export interface Category { id: number; name: string; color?: string; itemCount: number }
 export interface StorageLocation {
-  id: number; name: string; description?: string; roomId: number; roomName: string; itemCount: number
+  id: number; name: string; description?: string; color?: string; roomId: number; roomName: string; itemCount: number
 }
 export interface Item {
   id: number; name: string; description?: string; quantity: number

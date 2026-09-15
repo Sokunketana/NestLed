@@ -17,6 +17,9 @@ public class Room {
     @Column(length = 500)
     private String description;
 
+    @Column(length = 7)
+    private String color;
+
     // Nullable in the entity only so existing installations can be backfilled by schema.sql.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "household_id")
@@ -35,6 +38,8 @@ public class Room {
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
     public Household getHousehold() { return household; }
     public void setHousehold(Household household) { this.household = household; }
     public List<StorageLocation> getStorageLocations() { return storageLocations; }

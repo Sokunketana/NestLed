@@ -1,5 +1,7 @@
 import { FormEvent, useEffect, useId, useRef, useState } from 'react'
 import Icon from './Icon'
+import SpaceColorPicker from './SpaceColorPicker'
+import { defaultLocationColor, defaultRoomColor } from '../spaceColors'
 import type { Room, StorageLocation } from '../types'
 
 export type SpaceEditTarget =
@@ -9,6 +11,7 @@ export type SpaceEditTarget =
 export type SpaceEditForm = {
   name: string
   description: string
+  color: string
   roomId?: number
 }
 
@@ -30,6 +33,7 @@ export default function SpaceEditModal({ target, rooms, onClose, onSave }: Space
   const [form, setForm] = useState<SpaceEditForm>(() => ({
     name: target.value.name,
     description: target.value.description ?? '',
+    color: target.value.color ?? (target.type === 'location' ? defaultLocationColor : defaultRoomColor),
     ...(target.type === 'location' ? { roomId: target.value.roomId } : {}),
   }))
 
@@ -79,7 +83,7 @@ export default function SpaceEditModal({ target, rooms, onClose, onSave }: Space
       <form className="p-5 sm:p-7" onSubmit={save}>
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className={`grid h-12 w-12 shrink-0 place-items-center rounded-full ${isLocation ? 'bg-sage text-pine' : 'bg-coral/10 text-coral'}`} aria-hidden="true">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full" style={{ backgroundColor: `${form.color}20`, color: form.color }} aria-hidden="true">
               <Icon name={isLocation ? 'map' : 'home'} className="h-6 w-6" />
             </div>
             <div className="min-w-0">
@@ -124,6 +128,10 @@ export default function SpaceEditModal({ target, rooms, onClose, onSave }: Space
             </select>
           </div>
         )}
+
+        <div className="mt-5">
+          <SpaceColorPicker value={form.color} onChange={color => setForm(current => ({ ...current, color }))} disabled={isSaving} />
+        </div>
 
         <div className="mt-4">
           <label className="label" htmlFor={`${titleId}-description`}>Description</label>

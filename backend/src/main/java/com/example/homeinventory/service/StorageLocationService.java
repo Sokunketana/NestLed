@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class StorageLocationService {
+    private static final String DEFAULT_LOCATION_COLOR = "#D8A52B";
     private final StorageLocationRepository repository;
     private final RoomService roomService;
     private final ItemRepository itemRepository;
@@ -72,11 +73,15 @@ public class StorageLocationService {
     private void copy(StorageLocationRequest request, StorageLocation location) {
         location.setName(request.name().trim());
         location.setDescription(request.description());
+        location.setColor(request.color() == null
+                ? (location.getColor() == null ? DEFAULT_LOCATION_COLOR : location.getColor())
+                : request.color().toUpperCase());
         location.setRoom(roomService.getEntity(request.roomId()));
     }
 
     private StorageLocationResponse toResponse(StorageLocation location) {
         return new StorageLocationResponse(location.getId(), location.getName(), location.getDescription(),
+                location.getColor() == null ? DEFAULT_LOCATION_COLOR : location.getColor(),
                 location.getRoom().getId(), location.getRoom().getName(),
                 itemRepository.countByHouseholdIdAndStorageLocationId(
                         location.getHousehold().getId(), location.getId()));

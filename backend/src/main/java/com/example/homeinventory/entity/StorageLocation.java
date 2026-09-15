@@ -17,6 +17,9 @@ public class StorageLocation {
     @Column(length = 500)
     private String description;
 
+    @Column(length = 7)
+    private String color;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
@@ -36,6 +39,8 @@ public class StorageLocation {
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
     public Room getRoom() { return room; }
     public void setRoom(Room room) { this.room = room; }
     public Household getHousehold() { return household; }

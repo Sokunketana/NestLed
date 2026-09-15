@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -108,6 +109,9 @@ public class ItemService {
     @Transactional
     public ItemResponse update(Long id, UpdateItemRequest request) {
         Item item = getEntity(id);
+        if (!request.version().equals(item.getVersion())) {
+            throw new ObjectOptimisticLockingFailureException(Item.class, id);
+        }
         Room previousRoom = item.getRoom();
         StorageLocation previousLocation = item.getStorageLocation();
         copy(item, request.name(), request.description(), request.quantity(), request.categoryId(),
@@ -287,7 +291,7 @@ public class ItemService {
     // Manual mapping keeps persistence details out of the HTTP response and avoids circular JSON.
     private ItemResponse toResponse(Item item) {
         StorageLocation location = item.getStorageLocation();
-        return new ItemResponse(item.getId(), item.getName(), item.getDescription(), item.getQuantity(),
+        return new ItemResponse(item.getId(), item.getVersion(), item.getName(), item.getDescription(), item.getQuantity(),
                 item.getCategory().getId(), item.getCategory().getName(), item.getCategory().getColor(),
                 item.getRoom().getId(), item.getRoom().getName(),
                 location.getId(), location.getName(),

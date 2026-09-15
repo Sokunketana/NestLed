@@ -23,9 +23,9 @@ const PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif
 export default function ItemFormPage() {
   const { id } = useParams(); const editing = Boolean(id); const navigate = useNavigate()
   const itemId = editing ? Number(id) : null
-  const { data: rooms } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
-  const { data: categories } = useSWR<Category[]>(cacheKeys.categories, categoryApi.list)
-  const { data: locations } = useSWR<StorageLocation[]>(cacheKeys.locations, storageLocationApi.list)
+  const { data: rooms, error: roomsError } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
+  const { data: categories, error: categoriesError } = useSWR<Category[]>(cacheKeys.categories, categoryApi.list)
+  const { data: locations, error: locationsError } = useSWR<StorageLocation[]>(cacheKeys.locations, storageLocationApi.list)
   const { data: item, error: itemError } = useSWR<Item>(itemId ? cacheKeys.item(itemId) : null, () => itemApi.get(itemId!))
   const [form, setForm] = useState<ItemPayload>(initial)
   const [saving, setSaving] = useState(false); const [error, setError] = useState('')
@@ -39,6 +39,7 @@ export default function ItemFormPage() {
   const [pendingDuplicatePayload, setPendingDuplicatePayload] = useState<ItemPayload | null>(null)
   const photoInput = useRef<HTMLInputElement>(null)
   const persistedItemId = useRef<number | null>(id ? Number(id) : null)
+  const itemVersion = useRef<number | null>(null)
   const initializedItemId = useRef<number | null>(null)
 
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function ItemFormPage() {
     initializedItemId.current = null
     if (!editing) {
       setForm(initial)
+      itemVersion.current = null
       setExistingPhotoUrl(null)
       setExistingPhotoVersion(undefined)
       setRemovePhoto(false)
@@ -55,6 +57,7 @@ export default function ItemFormPage() {
   useEffect(() => {
     if (!item || initializedItemId.current === item.id) return
     initializedItemId.current = item.id
+    itemVersion.current = item.version
     setForm({ name:item.name, description:item.description, quantity:item.quantity, categoryId:item.categoryId, roomId:item.roomId, storageLocationId:item.storageLocationId, estimatedValue:item.estimatedValue ?? undefined, purchaseDate:item.purchaseDate, warrantyExpirationDate:item.warrantyExpirationDate, condition:item.condition, notes:item.notes })
     setExistingPhotoUrl(item.photoUrl ?? null)
     setExistingPhotoVersion(item.updatedAt)
@@ -101,10 +104,16 @@ export default function ItemFormPage() {
 
   async function persist(payload: ItemPayload, allowDuplicate = false) {
     const creating = persistedItemId.current == null
-    const saved = creating
-      ? await itemApi.create(payload, allowDuplicate)
-      : await itemApi.update(persistedItemId.current!, payload)
+    let saved: Item
+    if (creating) {
+      saved = await itemApi.create(payload, allowDuplicate)
+    } else {
+      const version = itemVersion.current
+      if (version == null) throw new Error('This item version is unavailable. Reload the page and try again.')
+      saved = await itemApi.update(persistedItemId.current!, { ...payload, version })
+    }
     persistedItemId.current = saved.id
+    itemVersion.current = saved.version
 
     try {
       if (photoFile) await itemApi.uploadPhoto(saved.id, photoFile)
@@ -149,9 +158,9 @@ export default function ItemFormPage() {
     }
   }
 
-  const loading = !rooms || !categories || !locations || (editing && !item && !itemError)
-  if (loading) return <Loading />
-  if (itemError) return <ErrorMessage message={itemError instanceof Error ? itemError.message : 'Unable to load this item.'} />
+  const loadError = roomsError || categoriesError || locationsError || itemError
+  if (loadError) return <ErrorMessage message={loadError instanceof Error ? loadError.message : 'Unable to load the item form.'} />
+  if (!rooms || !categories || !locations || (editing && !item)) return <Loading />
   const roomList = rooms ?? []
   const categoryList = categories ?? []
   const locationList = locations ?? []

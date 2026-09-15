@@ -31,13 +31,9 @@ export default function CategoriesPage() {
 
   async function remove() {
     if (!deleteTarget) return
-    try {
-      await categoryApi.remove(deleteTarget.id)
-      await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
-      setDeleteTarget(undefined)
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to delete category.')
-    }
+    await categoryApi.remove(deleteTarget.id)
+    await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
+    setDeleteTarget(undefined)
   }
 
   function cancelEdit() {

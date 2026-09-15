@@ -13,7 +13,9 @@ public class Item {
     private Long id;
 
     @Version
-    @Column(nullable = false)
+    // Nullable during Hibernate schema updates; schema.sql backfills and
+    // enforces the database constraint after existing rows are migrated.
+    @Column
     private Long version;
 
     @Column(nullable = false, length = 150)
@@ -33,8 +35,10 @@ public class Item {
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "storage_location_id", nullable = false)
+    // Nullable during Hibernate schema updates; schema.sql backfills legacy
+    // items before enforcing the database constraint.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "storage_location_id")
     private StorageLocation storageLocation;
 
     // Nullable in the entity only so existing installations can be backfilled by schema.sql.
@@ -76,6 +80,7 @@ public class Item {
     void beforeUpdate() { updatedAt = LocalDateTime.now(); }
 
     public Long getId() { return id; }
+    public Long getVersion() { return version; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getDescription() { return description; }

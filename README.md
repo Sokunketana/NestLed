@@ -119,9 +119,10 @@ Configure these backend variables in Render:
 FRONTEND_URL=https://your-vercel-app.vercel.app
 SESSION_COOKIE_SECURE=true
 SESSION_COOKIE_SAME_SITE=none
+GOOGLE_REDIRECT_URI=https://your-render-service.onrender.com/login/oauth2/code/google
 ```
 
-Also set `DB_URL` to the JDBC form of Render's PostgreSQL connection URL (`jdbc:postgresql://...`), along with `DB_USERNAME`, `DB_PASSWORD`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`. The Google OAuth redirect URI must use the Render service URL:
+Also set `DB_URL` to the JDBC form of Render's PostgreSQL connection URL (`jdbc:postgresql://...`), along with `DB_USERNAME`, `DB_PASSWORD`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET`. Register the same `GOOGLE_REDIRECT_URI` value in Google Cloud Console as an authorized redirect URI.
 
 ```text
 https://your-render-service.onrender.com/login/oauth2/code/google

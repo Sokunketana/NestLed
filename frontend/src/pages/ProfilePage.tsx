@@ -1,8 +1,14 @@
 import { useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { householdApi, type HouseholdExportPreview } from '../api/householdApi'
+import {
+  householdApi,
+  type HouseholdExportPreview,
+  type HouseholdImportPreview,
+  type HouseholdImportResult,
+} from '../api/householdApi'
 import Icon from '../components/Icon'
 import ExportPreviewModal from '../components/ExportPreviewModal'
+import ImportPreviewModal from '../components/ImportPreviewModal'
 
 type ExportFormat = 'json' | 'csv'
 
@@ -17,6 +23,12 @@ export default function ProfilePage() {
   const [exportBusy, setExportBusy] = useState(false)
   const [preview, setPreview] = useState<HouseholdExportPreview | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [importPreviewBusy, setImportPreviewBusy] = useState(false)
+  const [importBusy, setImportBusy] = useState(false)
+  const [importFile, setImportFile] = useState<File | null>(null)
+  const [importPreview, setImportPreview] = useState<HouseholdImportPreview | null>(null)
+  const [importError, setImportError] = useState<string | null>(null)
+  const [importSuccess, setImportSuccess] = useState<string | null>(null)
 
   async function reviewExport(format: ExportFormat) {
     setPreviewBusy(format)
@@ -52,8 +64,39 @@ export default function ProfilePage() {
     }
   }
 
+  async function reviewImport(file: File) {
+    setImportPreviewBusy(true)
+    setImportError(null)
+    setImportSuccess(null)
+    setImportFile(file)
+    try {
+      setImportPreview(await householdApi.importPreview(file))
+    } catch (cause) {
+      setImportFile(null)
+      setImportError(cause instanceof Error ? cause.message : 'Could not prepare the import preview')
+    } finally {
+      setImportPreviewBusy(false)
+    }
+  }
+
+  async function importData() {
+    if (!importPreview || !importFile) return
+    setImportBusy(true)
+    setImportError(null)
+    try {
+      const result: HouseholdImportResult = await householdApi.importData(importFile)
+      setImportPreview(null)
+      setImportFile(null)
+      setImportSuccess(`Imported ${result.itemsImported} item${result.itemsImported === 1 ? '' : 's'} into ${result.destinationHouseholdName}.`)
+    } catch (cause) {
+      setImportError(cause instanceof Error ? cause.message : 'Could not import household data')
+    } finally {
+      setImportBusy(false)
+    }
+  }
+
   const isOwner = user?.householdRole === 'OWNER'
-  const busy = previewBusy !== null || exportBusy
+  const busy = previewBusy !== null || exportBusy || importPreviewBusy || importBusy
 
   return <>
   <div className="space-y-7">
@@ -82,9 +125,11 @@ export default function ProfilePage() {
     <section className="card">
       <div className="flex items-start gap-3">
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-cream text-pine"><Icon name="box" className="h-4 w-4" /></span>
-        <div><h2 className="text-xl">Household data</h2><p className="mt-1 text-sm text-ink-soft">Export the shared inventory so it can be backed up or moved to another household.</p></div>
+        <div><h2 className="text-xl">Household data</h2><p className="mt-1 text-sm text-ink-soft">Export or import the shared inventory so it can be backed up or moved to another household.</p></div>
       </div>
       {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+      {importError && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{importError}</p>}
+      {importSuccess && <p role="status" className="mt-4 rounded-xl bg-sage px-4 py-3 text-sm text-pine">{importSuccess}</p>}
       {isOwner ? <>
         <div className="mt-5 flex flex-wrap gap-3">
           <button type="button" className="btn-primary" disabled={busy} onClick={() => void reviewExport('json')}>
@@ -93,9 +138,24 @@ export default function ProfilePage() {
           <button type="button" className="btn-secondary" disabled={busy} onClick={() => void reviewExport('csv')}>
             <Icon name="download" className="h-4 w-4" />{previewBusy === 'csv' ? 'Loading preview…' : 'Export CSV'}
           </button>
+          <label className={`btn-secondary ${busy ? 'pointer-events-none opacity-60' : ''}`}>
+            <Icon name="upload" className="h-4 w-4" />{importPreviewBusy ? 'Loading preview…' : 'Import JSON'}
+            <input
+              type="file"
+              accept=".json,application/json"
+              aria-label="Import JSON file"
+              className="sr-only"
+              disabled={busy}
+              onChange={event => {
+                const file = event.target.files?.[0]
+                event.target.value = ''
+                if (file) void reviewImport(file)
+              }}
+            />
+          </label>
         </div>
-        <p className="mt-4 text-xs text-stone-500">JSON includes rooms, locations, categories, items, and movement history. CSV contains one row per item. Photos and member accounts are not included.</p>
-      </> : <p className="mt-5 rounded-xl bg-cream px-4 py-3 text-sm text-stone-600">Only the household owner can export shared household data.</p>}
+        <p className="mt-4 text-xs text-stone-500">JSON includes rooms, locations, categories, items, and movement history. CSV contains one row per item. Photos and member accounts are not included. Imports accept Nestled JSON exports and add items without overwriting existing records.</p>
+      </> : <p className="mt-5 rounded-xl bg-cream px-4 py-3 text-sm text-stone-600">Only the household owner can export or import shared household data.</p>}
     </section>
   </div>
   {preview && <ExportPreviewModal
@@ -104,6 +164,13 @@ export default function ProfilePage() {
     error={error}
     onClose={() => { if (!exportBusy) { setPreview(null); setError(null) } }}
     onConfirm={exportData}
+  />}
+  {importPreview && <ImportPreviewModal
+    preview={importPreview}
+    confirming={importBusy}
+    error={importError}
+    onClose={() => { if (!importBusy) { setImportPreview(null); setImportFile(null); setImportError(null) } }}
+    onConfirm={importData}
   />}
   </>
 }

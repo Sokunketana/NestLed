@@ -36,6 +36,46 @@ export interface HouseholdExportPreview {
   movementHistoryIncluded: boolean
 }
 
+export interface HouseholdImportIssue {
+  path: string
+  message: string
+}
+
+export interface HouseholdImportPreview {
+  sourceHouseholdName: string | null
+  sourceVersion: number
+  destinationHouseholdName: string
+  roomsToCreate: number
+  existingRooms: number
+  locationsToCreate: number
+  existingLocations: number
+  categoriesToCreate: number
+  existingCategories: number
+  itemsToImport: number
+  duplicateItems: number
+  movementRecordsSkipped: number
+  errors: HouseholdImportIssue[]
+  warnings: HouseholdImportIssue[]
+  canImport: boolean
+}
+
+export interface HouseholdImportResult {
+  sourceHouseholdName: string
+  destinationHouseholdName: string
+  roomsCreated: number
+  locationsCreated: number
+  categoriesCreated: number
+  itemsImported: number
+  duplicateItemsImported: number
+  movementRecordsSkipped: number
+}
+
+function importFile(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return formData
+}
+
 export const householdApi = {
   get: () => request<Household>('/household'),
   rename: (name: string) => request<Household>('/household', {
@@ -55,4 +95,10 @@ export const householdApi = {
   }),
   exportPreview: (format: 'json' | 'csv') => request<HouseholdExportPreview>(`/household/export/preview?format=${format}`),
   exportData: (format: 'json' | 'csv') => download(`/household/export?format=${format}`),
+  importPreview: (file: File) => request<HouseholdImportPreview>('/household/import/preview', {
+    method: 'POST', body: importFile(file),
+  }),
+  importData: (file: File) => request<HouseholdImportResult>('/household/import', {
+    method: 'POST', body: importFile(file),
+  }),
 }

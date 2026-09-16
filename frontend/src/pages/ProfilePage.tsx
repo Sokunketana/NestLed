@@ -138,7 +138,7 @@ export default function ProfilePage() {
           <button type="button" className="btn-secondary" disabled={busy} onClick={() => void reviewExport('csv')}>
             <Icon name="download" className="h-4 w-4" />{previewBusy === 'csv' ? 'Loading preview…' : 'Export CSV'}
           </button>
-          <label className={`btn-secondary ${busy ? 'pointer-events-none opacity-60' : ''}`}>
+          <label className={`btn-secondary cursor-pointer ${busy ? 'pointer-events-none opacity-60' : ''}`}>
             <Icon name="upload" className="h-4 w-4" />{importPreviewBusy ? 'Loading preview…' : 'Import JSON'}
             <input
               type="file"

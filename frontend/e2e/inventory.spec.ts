@@ -129,7 +129,6 @@ test('an authenticated user can browse items and open item details', async ({ pa
   await expect(page.getByRole('heading', { name: 'Passport', exact: true })).toBeVisible()
   await expect(page.getByText('Bedroom → Top drawer')).toBeVisible()
 })
-
 test('an owner can export household data from profile settings', async ({ page }) => {
   await mockAuthenticatedApi(page)
   await page.route(/\/api\/household\/export/, route => {

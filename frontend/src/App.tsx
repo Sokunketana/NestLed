@@ -11,6 +11,7 @@ import HouseholdPage from './pages/HouseholdPage'
 import MovementHistoryPage from './pages/MovementHistoryPage'
 import { useAuth } from './auth/AuthContext'
 import LoadingScreen from './components/LoadingScreen'
+import ProfilePage from './pages/ProfilePage'
 
 export default function App() {
   const { status } = useAuth()
@@ -30,6 +31,7 @@ export default function App() {
       <Route path="/rooms" element={<RoomsPage />} />
       <Route path="/categories" element={<CategoriesPage />} />
       <Route path="/household" element={<HouseholdPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Route>
   </Routes>

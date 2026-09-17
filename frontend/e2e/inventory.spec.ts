@@ -129,3 +129,97 @@ test('an authenticated user can browse items and open item details', async ({ pa
   await expect(page.getByRole('heading', { name: 'Passport', exact: true })).toBeVisible()
   await expect(page.getByText('Bedroom → Top drawer')).toBeVisible()
 })
+test('an owner can export household data from profile settings', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+  await page.route(/\/api\/household\/export/, route => {
+    const url = new URL(route.request().url())
+    if (url.pathname.endsWith('/preview')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          format: 'json', householdName: 'Our home', roomCount: 1, storageLocationCount: 1,
+          categoryCount: 1, itemCount: 1, movementCount: 0, photoCount: 0, movementHistoryIncluded: true,
+        }),
+      })
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'Content-Disposition': 'attachment; filename=our-home-inventory.json' },
+      body: JSON.stringify({ format: 'nestled-household-export', version: 1, items: [] }),
+    })
+  })
+
+  await page.goto('/')
+  await page.getByRole('button', { name: /Open account menu/ }).click()
+  await page.getByRole('menuitem', { name: 'Profile & settings' }).click()
+  await expect(page.getByRole('heading', { name: 'Profile & settings' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Export JSON' }).click()
+  await expect(page.getByRole('heading', { name: 'Review JSON export' })).toBeVisible()
+  await expect(page.getByText('Movement history: 0 records will be included.')).toBeVisible()
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Download JSON' }).click()
+  await expect((await download).suggestedFilename()).toBe('our-home-inventory.json')
+})
+
+test('an owner can review and import household data from profile settings', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+  await page.route(/\/api\/auth\/csrf/, route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ headerName: 'X-XSRF-TOKEN', parameterName: '_csrf', token: 'csrf-token' }),
+  }))
+  await page.route(/\/api\/household\/import(?:\/|$)/, route => {
+    const url = new URL(route.request().url())
+    if (url.pathname.endsWith('/preview')) {
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          sourceHouseholdName: 'Old home', sourceVersion: 1, destinationHouseholdName: 'Our home',
+          roomsToCreate: 1, existingRooms: 0, locationsToCreate: 1, existingLocations: 0,
+          categoriesToCreate: 1, existingCategories: 0, itemsToImport: 1, duplicateItems: 0,
+          movementRecordsSkipped: 0, errors: [],
+          warnings: [{ path: 'photos', message: 'Photo files are not included in the export and cannot be imported' }],
+          canImport: true,
+        }),
+      })
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        sourceHouseholdName: 'Old home', destinationHouseholdName: 'Our home',
+        roomsCreated: 1, locationsCreated: 1, categoriesCreated: 1, itemsImported: 1,
+        duplicateItemsImported: 0, movementRecordsSkipped: 0,
+      }),
+    })
+  })
+
+  await page.goto('/')
+  await page.getByRole('button', { name: /Open account menu/ }).click()
+  await page.getByRole('menuitem', { name: 'Profile & settings' }).click()
+  await expect(page.getByRole('heading', { name: 'Profile & settings' })).toBeVisible()
+
+  await page.setInputFiles('input[aria-label="Import JSON file"]', {
+    name: 'backup.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify({
+      format: 'nestled-household-export', version: 1, household: { name: 'Old home' },
+      rooms: [{ name: 'Bedroom', description: null, color: null }],
+      storageLocations: [{ name: 'Top drawer', description: null, color: null, roomName: 'Bedroom' }],
+      categories: [{ name: 'Documents', color: null }],
+      items: [{ name: 'Passport', description: null, quantity: 1, categoryName: 'Documents', roomName: 'Bedroom',
+        storageLocationName: 'Top drawer', estimatedValue: 0, purchaseDate: null, warrantyExpirationDate: null,
+        condition: 'GOOD', notes: null, photoAvailable: false, createdAt: null, updatedAt: null }],
+      movementHistory: [],
+    })),
+  })
+
+  await expect(page.getByRole('heading', { name: 'Review import' })).toBeVisible()
+  await expect(page.getByText('Photo files are not included in the export and cannot be imported')).toBeVisible()
+  await page.getByRole('button', { name: 'Import 1 item' }).click()
+  await expect(page.getByRole('status')).toHaveText('Imported 1 item into Our home.')
+})

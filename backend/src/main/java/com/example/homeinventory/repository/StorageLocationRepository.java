@@ -8,5 +8,6 @@ public interface StorageLocationRepository extends JpaRepository<StorageLocation
     List<StorageLocation> findByHouseholdIdOrderByNameAsc(Long householdId);
     List<StorageLocation> findByRoomIdAndHouseholdIdOrderByNameAsc(Long roomId, Long householdId);
     java.util.Optional<StorageLocation> findByIdAndHouseholdId(Long id, Long householdId);
+    long countByHouseholdId(Long householdId);
     long countByRoomIdAndHouseholdId(Long roomId, Long householdId);
 }

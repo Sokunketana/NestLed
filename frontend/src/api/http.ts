@@ -112,3 +112,16 @@ export async function request<T>(path: string, options?: RequestInit): Promise<T
   if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
 }
+
+export async function download(path: string): Promise<Blob> {
+  const response = await fetchWithSafeRetry(endpointUrl(path), {
+    credentials: 'include',
+  }, 'GET')
+  if (!response.ok) {
+    const error = (await response.json().catch(() => ({
+      message: `Request failed (${response.status}${response.statusText ? ` ${response.statusText}` : ''})`,
+    }))) as ApiError
+    throw new ApiRequestError(error.message || 'Download failed', response.status, error)
+  }
+  return response.blob()
+}

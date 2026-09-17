@@ -23,6 +23,8 @@ export type IconName =
   | 'sparkles'
   | 'grid'
   | 'calendar'
+  | 'download'
+  | 'upload'
 
 type IconProps = SVGProps<SVGSVGElement> & {
   name: IconName
@@ -61,5 +63,7 @@ export default function Icon({ name, ...props }: IconProps) {
     case 'sparkles': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><path d="m12 3 1.4 5.6L19 10l-5.6 1.4L12 17l-1.4-5.6L5 10l5.6-1.4L12 3ZM19 16l.6 2.4L22 19l-2.4.6L19 22l-.6-2.4L16 19l2.4-.6L19 16Z" /></svg>
     case 'grid': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><rect x="4" y="4" width="6" height="6" rx="1" /><rect x="14" y="4" width="6" height="6" rx="1" /><rect x="4" y="14" width="6" height="6" rx="1" /><rect x="14" y="14" width="6" height="6" rx="1" /></svg>
     case 'calendar': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><rect x="3.5" y="5.5" width="17" height="15" rx="2" /><path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17" /></svg>
+    case 'download': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4 20.5h16" /></svg>
+    case 'upload': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><path d="M12 20.5v-11M7.5 14l4.5-4.5 4.5 4.5M4 3.5h16" /></svg>
   }
 }

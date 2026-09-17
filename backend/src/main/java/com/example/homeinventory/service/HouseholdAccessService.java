@@ -27,6 +27,10 @@ public class HouseholdAccessService {
         return getActiveMembership(currentOidcUser()).getHousehold();
     }
 
+    public HouseholdMembership getActiveMembership() {
+        return getActiveMembership(currentOidcUser());
+    }
+
     public HouseholdMembership getActiveMembership(OidcUser principal) {
         AppUser user = appUserService.getRequired(principal);
         if (user.getHousehold() == null) {

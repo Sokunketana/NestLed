@@ -16,6 +16,7 @@ export default function HouseholdPage() {
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [busy, setBusy] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<HouseholdMember | null>(null)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
@@ -40,7 +41,7 @@ export default function HouseholdPage() {
 
   async function rename(event: FormEvent) {
     event.preventDefault()
-    setBusy(true)
+    setSaving(true)
     setError(null)
     setSaved(false)
     try {
@@ -52,7 +53,7 @@ export default function HouseholdPage() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'The household could not be updated')
     } finally {
-      setBusy(false)
+      setSaving(false)
     }
   }
 
@@ -119,7 +120,7 @@ export default function HouseholdPage() {
         <form onSubmit={rename} className="mt-5 flex max-w-xl flex-col gap-3 sm:flex-row">
           <input className="field" aria-label="Household name" maxLength={100} required value={name}
             onChange={event => { setName(event.target.value); setSaved(false) }} />
-          <button className="btn-primary" disabled={busy || !name.trim()}>{busy ? 'Saving…' : 'Save'}</button>
+          <button className="btn-primary" disabled={saving || !name.trim()}>{saving ? 'Saving…' : 'Save'}</button>
         </form>
         {saved && <p role="status" className="mt-2 text-sm text-emerald-700">Household name saved.</p>}
       </> : <div className="mt-5 flex flex-wrap items-center justify-between gap-3">

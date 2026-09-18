@@ -4,6 +4,7 @@ import HomeTree from './HomeTree'
 import ConfirmationModal from './ConfirmationModal'
 import Icon, { type IconName } from './Icon'
 import { useAuth } from '../auth/AuthContext'
+import SetupGuide, { type SetupData } from './SetupGuide'
 
 const primaryLinks: Array<{ to: string; label: string; icon: IconName }> = [
   { to: '/', label: 'Overview', icon: 'home' },
@@ -17,7 +18,7 @@ const manageLinks: Array<{ to: string; label: string; icon: IconName }> = [
   { to: '/movements', label: 'Movement history', icon: 'history' },
 ]
 
-export default function Layout() {
+export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   const [search, setSearch] = useState('')
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false)
@@ -25,9 +26,14 @@ export default function Layout() {
   const profileMenuRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user, logout, completeOnboarding } = useAuth()
   const manageRouteActive = manageLinks.some(link => location.pathname.startsWith(link.to))
   const [manageOpen, setManageOpen] = useState(manageRouteActive)
+  const setupComplete = Boolean(onboarding?.rooms.length && onboarding.locations.length && onboarding.categories.length)
+  const onboardingActive = Boolean(onboarding && user?.onboardingCompleted === false && !setupComplete)
+  const onboardingStep = !onboarding?.rooms.length ? 'room' : !onboarding.locations.length ? 'location' : 'category'
+  const wasOnboardingActive = useRef(onboardingActive)
+  const completionRequested = useRef(false)
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -44,6 +50,27 @@ export default function Layout() {
   useEffect(() => {
     if (manageRouteActive) setManageOpen(true)
   }, [manageRouteActive])
+
+  useEffect(() => {
+    if (setupComplete && user?.onboardingCompleted === false && !completionRequested.current) {
+      completionRequested.current = true
+      void completeOnboarding().catch(() => { completionRequested.current = false })
+    }
+    if (wasOnboardingActive.current && !onboardingActive) {
+      navigate('/items/new', { replace: true })
+    }
+    wasOnboardingActive.current = onboardingActive
+  }, [completeOnboarding, navigate, onboardingActive, setupComplete, user?.onboardingCompleted])
+
+  useEffect(() => {
+    if (!onboardingActive) return
+    const setupMode = new URLSearchParams(location.search).get('setup')
+    const target = onboardingStep === 'category' ? '/categories#category-form' : `/rooms?setup=${onboardingStep}#quick-add`
+    const alreadyAtTarget = onboardingStep === 'category'
+      ? location.pathname === '/categories'
+      : location.pathname === '/rooms' && setupMode === onboardingStep
+    if (!alreadyAtTarget) navigate(target, { replace: true })
+  }, [location.pathname, location.search, navigate, onboardingActive, onboardingStep])
 
   useEffect(() => {
     function closeProfileMenu(event: PointerEvent) {
@@ -168,7 +195,10 @@ export default function Layout() {
           </div>
         </div>
       </header>
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8 lg:px-10 lg:py-10"><Outlet /></div>
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8 lg:px-10 lg:py-10">
+        {onboardingActive && onboarding && <SetupGuide data={onboarding} />}
+        <Outlet />
+      </div>
       {showLogoutConfirmation && <ConfirmationModal
         title="Sign out?"
         description="You’ll need to sign in with Google again to access your home inventory."

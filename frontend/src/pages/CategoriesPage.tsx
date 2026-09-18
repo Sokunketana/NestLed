@@ -62,7 +62,7 @@ export default function CategoriesPage() {
         {!categories.length && <div className="card border-dashed py-14 text-center sm:col-span-2"><Icon name="tag" className="mx-auto h-7 w-7 text-pine" /><p className="mt-3 font-semibold">No categories yet.</p><p className="mt-1 text-sm text-ink-soft">Add a label to make your first items easier to find.</p></div>}
       </section>
 
-      <form className="card self-start" onSubmit={submit}>
+      <form id="category-form" className="card self-start scroll-mt-24" onSubmit={submit}>
         <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-gold/15 text-amber-700"><Icon name="tag" className="h-4 w-4" /></span><div><h2 className="text-xl">{editing ? 'Edit category' : 'Add a category'}</h2><p className="mt-1 text-sm text-ink-soft">Choose a simple label you’ll recognize at a glance.</p></div></div>
         <div className="mt-5"><label className="label">Name *</label><input className="field" required maxLength={100} value={form.name} onChange={event => setForm({ ...form, name: event.target.value })} placeholder="Electronics" /></div>
         <div className="mt-4"><label className="label">Color *</label><div className="flex gap-3"><input aria-label="Category color" className="h-11 w-14 cursor-pointer rounded-xl border-line bg-white p-1" type="color" value={form.color} onChange={event => setForm({ ...form, color: event.target.value })} /><input className="field" required pattern="#[0-9A-Fa-f]{6}" value={form.color} onChange={event => setForm({ ...form, color: event.target.value })} /></div></div>

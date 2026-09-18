@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,6 +35,12 @@ public class AuthController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deleteAccount(@AuthenticationPrincipal OidcUser oidcUser) {
         accountDeletionService.deleteAccount(oidcUser);
+    }
+
+    @PostMapping("/onboarding/complete")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void completeOnboarding(@AuthenticationPrincipal OidcUser oidcUser) {
+        appUserService.completeOnboarding(oidcUser);
     }
 
     @GetMapping("/csrf")

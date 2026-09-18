@@ -58,6 +58,11 @@ public class AppUser {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    // Existing accounts are backfilled as complete by schema.sql. New accounts
+    // begin incomplete and are released after the setup guide is finished.
+    @Column(name = "onboarding_completed")
+    private Boolean onboardingCompleted = false;
+
     protected AppUser() {}
 
     public AppUser(String oidcIssuer, String oidcSubject, String email, String displayName, String pictureUrl) {
@@ -82,6 +87,8 @@ public class AppUser {
         this.householdRole = null;
     }
 
+    public void completeOnboarding() { onboardingCompleted = true; }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();
@@ -104,4 +111,5 @@ public class AppUser {
     public HouseholdRole getHouseholdRole() { return householdRole; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+    public boolean isOnboardingCompleted() { return Boolean.TRUE.equals(onboardingCompleted); }
 }

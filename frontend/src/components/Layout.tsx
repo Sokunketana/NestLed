@@ -4,6 +4,7 @@ import HomeTree from './HomeTree'
 import ConfirmationModal from './ConfirmationModal'
 import Icon, { type IconName } from './Icon'
 import { useAuth } from '../auth/AuthContext'
+import OnboardingWelcome from './OnboardingWelcome'
 import SetupGuide, { type SetupData } from './SetupGuide'
 
 const primaryLinks: Array<{ to: string; label: string; icon: IconName }> = [
@@ -23,6 +24,7 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false)
   const [avatarImageFailed, setAvatarImageFailed] = useState(false)
+  const [onboardingStarted, setOnboardingStarted] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const navigate = useNavigate()
@@ -31,6 +33,7 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   const [manageOpen, setManageOpen] = useState(manageRouteActive)
   const setupComplete = Boolean(onboarding?.rooms.length && onboarding.locations.length && onboarding.categories.length)
   const onboardingActive = Boolean(onboarding && user?.onboardingCompleted === false && !setupComplete)
+  const showOnboardingWelcome = onboardingActive && !onboardingStarted
   const onboardingStep = !onboarding?.rooms.length ? 'room' : !onboarding.locations.length ? 'location' : 'category'
   const wasOnboardingActive = useRef(onboardingActive)
   const completionRequested = useRef(false)
@@ -63,14 +66,14 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   }, [completeOnboarding, navigate, onboardingActive, setupComplete, user?.onboardingCompleted])
 
   useEffect(() => {
-    if (!onboardingActive) return
+    if (!onboardingActive || !onboardingStarted) return
     const setupMode = new URLSearchParams(location.search).get('setup')
     const target = onboardingStep === 'category' ? '/categories#category-form' : `/rooms?setup=${onboardingStep}#quick-add`
     const alreadyAtTarget = onboardingStep === 'category'
       ? location.pathname === '/categories'
       : location.pathname === '/rooms' && setupMode === onboardingStep
     if (!alreadyAtTarget) navigate(target, { replace: true })
-  }, [location.pathname, location.search, navigate, onboardingActive, onboardingStep])
+  }, [location.pathname, location.search, navigate, onboardingActive, onboardingStarted, onboardingStep])
 
   useEffect(() => {
     function closeProfileMenu(event: PointerEvent) {
@@ -190,7 +193,8 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
         </div>
       </header>
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8 lg:px-10 lg:py-10">
-        {onboardingActive && onboarding && <SetupGuide data={onboarding} />}
+        {showOnboardingWelcome && <OnboardingWelcome onStart={() => setOnboardingStarted(true)} />}
+        {onboardingActive && onboardingStarted && onboarding && <SetupGuide data={onboarding} />}
         <Outlet />
       </div>
       {showLogoutConfirmation && <ConfirmationModal

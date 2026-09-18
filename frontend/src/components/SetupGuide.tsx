@@ -114,7 +114,6 @@ export default function SetupGuide({ data }: { data: SetupData }) {
     >
       <div className="pointer-events-auto w-full max-w-md rounded-2xl border-2 border-pine bg-deep p-4 text-white shadow-2xl sm:p-5">
         <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sage text-pine shadow-sm"><Icon name="sparkles" className="h-5 w-5" /></span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-3"><p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-emerald-200">Tutorial objective</p><span className="rounded-full bg-white/10 px-2 py-1 text-[0.65rem] font-bold text-emerald-100">{stepIndex + 1}/{steps.length}</span></div>
             <h2 className="mt-1 text-lg text-white">{activeStep.title}</h2>

@@ -1,10 +1,13 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import type { MouseEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import HomeTree from './HomeTree'
 import ConfirmationModal from './ConfirmationModal'
 import Icon, { type IconName } from './Icon'
 import { useAuth } from '../auth/AuthContext'
+import OnboardingWelcome from './OnboardingWelcome'
 import SetupGuide, { type SetupData } from './SetupGuide'
+import TutorialRequiredModal from './TutorialRequiredModal'
 
 const primaryLinks: Array<{ to: string; label: string; icon: IconName }> = [
   { to: '/', label: 'Overview', icon: 'home' },
@@ -22,7 +25,9 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   const [search, setSearch] = useState('')
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false)
+  const [showTutorialRequired, setShowTutorialRequired] = useState(false)
   const [avatarImageFailed, setAvatarImageFailed] = useState(false)
+  const [onboardingStarted, setOnboardingStarted] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
   const navigate = useNavigate()
@@ -31,13 +36,40 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   const [manageOpen, setManageOpen] = useState(manageRouteActive)
   const setupComplete = Boolean(onboarding?.rooms.length && onboarding.locations.length && onboarding.categories.length)
   const onboardingActive = Boolean(onboarding && user?.onboardingCompleted === false && !setupComplete)
+  const showOnboardingWelcome = onboardingActive && !onboardingStarted
   const onboardingStep = !onboarding?.rooms.length ? 'room' : !onboarding.locations.length ? 'location' : 'category'
   const wasOnboardingActive = useRef(onboardingActive)
   const completionRequested = useRef(false)
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    if (search.trim()) navigate(`/items?q=${encodeURIComponent(search.trim())}`)
+    if (!search.trim()) return
+    if (onboardingActive && onboardingStarted) {
+      setShowTutorialRequired(true)
+      return
+    }
+    navigate(`/items?q=${encodeURIComponent(search.trim())}`)
+  }
+
+  function handleNavigationAttempt(event: MouseEvent<HTMLDivElement>) {
+    if (!onboardingActive || !onboardingStarted || event.defaultPrevented
+      || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+
+    const link = (event.target as HTMLElement).closest('a')
+    const href = link?.getAttribute('href')
+    if (!href || href.startsWith('#')) return
+
+    const destination = new URL(href, window.location.href)
+    if (destination.origin !== window.location.origin) return
+
+    const setupTarget = onboardingStep === 'category'
+      ? { pathname: '/categories', search: '' }
+      : { pathname: '/rooms', search: `?setup=${onboardingStep}` }
+    if (destination.pathname === setupTarget.pathname && destination.search === setupTarget.search) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    setShowTutorialRequired(true)
   }
 
   const avatar = (user?.displayName || user?.email || 'N').slice(0, 1).toUpperCase()
@@ -63,14 +95,14 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   }, [completeOnboarding, navigate, onboardingActive, setupComplete, user?.onboardingCompleted])
 
   useEffect(() => {
-    if (!onboardingActive) return
+    if (!onboardingActive || !onboardingStarted) return
     const setupMode = new URLSearchParams(location.search).get('setup')
     const target = onboardingStep === 'category' ? '/categories#category-form' : `/rooms?setup=${onboardingStep}#quick-add`
     const alreadyAtTarget = onboardingStep === 'category'
       ? location.pathname === '/categories'
       : location.pathname === '/rooms' && setupMode === onboardingStep
     if (!alreadyAtTarget) navigate(target, { replace: true })
-  }, [location.pathname, location.search, navigate, onboardingActive, onboardingStep])
+  }, [location.pathname, location.search, navigate, onboardingActive, onboardingStarted, onboardingStep])
 
   useEffect(() => {
     function closeProfileMenu(event: PointerEvent) {
@@ -91,16 +123,14 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
     }
   }, [])
 
-  return <div className="min-h-screen lg:flex">
+  return <div className="min-h-screen lg:flex" onClickCapture={handleNavigationAttempt}>
     <aside className="relative z-20 bg-deep px-3 py-4 text-white sm:px-4 lg:fixed lg:inset-y-0 lg:h-screen lg:w-[17rem] lg:px-5 lg:py-6">
       <div className="relative flex flex-col lg:h-full lg:min-h-full">
         <NavLink to="/" className="group flex shrink-0 items-center gap-3 rounded-2xl px-2 py-1">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-coral/20 text-sage ring-1 ring-white/10 transition group-hover:bg-coral/30"><Icon name="home" className="h-5 w-5" /></span>
           <span><strong className="font-serif text-[1.35rem] tracking-tight">Nestled</strong><small className="block text-xs text-emerald-100/75">{user?.householdName || 'Home inventory'}</small></span>
         </NavLink>
 
         <div className="mt-6 sm:mt-8">
-          <p className="px-3 text-[0.64rem] font-bold uppercase tracking-[0.2em] text-emerald-200/70">Workspace</p>
           <nav className="mt-2 flex gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
             {primaryLinks.map(({ to, label, icon }) => <NavLink key={to} to={to} end={to === '/'}
               className={({ isActive }) => `group flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive ? 'bg-white text-deep shadow-sm' : 'text-emerald-50/85 hover:bg-white/10 hover:text-white'}`}>
@@ -129,10 +159,6 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
             <summary className="cursor-pointer list-none rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold lg:hidden">Browse your home <Icon name="chevron-down" className="float-right mt-0.5 h-4 w-4 transition group-open:rotate-180" /></summary>
             <HomeTree />
           </details>
-          <div className="mt-5 border-t border-white/10 px-2 pt-4 text-xs text-emerald-100/65">
-            <span>Household</span>
-            <p className="mt-1 truncate text-sm font-semibold text-white">{user?.householdName || 'No household'}</p>
-          </div>
         </div>
       </div>
     </aside>
@@ -196,7 +222,8 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
         </div>
       </header>
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8 lg:px-10 lg:py-10">
-        {onboardingActive && onboarding && <SetupGuide data={onboarding} />}
+        {showOnboardingWelcome && <OnboardingWelcome onStart={() => setOnboardingStarted(true)} />}
+        {onboardingActive && onboardingStarted && onboarding && <SetupGuide data={onboarding} />}
         <Outlet />
       </div>
       {showLogoutConfirmation && <ConfirmationModal
@@ -208,6 +235,14 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
         intent="logout"
         onClose={() => setShowLogoutConfirmation(false)}
         onConfirm={logout}
+      />}
+      {showTutorialRequired && <TutorialRequiredModal
+        stepLabel={onboardingStep === 'room' ? 'create a room' : onboardingStep === 'location' ? 'add a location' : 'create a category'}
+        onContinue={() => {
+          setShowTutorialRequired(false)
+          const target = onboardingStep === 'category' ? '/categories#category-form' : `/rooms?setup=${onboardingStep}#quick-add`
+          navigate(target)
+        }}
       />}
     </main>
   </div>

@@ -155,6 +155,8 @@ test('an owner can export household data from profile settings', async ({ page }
   await page.getByRole('button', { name: /Open account menu/ }).click()
   await page.getByRole('menuitem', { name: 'Profile & settings' }).click()
   await expect(page.getByRole('heading', { name: 'Profile & settings' })).toBeVisible()
+  await page.getByRole('link', { name: 'Data' }).click()
+  await expect(page.getByRole('heading', { name: 'Household data' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Export JSON' }).click()
   await expect(page.getByRole('heading', { name: 'Review JSON export' })).toBeVisible()
@@ -202,6 +204,8 @@ test('an owner can review and import household data from profile settings', asyn
   await page.getByRole('button', { name: /Open account menu/ }).click()
   await page.getByRole('menuitem', { name: 'Profile & settings' }).click()
   await expect(page.getByRole('heading', { name: 'Profile & settings' })).toBeVisible()
+  await page.getByRole('link', { name: 'Data' }).click()
+  await expect(page.getByRole('heading', { name: 'Household data' })).toBeVisible()
 
   await page.setInputFiles('input[aria-label="Import JSON file"]', {
     name: 'backup.json',

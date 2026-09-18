@@ -1,5 +1,5 @@
-import { FormEvent, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { FormEvent, useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import useSWR from 'swr'
 import { roomApi } from '../api/roomApi'
 import { storageLocationApi } from '../api/storageLocationApi'
@@ -18,9 +18,11 @@ type DeleteTarget = { type: 'room'; value: Room } | { type: 'location'; value: S
 const roomDeleteConflictMessage = 'This room cannot be deleted while it contains items or storage locations. Move or delete the items, then delete the storage locations first.'
 
 export default function RoomsPage() {
+  const [searchParams] = useSearchParams()
+  const setupMode = searchParams.get('setup')
   const { data: rooms, error: roomsError } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
   const { data: locations, error: locationsError } = useSWR<StorageLocation[]>(cacheKeys.locations, storageLocationApi.list)
-  const [addMode, setAddMode] = useState<AddMode>('room')
+  const [addMode, setAddMode] = useState<AddMode>(setupMode === 'location' ? 'location' : 'room')
   const [roomForm, setRoomForm] = useState({ name: '', description: '', color: defaultRoomColor })
   const [locationForm, setLocationForm] = useState({ name: '', description: '', color: defaultLocationColor, roomId: 0 })
   const [editingTarget, setEditingTarget] = useState<SpaceEditTarget>()
@@ -34,6 +36,14 @@ export default function RoomsPage() {
     addMode === 'room' ? roomForm.color : locationForm.color,
     addMode === 'room' ? defaultRoomColor : defaultLocationColor,
   )
+
+  useEffect(() => {
+    if (setupMode === 'location') {
+      setAddMode('location')
+      if (rooms?.[0]) setLocationForm(current => ({ ...current, roomId: current.roomId || rooms[0].id }))
+      requestAnimationFrame(() => document.getElementById('quick-add')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
+    }
+  }, [rooms, setupMode])
 
   async function refreshInventory() {
     await revalidateInventory({ dashboard: true, itemDetails: true, items: true, locations: true, movements: true, rooms: true })

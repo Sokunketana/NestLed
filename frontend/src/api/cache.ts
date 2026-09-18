@@ -19,6 +19,15 @@ export const cacheKeys = {
   itemSearch: (name: string) => `/items/search?name=${encodeURIComponent(name)}`,
 }
 
+/** Remove data that belongs to the currently signed-in household. */
+export async function clearUserScopedCache() {
+  await mutate(
+    key => typeof key === 'string' && key !== cacheKeys.authMe,
+    undefined,
+    { revalidate: false },
+  )
+}
+
 function isItemCollectionKey(key: unknown) {
   return typeof key === 'string'
     && (key === '/items' || key.startsWith('/items?') || key.startsWith('/items/search?'))

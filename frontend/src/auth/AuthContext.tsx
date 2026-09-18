@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import useSWR from 'swr'
 import { authApi, type AuthenticatedUser } from '../api/authApi'
-import { cacheKeys } from '../api/cache'
+import { cacheKeys, clearUserScopedCache } from '../api/cache'
 import { ApiRequestError } from '../api/http'
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
@@ -14,6 +14,7 @@ type AuthContextValue = {
   login: () => void
   logout: () => Promise<void>
   deleteAccount: () => Promise<void>
+  completeOnboarding: () => Promise<void>
   updateHouseholdName: (id: number, name: string) => void
 }
 
@@ -40,8 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         await authApi.logout()
       } finally {
+        await clearUserScopedCache()
         await mutate(undefined, { revalidate: false })
       }
+    },
+    completeOnboarding: async () => {
+      await authApi.completeOnboarding()
+      await mutate(currentUser => currentUser ? { ...currentUser, onboardingCompleted: true } : currentUser, { revalidate: false })
     },
     updateHouseholdName: (id: number, name: string) => {
       void mutate(currentUser => currentUser ? {
@@ -52,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout: async () => {
       try {
         await authApi.logout()
+        await clearUserScopedCache()
         await mutate(undefined, { revalidate: false })
       } catch (cause) {
         const logoutError = cause instanceof Error ? cause : new Error('Could not sign out')

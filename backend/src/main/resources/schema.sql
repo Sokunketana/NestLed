@@ -35,6 +35,20 @@ ALTER TABLE IF EXISTS storage_locations
     ALTER COLUMN color SET DEFAULT '#D8A52B'^^^
 
 -- Put accounts from pre-household installations into the one shared household.
+-- Existing accounts should not be interrupted by the first-time setup guide.
+ALTER TABLE IF EXISTS app_users
+    ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN^^^
+
+UPDATE app_users
+SET onboarding_completed = TRUE
+WHERE onboarding_completed IS NULL^^^
+
+ALTER TABLE IF EXISTS app_users
+    ALTER COLUMN onboarding_completed SET DEFAULT FALSE^^^
+
+ALTER TABLE IF EXISTS app_users
+    ALTER COLUMN onboarding_completed SET NOT NULL^^^
+
 DO $$
 DECLARE
     shared_household_id BIGINT;

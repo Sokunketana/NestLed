@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import SetupGuide from './SetupGuide'
 
 describe('SetupGuide', () => {
-  it('points a new household to the room quick-add area', () => {
+  it('shows the current room setup objective', () => {
     render(<MemoryRouter><SetupGuide data={{ rooms: [], locations: [], categories: [] }} /></MemoryRouter>)
 
     expect(screen.queryByText('Step 1 of 3')).not.toBeInTheDocument()
@@ -13,7 +13,7 @@ describe('SetupGuide', () => {
     expect(tutorialHint).toBeVisible()
     expect(screen.getByText('Your first mission: create a room')).toBeVisible()
     expect(within(tutorialHint).getByText(/Open Quick add, choose Add room/)).toBeVisible()
-    expect(screen.getByRole('link', { name: /Let’s do it/ })).toHaveAttribute('href', '/rooms?setup=room#quick-add')
+    expect(screen.queryByRole('link', { name: /Let’s do it/ })).not.toBeInTheDocument()
   })
 
   it('moves the guide to categories after rooms and locations exist', () => {
@@ -24,6 +24,6 @@ describe('SetupGuide', () => {
     }} /></MemoryRouter>)
 
     expect(screen.getByText('Final mission: add a category')).toBeVisible()
-    expect(screen.getByRole('link', { name: /Let’s do it/ })).toHaveAttribute('href', '/categories#category-form')
+    expect(screen.queryByRole('link', { name: /Let’s do it/ })).not.toBeInTheDocument()
   })
 })

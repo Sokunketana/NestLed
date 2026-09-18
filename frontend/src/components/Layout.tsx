@@ -100,7 +100,6 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
         </NavLink>
 
         <div className="mt-6 sm:mt-8">
-          <p className="px-3 text-[0.64rem] font-bold uppercase tracking-[0.2em] text-emerald-200/70">Workspace</p>
           <nav className="mt-2 flex gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
             {primaryLinks.map(({ to, label, icon }) => <NavLink key={to} to={to} end={to === '/'}
               className={({ isActive }) => `group flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive ? 'bg-white text-deep shadow-sm' : 'text-emerald-50/85 hover:bg-white/10 hover:text-white'}`}>

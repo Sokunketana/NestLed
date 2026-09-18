@@ -127,10 +127,6 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
             <summary className="cursor-pointer list-none rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold lg:hidden">Browse your home <Icon name="chevron-down" className="float-right mt-0.5 h-4 w-4 transition group-open:rotate-180" /></summary>
             <HomeTree />
           </details>
-          <div className="mt-5 border-t border-white/10 px-2 pt-4 text-xs text-emerald-100/65">
-            <span>Household</span>
-            <p className="mt-1 truncate text-sm font-semibold text-white">{user?.householdName || 'No household'}</p>
-          </div>
         </div>
       </div>
     </aside>

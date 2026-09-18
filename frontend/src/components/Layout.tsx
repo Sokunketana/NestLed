@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
+import type { MouseEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import HomeTree from './HomeTree'
 import ConfirmationModal from './ConfirmationModal'
@@ -6,6 +7,7 @@ import Icon, { type IconName } from './Icon'
 import { useAuth } from '../auth/AuthContext'
 import OnboardingWelcome from './OnboardingWelcome'
 import SetupGuide, { type SetupData } from './SetupGuide'
+import TutorialRequiredModal from './TutorialRequiredModal'
 
 const primaryLinks: Array<{ to: string; label: string; icon: IconName }> = [
   { to: '/', label: 'Overview', icon: 'home' },
@@ -23,6 +25,7 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   const [search, setSearch] = useState('')
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false)
+  const [showTutorialRequired, setShowTutorialRequired] = useState(false)
   const [avatarImageFailed, setAvatarImageFailed] = useState(false)
   const [onboardingStarted, setOnboardingStarted] = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -40,7 +43,33 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    if (search.trim()) navigate(`/items?q=${encodeURIComponent(search.trim())}`)
+    if (!search.trim()) return
+    if (onboardingActive && onboardingStarted) {
+      setShowTutorialRequired(true)
+      return
+    }
+    navigate(`/items?q=${encodeURIComponent(search.trim())}`)
+  }
+
+  function handleNavigationAttempt(event: MouseEvent<HTMLDivElement>) {
+    if (!onboardingActive || !onboardingStarted || event.defaultPrevented
+      || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+
+    const link = (event.target as HTMLElement).closest('a')
+    const href = link?.getAttribute('href')
+    if (!href || href.startsWith('#')) return
+
+    const destination = new URL(href, window.location.href)
+    if (destination.origin !== window.location.origin) return
+
+    const setupTarget = onboardingStep === 'category'
+      ? { pathname: '/categories', search: '' }
+      : { pathname: '/rooms', search: `?setup=${onboardingStep}` }
+    if (destination.pathname === setupTarget.pathname && destination.search === setupTarget.search) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    setShowTutorialRequired(true)
   }
 
   const avatar = (user?.displayName || user?.email || 'N').slice(0, 1).toUpperCase()
@@ -94,7 +123,7 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
     }
   }, [])
 
-  return <div className="min-h-screen lg:flex">
+  return <div className="min-h-screen lg:flex" onClickCapture={handleNavigationAttempt}>
     <aside className="relative z-20 bg-deep px-3 py-4 text-white sm:px-4 lg:fixed lg:inset-y-0 lg:h-screen lg:w-[17rem] lg:px-5 lg:py-6">
       <div className="relative flex flex-col lg:h-full lg:min-h-full">
         <NavLink to="/" className="group flex shrink-0 items-center gap-3 rounded-2xl px-2 py-1">
@@ -206,6 +235,14 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
         intent="logout"
         onClose={() => setShowLogoutConfirmation(false)}
         onConfirm={logout}
+      />}
+      {showTutorialRequired && <TutorialRequiredModal
+        stepLabel={onboardingStep === 'room' ? 'create a room' : onboardingStep === 'location' ? 'add a location' : 'create a category'}
+        onContinue={() => {
+          setShowTutorialRequired(false)
+          const target = onboardingStep === 'category' ? '/categories#category-form' : `/rooms?setup=${onboardingStep}#quick-add`
+          navigate(target)
+        }}
       />}
     </main>
   </div>

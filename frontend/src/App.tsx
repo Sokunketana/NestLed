@@ -11,7 +11,10 @@ import LoginPage from './pages/LoginPage'
 import MovementHistoryPage from './pages/MovementHistoryPage'
 import { useAuth } from './auth/AuthContext'
 import LoadingScreen from './components/LoadingScreen'
+import SettingsLayout from './components/SettingsLayout'
 import ProfilePage from './pages/ProfilePage'
+import HouseholdSettingsPage from './pages/HouseholdSettingsPage'
+import HouseholdDataPage from './pages/HouseholdDataPage'
 import { cacheKeys } from './api/cache'
 import { roomApi } from './api/roomApi'
 import { storageLocationApi } from './api/storageLocationApi'
@@ -49,8 +52,12 @@ export default function App() {
       <Route path="/movements" element={<MovementHistoryPage />} />
       <Route path="/rooms" element={<RoomsPage />} />
       <Route path="/categories" element={<CategoriesPage />} />
-      <Route path="/household" element={<Navigate to="/profile#household" replace />} />
-      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/household" element={<Navigate to="/profile/household" replace />} />
+      <Route path="/profile" element={<SettingsLayout />}>
+        <Route index element={<ProfilePage />} />
+        <Route path="household" element={<HouseholdSettingsPage />} />
+        <Route path="data" element={<HouseholdDataPage />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Route>
   </Routes>

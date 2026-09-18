@@ -10,6 +10,7 @@ import Icon from '../components/Icon'
 import ConfirmationModal from '../components/ConfirmationModal'
 import ExportPreviewModal from '../components/ExportPreviewModal'
 import ImportPreviewModal from '../components/ImportPreviewModal'
+import HouseholdSettings from '../components/HouseholdSettings'
 
 type ExportFormat = 'json' | 'csv'
 
@@ -123,6 +124,8 @@ export default function ProfilePage() {
         </div>
       </div>
     </section>
+
+    <HouseholdSettings embedded />
 
     <section className="card">
       <div className="flex items-start gap-3">

@@ -8,7 +8,6 @@ import ItemFormPage from './pages/ItemFormPage'
 import RoomsPage from './pages/RoomsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import LoginPage from './pages/LoginPage'
-import HouseholdPage from './pages/HouseholdPage'
 import MovementHistoryPage from './pages/MovementHistoryPage'
 import { useAuth } from './auth/AuthContext'
 import LoadingScreen from './components/LoadingScreen'
@@ -50,7 +49,7 @@ export default function App() {
       <Route path="/movements" element={<MovementHistoryPage />} />
       <Route path="/rooms" element={<RoomsPage />} />
       <Route path="/categories" element={<CategoriesPage />} />
-      <Route path="/household" element={<HouseholdPage />} />
+      <Route path="/household" element={<Navigate to="/profile#household" replace />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Route>

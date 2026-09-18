@@ -12,7 +12,6 @@ import TutorialRequiredModal from './TutorialRequiredModal'
 const primaryLinks: Array<{ to: string; label: string; icon: IconName }> = [
   { to: '/', label: 'Overview', icon: 'home' },
   { to: '/items', label: 'Items', icon: 'box' },
-  { to: '/household', label: 'Household', icon: 'users' },
 ]
 
 const manageLinks: Array<{ to: string; label: string; icon: IconName }> = [

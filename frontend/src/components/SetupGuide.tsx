@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import Icon from './Icon'
 import type { Category, Room, StorageLocation } from '../types'
 
@@ -54,6 +54,7 @@ export default function SetupGuide({ data }: { data: SetupData }) {
   const stepIndex = steps.findIndex(item => item.id === step)
   const activeStep = steps[stepIndex]
   const target = step === 'category' ? '/categories#category-form' : `/rooms?setup=${step}#quick-add`
+  const location = useLocation()
   const coachmarkRef = useRef<HTMLElement>(null)
   const [coachmarkPosition, setCoachmarkPosition] = useState<{ top: number; left: number } | null>(null)
 
@@ -95,41 +96,17 @@ export default function SetupGuide({ data }: { data: SetupData }) {
       setCoachmarkPosition({ top, left })
     }
 
-    updateCoachmarkPosition()
+    const frame = requestAnimationFrame(updateCoachmarkPosition)
     window.addEventListener('resize', updateCoachmarkPosition)
     window.addEventListener('scroll', updateCoachmarkPosition, true)
     return () => {
+      cancelAnimationFrame(frame)
       window.removeEventListener('resize', updateCoachmarkPosition)
       window.removeEventListener('scroll', updateCoachmarkPosition, true)
     }
-  }, [activeStep.anchorId, activeStep.id])
+  }, [activeStep.anchorId, activeStep.id, location.pathname, location.search])
 
-  return <>
-    <section className="mb-8 overflow-hidden rounded-2xl border border-pine/20 bg-mint shadow-card" aria-label="Getting started guide">
-      <div className="p-5 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0"><p className="eyebrow">Getting started</p><h1 className="mt-2 text-2xl sm:text-3xl">Let’s set up your home</h1><p className="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">Follow the highlighted steps in the sidebar. We’ll create the structure you need before you add your first item.</p></div>
-        </div>
-
-        <div className="mt-6 grid gap-2 border-t border-pine/10 pt-5 sm:grid-cols-3 sm:gap-3">
-          {steps.map((item, index) => {
-            const complete = index < stepIndex
-            const active = item.id === step
-            return <div className={`flex items-center gap-2.5 rounded-xl px-3 py-2 ${active ? 'bg-white shadow-sm' : ''}`} key={item.id}>
-              <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${complete ? 'bg-pine text-white' : active ? 'bg-sage text-pine' : 'bg-white/60 text-stone-400'}`}><Icon name={complete ? 'check' : item.icon} className="h-4 w-4" /></span>
-              <span className={`text-sm font-semibold ${active || complete ? 'text-deep' : 'text-stone-500'}`}>{item.label}</span>
-            </div>
-          })}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-3 border-t border-pine/10 bg-white/50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <div className="flex items-start gap-3"><span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-sage text-pine"><Icon name={activeStep.icon} className="h-4 w-4" /></span><p className="text-sm text-ink-soft"><strong className="text-deep">Next: {activeStep.label}.</strong> {activeStep.instruction}</p></div>
-        <Link className="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-pine hover:text-deep" to={target}>Show me <Icon name="arrow-right" className="h-4 w-4" /></Link>
-      </div>
-    </section>
-
-    <aside
+  return <aside
       ref={coachmarkRef}
       aria-label="Tutorial hint"
       className={`pointer-events-none fixed z-40 w-[min(24rem,calc(100vw-2rem))] ${coachmarkPosition ? '' : 'bottom-3 right-3'}`}
@@ -153,5 +130,4 @@ export default function SetupGuide({ data }: { data: SetupData }) {
         </div>
       </div>
     </aside>
-  </>
 }

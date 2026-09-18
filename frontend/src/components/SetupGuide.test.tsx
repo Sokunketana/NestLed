@@ -8,12 +8,12 @@ describe('SetupGuide', () => {
     render(<MemoryRouter><SetupGuide data={{ rooms: [], locations: [], categories: [] }} /></MemoryRouter>)
 
     expect(screen.queryByText('Step 1 of 3')).not.toBeInTheDocument()
-    expect(screen.getByText('Next: Create a room.')).toBeVisible()
+    expect(screen.queryByRole('region', { name: 'Getting started guide' })).not.toBeInTheDocument()
     const tutorialHint = screen.getByRole('complementary', { name: 'Tutorial hint' })
     expect(tutorialHint).toBeVisible()
     expect(screen.getByText('Your first mission: create a room')).toBeVisible()
     expect(within(tutorialHint).getByText(/Open Quick add, choose Add room/)).toBeVisible()
-    expect(screen.getByRole('link', { name: /Show me/ })).toHaveAttribute('href', '/rooms?setup=room#quick-add')
+    expect(screen.getByRole('link', { name: /Let’s do it/ })).toHaveAttribute('href', '/rooms?setup=room#quick-add')
   })
 
   it('moves the guide to categories after rooms and locations exist', () => {
@@ -23,7 +23,7 @@ describe('SetupGuide', () => {
       categories: [],
     }} /></MemoryRouter>)
 
-    expect(screen.getByText('Next: Add a category.')).toBeVisible()
-    expect(screen.getByRole('link', { name: /Show me/ })).toHaveAttribute('href', '/categories#category-form')
+    expect(screen.getByText('Final mission: add a category')).toBeVisible()
+    expect(screen.getByRole('link', { name: /Let’s do it/ })).toHaveAttribute('href', '/categories#category-form')
   })
 })

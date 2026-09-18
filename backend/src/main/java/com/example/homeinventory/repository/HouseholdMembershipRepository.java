@@ -20,4 +20,6 @@ public interface HouseholdMembershipRepository extends JpaRepository<HouseholdMe
     Optional<HouseholdMembership> findByUserIdAndHouseholdId(Long userId, Long householdId);
 
     boolean existsByHouseholdIdAndUserEmailIgnoreCase(Long householdId, String email);
+
+    long countByHouseholdId(Long householdId);
 }

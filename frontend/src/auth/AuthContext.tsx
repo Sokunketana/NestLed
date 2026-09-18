@@ -13,6 +13,7 @@ type AuthContextValue = {
   error: string | null
   login: () => void
   logout: () => Promise<void>
+  deleteAccount: () => Promise<void>
   updateHouseholdName: (id: number, name: string) => void
 }
 
@@ -34,6 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: user ?? null,
     error,
     login: () => window.location.assign(authApi.loginUrl),
+    deleteAccount: async () => {
+      await authApi.deleteAccount()
+      try {
+        await authApi.logout()
+      } finally {
+        await mutate(undefined, { revalidate: false })
+      }
+    },
     updateHouseholdName: (id: number, name: string) => {
       void mutate(currentUser => currentUser ? {
         ...currentUser,

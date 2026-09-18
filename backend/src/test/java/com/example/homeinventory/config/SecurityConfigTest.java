@@ -2,6 +2,7 @@ package com.example.homeinventory.config;
 
 import com.example.homeinventory.controller.AuthController;
 import com.example.homeinventory.dto.AuthenticatedUserResponse;
+import com.example.homeinventory.service.AccountDeletionService;
 import com.example.homeinventory.service.AppUserService;
 import com.example.homeinventory.service.HouseholdAccessService;
 import java.util.List;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -36,6 +38,9 @@ class SecurityConfigTest {
 
     @MockitoBean
     private AppUserService appUserService;
+
+    @MockitoBean
+    private AccountDeletionService accountDeletionService;
 
     @MockitoBean
     private HouseholdAccessService householdAccessService;
@@ -79,6 +84,15 @@ class SecurityConfigTest {
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/api/auth/logout").with(oidcLogin()).with(csrf()))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void protectsAccountDeletionWithCsrf() throws Exception {
+        mockMvc.perform(delete("/api/auth/account").with(oidcLogin()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(delete("/api/auth/account").with(oidcLogin()).with(csrf()))
                 .andExpect(status().isNoContent());
     }
 

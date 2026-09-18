@@ -95,7 +95,6 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
     <aside className="relative z-20 bg-deep px-3 py-4 text-white sm:px-4 lg:fixed lg:inset-y-0 lg:h-screen lg:w-[17rem] lg:px-5 lg:py-6">
       <div className="relative flex flex-col lg:h-full lg:min-h-full">
         <NavLink to="/" className="group flex shrink-0 items-center gap-3 rounded-2xl px-2 py-1">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-coral/20 text-sage ring-1 ring-white/10 transition group-hover:bg-coral/30"><Icon name="home" className="h-5 w-5" /></span>
           <span><strong className="font-serif text-[1.35rem] tracking-tight">Nestled</strong><small className="block text-xs text-emerald-100/75">{user?.householdName || 'Home inventory'}</small></span>
         </NavLink>
 

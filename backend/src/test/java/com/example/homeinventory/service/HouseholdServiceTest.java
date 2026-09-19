@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +26,25 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class HouseholdServiceTest {
+    @Test
+    void ownerRenameAddsTheHouseholdSuffix() {
+        Fixture fixture = new Fixture();
+
+        var response = fixture.service.rename(fixture.principal, "Smith");
+
+        assertEquals("Smith's household", fixture.shared.getName());
+        assertEquals("Smith's household", response.name());
+    }
+
+    @Test
+    void ownerRenameDoesNotDuplicateAnExistingHouseholdSuffix() {
+        Fixture fixture = new Fixture();
+
+        fixture.service.rename(fixture.principal, "Smith's household");
+
+        assertEquals("Smith's household", fixture.shared.getName());
+    }
+
     @Test
     void removingMemberFromCurrentHouseholdRemovesTheirOnlyMembership() {
         Fixture fixture = new Fixture();

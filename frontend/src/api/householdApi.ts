@@ -1,5 +1,20 @@
 import { download, request } from './http'
 
+export const HOUSEHOLD_SUFFIX = "'s household"
+
+export function householdNameWithSuffix(name: string) {
+  const trimmedName = name.trim()
+  if (!trimmedName || trimmedName.toLowerCase().endsWith(HOUSEHOLD_SUFFIX)) return trimmedName
+  return `${trimmedName}${HOUSEHOLD_SUFFIX}`
+}
+
+export function editableHouseholdName(name: string) {
+  const normalizedName = householdNameWithSuffix(name)
+  return normalizedName.toLowerCase().endsWith(HOUSEHOLD_SUFFIX)
+    ? normalizedName.slice(0, -HOUSEHOLD_SUFFIX.length).trimEnd()
+    : normalizedName
+}
+
 export type HouseholdRole = 'OWNER' | 'MEMBER'
 
 export interface HouseholdMember {
@@ -79,7 +94,7 @@ function importFile(file: File) {
 export const householdApi = {
   get: () => request<Household>('/household'),
   rename: (name: string) => request<Household>('/household', {
-    method: 'PUT', body: JSON.stringify({ name }),
+    method: 'PUT', body: JSON.stringify({ name: householdNameWithSuffix(name) }),
   }),
   invite: (email: string) => request<Household>('/household/invitations', {
     method: 'POST', body: JSON.stringify({ email }),

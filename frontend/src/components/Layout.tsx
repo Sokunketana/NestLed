@@ -1,7 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import type { MouseEvent } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import HomeTree from './HomeTree'
 import ConfirmationModal from './ConfirmationModal'
 import Icon, { type IconName } from './Icon'
 import { useAuth } from '../auth/AuthContext'
@@ -11,6 +10,7 @@ import TutorialRequiredModal from './TutorialRequiredModal'
 
 const primaryLinks: Array<{ to: string; label: string; icon: IconName }> = [
   { to: '/', label: 'Overview', icon: 'home' },
+  { to: '/home', label: 'Home tree', icon: 'map' },
   { to: '/items', label: 'Items', icon: 'box' },
 ]
 
@@ -153,12 +153,6 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
           </details>
         </div>
 
-        <div className="mt-5 pt-2 lg:mt-auto lg:pt-8">
-          <details className="group mt-4 lg:contents" open>
-            <summary className="cursor-pointer list-none rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold lg:hidden">Browse your home <Icon name="chevron-down" className="float-right mt-0.5 h-4 w-4 transition group-open:rotate-180" /></summary>
-            <HomeTree />
-          </details>
-        </div>
       </div>
     </aside>
 

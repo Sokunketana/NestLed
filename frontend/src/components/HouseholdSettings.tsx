@@ -124,7 +124,7 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
     {(error || loadError) && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error || loadMessage}</p>}
 
     <section className="card">
-      <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-sage text-pine"><Icon name="home" className="h-4 w-4" /></span><div><h3 className="text-xl">Household details</h3><p className="mt-1 text-sm text-ink-soft">This is the shared space everyone sees.</p></div></div>
+      <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-sage text-pine"><Icon name="home" className="h-4 w-4" /></span><div><h3 className="text-xl">Household name</h3><p className="mt-1 text-sm text-ink-soft">This is the name everyone in your household sees.</p></div></div>
       {isOwner ? <>
         <p className="mt-4 text-sm text-stone-500">Enter the household name and <span className="font-semibold text-stone-700">'s household</span> will be added automatically.</p>
         <form onSubmit={rename} className="mt-3 flex max-w-xl flex-col gap-3 sm:flex-row">

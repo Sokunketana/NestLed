@@ -128,10 +128,7 @@ export default function RoomsPage() {
         <p className="mt-2 max-w-2xl text-stone-500">A simple map of the rooms and the places where your things live.</p>
         <p className="mt-3 text-sm font-semibold text-ink-soft">{rooms.length} {rooms.length === 1 ? 'room' : 'rooms'} <span className="mx-1.5 text-stone-300">·</span> {locationList.length} {locationList.length === 1 ? 'location' : 'locations'} <span className="mx-1.5 text-stone-300">·</span> {totalItems} {totalItems === 1 ? 'item' : 'items'}</p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Link to="/items" className="btn-secondary"><Icon name="box" className="h-4 w-4" />Browse items</Link>
-        <button type="button" className="btn-primary" onClick={() => showQuickAdd('room')}><Icon name="plus" className="h-4 w-4" />Add room</button>
-      </div>
+      <button type="button" className="btn-primary" onClick={() => showQuickAdd('room')}><Icon name="plus" className="h-4 w-4" />Add room</button>
     </div>
     {(error || loadError) && <div className="mt-6"><ErrorMessage message={error || (loadError instanceof Error ? loadError.message : 'Unable to load rooms.')} /></div>}
 

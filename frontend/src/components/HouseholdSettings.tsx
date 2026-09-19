@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react'
 import useSWR from 'swr'
-import { householdApi, type Household, type HouseholdMember } from '../api/householdApi'
+import { editableHouseholdName, householdApi, householdNameWithSuffix, HOUSEHOLD_SUFFIX, type Household, type HouseholdMember } from '../api/householdApi'
 import { invitationApi } from '../api/invitationApi'
 import { cacheKeys } from '../api/cache'
 import { ApiRequestError } from '../api/http'
@@ -9,16 +9,8 @@ import { ErrorMessage, Loading } from './PageState'
 import Icon from './Icon'
 import { useAuth } from '../auth/AuthContext'
 
-const HOUSEHOLD_SUFFIX = "'s household"
 const MAX_HOUSEHOLD_NAME_LENGTH = 100
 const MAX_EDITABLE_HOUSEHOLD_NAME_LENGTH = MAX_HOUSEHOLD_NAME_LENGTH - HOUSEHOLD_SUFFIX.length
-
-function editableHouseholdName(name: string) {
-  const trimmedName = name.trim()
-  return trimmedName.toLowerCase().endsWith(HOUSEHOLD_SUFFIX)
-    ? trimmedName.slice(0, -HOUSEHOLD_SUFFIX.length).trimEnd()
-    : trimmedName
-}
 
 export default function HouseholdSettings({ embedded = false }: { embedded?: boolean }) {
   const { user, updateHouseholdName } = useAuth()
@@ -57,9 +49,10 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
     setSaved(false)
     try {
       const updated = await householdApi.rename(name)
-      await mutate(updated, { revalidate: false })
-      setName(editableHouseholdName(updated.name))
-      updateHouseholdName(updated.id, updated.name)
+      const normalizedUpdated = { ...updated, name: householdNameWithSuffix(updated.name) }
+      await mutate(normalizedUpdated, { revalidate: false })
+      setName(editableHouseholdName(normalizedUpdated.name))
+      updateHouseholdName(normalizedUpdated.id, normalizedUpdated.name)
       setSaved(true)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'The household could not be updated')

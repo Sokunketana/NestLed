@@ -6,6 +6,7 @@ import HouseholdPage from './HouseholdPage'
 import type { Household } from '../api/householdApi'
 
 const mocks = vi.hoisted(() => ({
+  HOUSEHOLD_SUFFIX: "'s household",
   householdApi: {
     get: vi.fn(),
     rename: vi.fn(),
@@ -15,9 +16,15 @@ const mocks = vi.hoisted(() => ({
     leave: vi.fn(),
   },
   useAuth: vi.fn(),
+  updateHouseholdName: vi.fn(),
 }))
 
-vi.mock('../api/householdApi', () => ({ householdApi: mocks.householdApi }))
+vi.mock('../api/householdApi', () => ({
+  HOUSEHOLD_SUFFIX: mocks.HOUSEHOLD_SUFFIX,
+  householdApi: mocks.householdApi,
+  editableHouseholdName: (name: string) => name.endsWith("'s household") ? name.slice(0, -"'s household".length) : name,
+  householdNameWithSuffix: (name: string) => name.endsWith("'s household") ? name : `${name}'s household`,
+}))
 vi.mock('../auth/AuthContext', () => ({ useAuth: mocks.useAuth }))
 
 const household: Household = {
@@ -48,7 +55,7 @@ describe('HouseholdPage', () => {
     mocks.householdApi.get.mockResolvedValue(household)
     mocks.useAuth.mockReturnValue({
       user: { email: 'owner@example.com', pendingInvitations: [] },
-      updateHouseholdName: vi.fn(),
+      updateHouseholdName: mocks.updateHouseholdName,
     })
   })
 
@@ -93,5 +100,6 @@ describe('HouseholdPage', () => {
     await waitFor(() => expect(mocks.householdApi.rename).toHaveBeenCalledWith('Smith'))
     expect(nameInput).toHaveValue('Smith')
     expect(screen.getAllByText("'s household")).toHaveLength(2)
+    expect(mocks.updateHouseholdName).toHaveBeenCalledWith(1, "Smith's household")
   })
 })

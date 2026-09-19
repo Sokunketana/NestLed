@@ -130,6 +130,28 @@ test('an authenticated user can browse items and open item details', async ({ pa
   await expect(page.getByRole('heading', { name: 'Passport', exact: true })).toBeVisible()
   await expect(page.getByText('Bedroom → Top drawer')).toBeVisible()
 })
+
+test('item filters stay clear on desktop and compact on mobile', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+
+  await page.goto('/items')
+  await expect(page.getByRole('heading', { name: 'Refine your items' })).toBeVisible()
+  await expect(page.getByLabel('Filter by room')).toBeVisible()
+
+  await page.getByLabel('Filter by room').selectOption('1')
+  await expect(page).toHaveURL(/roomId=1/)
+  await expect(page.getByRole('button', { name: 'Room: Bedroom' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Clear all' }).click()
+  await expect(page).not.toHaveURL(/roomId=/)
+
+  await page.setViewportSize({ width: 375, height: 760 })
+  await page.reload()
+  await expect(page.getByLabel('Filter by room')).toBeHidden()
+  await page.getByRole('button', { name: 'Show' }).click()
+  await expect(page.getByLabel('Filter by room')).toBeVisible()
+})
+
 test('an owner can export household data from profile settings', async ({ page }) => {
   await mockAuthenticatedApi(page)
   await page.route(/\/api\/household\/export/, route => {

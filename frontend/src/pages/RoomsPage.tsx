@@ -9,6 +9,7 @@ import Icon from '../components/Icon'
 import { ErrorMessage, Loading } from '../components/PageState'
 import SpaceEditModal, { SpaceEditForm, SpaceEditTarget } from '../components/SpaceEditModal'
 import SpaceColorPicker from '../components/SpaceColorPicker'
+import SpaceActionsMenu from '../components/SpaceActionsMenu'
 import { ApiRequestError } from '../api/http'
 import type { Room, StorageLocation } from '../types'
 import { defaultLocationColor, defaultRoomColor, getSpaceColor, withColorAlpha } from '../spaceColors'
@@ -128,15 +129,12 @@ export default function RoomsPage() {
         <p className="mt-2 max-w-2xl text-stone-500">A simple map of the rooms and the places where your things live.</p>
         <p className="mt-3 text-sm font-semibold text-ink-soft">{rooms.length} {rooms.length === 1 ? 'room' : 'rooms'} <span className="mx-1.5 text-stone-300">·</span> {locationList.length} {locationList.length === 1 ? 'location' : 'locations'} <span className="mx-1.5 text-stone-300">·</span> {totalItems} {totalItems === 1 ? 'item' : 'items'}</p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Link to="/items" className="btn-secondary"><Icon name="box" className="h-4 w-4" />Browse items</Link>
-        <button type="button" className="btn-primary" onClick={() => showQuickAdd('room')}><Icon name="plus" className="h-4 w-4" />Add room</button>
-      </div>
+      <button type="button" className="btn-primary" onClick={() => showQuickAdd('room')}><Icon name="plus" className="h-4 w-4" />Add room</button>
     </div>
     {(error || loadError) && <div className="mt-6"><ErrorMessage message={error || (loadError instanceof Error ? loadError.message : 'Unable to load rooms.')} /></div>}
 
     <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-      <section className="card overflow-hidden p-0" aria-label="Rooms and storage locations">
+      <section className="card p-0" aria-label="Rooms and storage locations">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line px-5 py-5 sm:px-6">
           <div><p className="eyebrow">Your home map</p><h2 className="mt-2 text-2xl">Rooms</h2></div>
           <button type="button" className="inline-flex items-center gap-1.5 text-sm font-bold text-pine hover:text-deep" onClick={() => showQuickAdd('location')}>
@@ -149,7 +147,7 @@ export default function RoomsPage() {
             const roomLocations = locationList.filter(location => location.roomId === room.id)
             const roomColor = getSpaceColor(room.color, defaultRoomColor)
 
-            return <article className="relative overflow-hidden" key={room.id}>
+            return <article className="relative" key={room.id}>
               <div className="h-1.5" style={{ backgroundColor: withColorAlpha(roomColor, '35') }} aria-hidden="true" />
               <div className="p-5 sm:p-6">
                 <div className="flex items-start gap-3">
@@ -160,10 +158,7 @@ export default function RoomsPage() {
                         <h3 className="truncate text-xl">{room.name}</h3>
                         <p className="mt-1 text-sm text-ink-soft">{room.itemCount} {room.itemCount === 1 ? 'item' : 'items'} across {roomLocations.length} {roomLocations.length === 1 ? 'location' : 'locations'}</p>
                       </div>
-                      <div className="flex shrink-0 gap-1">
-                        <button type="button" title={`Edit ${room.name}`} aria-label={`Edit ${room.name}`} className="btn-secondary h-8 w-8 p-0" onClick={() => setEditingTarget({ type: 'room', value: room })}><Icon name="edit" className="h-3.5 w-3.5" /></button>
-                        <button type="button" title={`Delete ${room.name}`} aria-label={`Delete ${room.name}`} className="btn-danger h-8 w-8 p-0" onClick={() => setDeleteTarget({ type: 'room', value: room })}><Icon name="trash" className="h-3.5 w-3.5" /></button>
-                      </div>
+                      <SpaceActionsMenu name={room.name} onEdit={() => setEditingTarget({ type: 'room', value: room })} onDelete={() => setDeleteTarget({ type: 'room', value: room })} />
                     </div>
                     {room.description && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-500">{room.description}</p>}
                   </div>
@@ -172,12 +167,14 @@ export default function RoomsPage() {
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
                   {roomLocations.map(location => {
                     const locationColor = getSpaceColor(location.color, defaultLocationColor)
-                    return <div className="group flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2.5" style={{ backgroundColor: withColorAlpha(locationColor, '0D'), borderColor: withColorAlpha(locationColor, '33') }} key={location.id}>
+                    return <div className="group flex min-w-0 items-center gap-2 rounded-xl border px-3 py-2" style={{ backgroundColor: withColorAlpha(locationColor, '0D'), borderColor: withColorAlpha(locationColor, '33') }} key={location.id}>
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: locationColor }} aria-hidden="true" />
-                      <Link to={`/items?roomId=${room.id}&storageLocationId=${location.id}`} className="min-w-0 flex-1 truncate text-sm font-semibold hover:text-pine">{location.name}</Link>
-                      <span className="shrink-0 text-xs text-stone-500" aria-label={`${location.itemCount} items`}>{location.itemCount}</span>
-                      <button type="button" title={`Edit ${location.name}`} aria-label={`Edit ${location.name}`} className="ml-1 shrink-0 text-pine hover:text-deep" onClick={() => setEditingTarget({ type: 'location', value: location })}><Icon name="edit" className="h-3.5 w-3.5" /></button>
-                      <button type="button" title={`Delete ${location.name}`} aria-label={`Delete ${location.name}`} className="shrink-0 text-red-600 hover:text-red-800" onClick={() => setDeleteTarget({ type: 'location', value: location })}><Icon name="x" className="h-3.5 w-3.5" /></button>
+                      <Link to={`/items?roomId=${room.id}&storageLocationId=${location.id}`} className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-0.5 text-sm font-semibold hover:text-pine focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pine/30">
+                        <span className="min-w-0 flex-1 truncate">{location.name}</span>
+                        <span className="shrink-0 rounded-full bg-white/80 px-2 py-0.5 text-xs font-bold text-ink-soft ring-1 ring-black/5" aria-label={`${location.itemCount} ${location.itemCount === 1 ? 'item' : 'items'}`}>{location.itemCount}</span>
+                        <Icon name="chevron-right" className="h-3.5 w-3.5 shrink-0 text-stone-400 transition group-hover:translate-x-0.5 group-hover:text-pine" />
+                      </Link>
+                      <SpaceActionsMenu name={location.name} onEdit={() => setEditingTarget({ type: 'location', value: location })} onDelete={() => setDeleteTarget({ type: 'location', value: location })} />
                     </div>
                   })}
                   {!roomLocations.length && <button type="button" className="flex items-center gap-2 rounded-xl border border-dashed border-line px-3 py-2.5 text-left text-sm text-stone-400 transition hover:border-pine/40 hover:bg-mint hover:text-pine" onClick={() => showQuickAdd('location', room.id)}>

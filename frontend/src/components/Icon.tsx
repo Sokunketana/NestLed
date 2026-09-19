@@ -16,6 +16,7 @@ export type IconName =
   | 'x'
   | 'chevron-down'
   | 'chevron-right'
+  | 'more-horizontal'
   | 'log-out'
   | 'camera'
   | 'sliders'
@@ -56,6 +57,7 @@ export default function Icon({ name, ...props }: IconProps) {
     case 'x': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><path d="m6 6 12 12M18 6 6 18" /></svg>
     case 'chevron-down': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><path d="m6 9 6 6 6-6" /></svg>
     case 'chevron-right': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><path d="m9 6 6 6-6 6" /></svg>
+    case 'more-horizontal': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><circle cx="5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none" /></svg>
     case 'log-out': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><path d="M14 8V5.5A2.5 2.5 0 0 0 11.5 3h-6A2.5 2.5 0 0 0 3 5.5v13A2.5 2.5 0 0 0 5.5 21h6a2.5 2.5 0 0 0 2.5-2.5V16M18 8l3.5 4L18 16M21.5 12H9" /></svg>
     case 'camera': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><path d="M4 7.5h3l1.2-2h7.6l1.2 2h3A1.5 1.5 0 0 1 21.5 9v9.5A1.5 1.5 0 0 1 20 20H4a1.5 1.5 0 0 1-1.5-1.5V9A1.5 1.5 0 0 1 4 7.5Z" /><circle cx="12" cy="14" r="3.5" /></svg>
     case 'sliders': return <svg viewBox="0 0 24 24" aria-hidden="true" {...shared}><path d="M4 6h16M4 12h16M4 18h16" /><circle cx="8" cy="6" r="1.8" fill="currentColor" stroke="none" /><circle cx="16" cy="12" r="1.8" fill="currentColor" stroke="none" /><circle cx="10" cy="18" r="1.8" fill="currentColor" stroke="none" /></svg>

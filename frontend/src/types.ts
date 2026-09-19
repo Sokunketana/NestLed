@@ -41,9 +41,22 @@ export interface ItemMovement {
   toLocationName: string
   movedAt: string
 }
+export type DashboardActivityType = 'ITEM_ADDED' | 'ITEM_MOVED'
+export interface DashboardActivity {
+  type: DashboardActivityType
+  itemId: number
+  itemName: string
+  roomName?: string | null
+  locationName?: string | null
+  fromRoomName?: string | null
+  fromLocationName?: string | null
+  toRoomName?: string | null
+  toLocationName?: string | null
+  occurredAt: string
+}
 export interface Dashboard {
   totalItems: number; totalRooms: number; totalCategories: number
-  totalEstimatedValue: number; rooms: Room[]
+  totalEstimatedValue: number; rooms: Room[]; recentActivity: DashboardActivity[]
 }
 export interface ApiError {
   message: string

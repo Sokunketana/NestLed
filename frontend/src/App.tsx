@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import useSWR from 'swr'
 import Layout from './components/Layout'
 import DashboardPage from './pages/DashboardPage'
+import HomeTreePage from './pages/HomeTreePage'
 import ItemsPage from './pages/ItemsPage'
 import ItemDetailsPage from './pages/ItemDetailsPage'
 import ItemFormPage from './pages/ItemFormPage'
@@ -45,6 +46,7 @@ export default function App() {
   return <Routes>
     <Route element={<Layout onboarding={{ rooms, locations, categories }} />}>
       <Route path="/" element={<DashboardPage />} />
+      <Route path="/home" element={<HomeTreePage />} />
       <Route path="/items" element={<ItemsPage />} />
       <Route path="/items/new" element={<ItemFormPage />} />
       <Route path="/items/:id" element={<ItemDetailsPage />} />

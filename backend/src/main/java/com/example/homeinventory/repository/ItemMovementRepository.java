@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ItemMovementRepository extends JpaRepository<ItemMovement, Long> {
     List<ItemMovement> findByHouseholdIdOrderByMovedAtDescIdDesc(Long householdId);
+    List<ItemMovement> findTop8ByHouseholdIdOrderByMovedAtDescIdDesc(Long householdId);
     long countByHouseholdId(Long householdId);
 }

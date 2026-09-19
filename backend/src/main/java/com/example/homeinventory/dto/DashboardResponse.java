@@ -8,5 +8,6 @@ public record DashboardResponse(
         long totalRooms,
         long totalCategories,
         BigDecimal totalEstimatedValue,
-        List<RoomResponse> rooms
+        List<RoomResponse> rooms,
+        List<DashboardActivityResponse> recentActivity
 ) {}

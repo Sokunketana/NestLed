@@ -73,6 +73,7 @@ async function mockAuthenticatedApi(page: Page) {
       totalCategories: 1,
       totalEstimatedValue: 0,
       rooms: [room],
+      recentActivity: [],
     }),
   }))
   await page.route('**/api/rooms*', route => route.fulfill({
@@ -118,7 +119,7 @@ test('an authenticated user can browse items and open item details', async ({ pa
   await mockAuthenticatedApi(page)
 
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Welcome home.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Quick actions' })).toBeVisible()
 
   await page.getByRole('link', { name: 'Browse items' }).click()
   await expect(page.getByRole('heading', { name: 'All items' })).toBeVisible()

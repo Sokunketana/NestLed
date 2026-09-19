@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findByHouseholdIdOrderByNameAsc(Long householdId);
+    List<Item> findTop8ByHouseholdIdOrderByCreatedAtDescIdDesc(Long householdId);
     List<Item> findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAsc(Long householdId, String name);
     List<Item> findByHouseholdIdAndRoomIdOrderByNameAsc(Long householdId, Long roomId);
     List<Item> findByHouseholdIdAndCategoryIdOrderByNameAsc(Long householdId, Long categoryId);

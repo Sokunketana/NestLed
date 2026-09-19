@@ -120,7 +120,10 @@ export default function ItemsPage() {
 
   const selectedCount = selectedIds.size
   const allVisibleSelected = items != null && items.length > 0 && items.every(item => selectedIds.has(item.id))
-  const activeFilterCount = [roomId, storageLocationId, categoryId].filter(Boolean).length
+  const activeFilterCount = [q, roomId, storageLocationId, categoryId].filter(Boolean).length
+  const selectedRoom = roomList.find(room => String(room.id) === roomId)
+  const selectedLocation = locationList.find(location => String(location.id) === storageLocationId)
+  const selectedCategory = categoryList.find(category => String(category.id) === categoryId)
   const title = q
     ? `Results for “${q}”`
     : storageLocationId
@@ -149,37 +152,60 @@ export default function ItemsPage() {
       </div>
     </div>
 
-    <div className="mt-7 rounded-2xl border border-line bg-white/65 p-3 sm:p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 px-1 text-sm font-bold text-ink">
-          <Icon name="sliders" className="h-4 w-4 text-pine" />
-          <span>Filter items</span>
-          {activeFilterCount > 0 && <span className="rounded-full bg-sage px-2 py-0.5 text-xs text-pine">{activeFilterCount} active</span>}
+    <section aria-labelledby="item-filters-title" className="mt-7 overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
+      <div className="flex items-center justify-between gap-3 border-b border-line/70 px-4 py-3.5 sm:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sage text-pine" aria-hidden="true">
+            <Icon name="sliders" className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 id="item-filters-title" className="font-sans text-sm font-bold tracking-normal text-ink">Refine your items</h2>
+              {activeFilterCount > 0 && <span className="rounded-full bg-pine px-2 py-0.5 text-[0.7rem] font-bold text-white">{activeFilterCount} active</span>}
+            </div>
+            <p className="mt-0.5 hidden text-xs text-ink-soft sm:block">Narrow the list by where an item lives or how it is grouped.</p>
+          </div>
         </div>
-        <button type="button" className="btn-secondary px-3 py-2" aria-expanded={showFilters} onClick={() => setShowFilters(current => !current)}>
-          {showFilters ? 'Hide filters' : 'Show filters'}
+        <button type="button" className="btn-secondary shrink-0 px-3 py-2 sm:hidden" aria-expanded={showFilters} aria-controls="item-filter-fields" onClick={() => setShowFilters(current => !current)}>
+          {showFilters ? 'Hide' : 'Show'} <Icon name="chevron-down" className={`h-4 w-4 transition ${showFilters ? 'rotate-180' : ''}`} />
         </button>
       </div>
-      {showFilters && <div className="mt-3 grid gap-3 sm:flex sm:flex-wrap">
-        <select aria-label="Filter by room" className="field w-full bg-white sm:w-auto sm:min-w-44" value={roomId} onChange={event => filter('roomId', event.target.value)}>
-          <option value="">Every room</option>
-          {roomList.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
-        </select>
-        <select aria-label="Filter by storage location" className="field w-full bg-white sm:w-auto sm:min-w-44" value={storageLocationId} onChange={event => filter('storageLocationId', event.target.value)}>
-          <option value="">Every location</option>
-          {locationList.filter(location => !roomId || String(location.roomId) === roomId).map(location => (
-            <option key={location.id} value={location.id}>{location.name}</option>
-          ))}
-        </select>
-        <select aria-label="Filter by category" className="field w-full bg-white sm:w-auto sm:min-w-44" value={categoryId} onChange={event => filter('categoryId', event.target.value)}>
-          <option value="">Every category</option>
-          {categoryList.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
-        </select>
-        {(q || roomId || categoryId || storageLocationId) && (
-          <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => setParams({})}><Icon name="x" className="h-4 w-4" />Clear filters</button>
-        )}
-      </div>}
-    </div>
+      <div id="item-filter-fields" className={`${showFilters ? 'grid' : 'hidden'} gap-3 p-4 sm:grid sm:grid-cols-3 sm:p-5`}>
+        <label className="block">
+          <span className="label">Room</span>
+          <select aria-label="Filter by room" className="field bg-white" value={roomId} onChange={event => filter('roomId', event.target.value)}>
+            <option value="">All rooms</option>
+            {roomList.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
+          </select>
+        </label>
+        <label className="block">
+          <span className="label">Storage location</span>
+          <select aria-label="Filter by storage location" className="field bg-white" value={storageLocationId} onChange={event => filter('storageLocationId', event.target.value)}>
+            <option value="">All locations</option>
+            {locationList.filter(location => !roomId || String(location.roomId) === roomId).map(location => (
+              <option key={location.id} value={location.id}>{location.name}</option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="label">Category</span>
+          <select aria-label="Filter by category" className="field bg-white" value={categoryId} onChange={event => filter('categoryId', event.target.value)}>
+            <option value="">All categories</option>
+            {categoryList.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
+          </select>
+        </label>
+      </div>
+      {activeFilterCount > 0 && (
+        <div className="flex flex-wrap items-center gap-2 border-t border-line/70 bg-cream/60 px-4 py-3 sm:px-5">
+          <span className="mr-1 text-xs font-bold uppercase tracking-[0.12em] text-ink-soft">Applied</span>
+          {q && <button type="button" className="inline-flex items-center gap-1.5 rounded-full border border-pine/15 bg-white px-3 py-1.5 text-xs font-semibold text-pine transition hover:border-pine/30 hover:bg-mint" onClick={() => filter('q', '')}>Search: “{q}” <Icon name="x" className="h-3.5 w-3.5" /></button>}
+          {selectedRoom && <button type="button" className="inline-flex items-center gap-1.5 rounded-full border border-pine/15 bg-white px-3 py-1.5 text-xs font-semibold text-pine transition hover:border-pine/30 hover:bg-mint" onClick={() => filter('roomId', '')}>Room: {selectedRoom.name} <Icon name="x" className="h-3.5 w-3.5" /></button>}
+          {selectedLocation && <button type="button" className="inline-flex items-center gap-1.5 rounded-full border border-pine/15 bg-white px-3 py-1.5 text-xs font-semibold text-pine transition hover:border-pine/30 hover:bg-mint" onClick={() => filter('storageLocationId', '')}>Location: {selectedLocation.name} <Icon name="x" className="h-3.5 w-3.5" /></button>}
+          {selectedCategory && <button type="button" className="inline-flex items-center gap-1.5 rounded-full border border-pine/15 bg-white px-3 py-1.5 text-xs font-semibold text-pine transition hover:border-pine/30 hover:bg-mint" onClick={() => filter('categoryId', '')}>Category: {selectedCategory.name} <Icon name="x" className="h-3.5 w-3.5" /></button>}
+          <button type="button" className="ml-auto px-1 py-1.5 text-xs font-bold text-stone-500 transition hover:text-pine" onClick={() => setParams({})}>Clear all</button>
+        </div>
+      )}
+    </section>
 
     {success && (
       <div role="status" className="mt-6 flex flex-col items-start gap-2 rounded-2xl border border-emerald-200 bg-mint px-4 py-3 text-sm text-emerald-800 sm:flex-row sm:items-center sm:justify-between sm:gap-4">

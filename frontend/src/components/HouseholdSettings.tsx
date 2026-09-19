@@ -9,6 +9,17 @@ import { ErrorMessage, Loading } from './PageState'
 import Icon from './Icon'
 import { useAuth } from '../auth/AuthContext'
 
+const HOUSEHOLD_SUFFIX = "'s household"
+const MAX_HOUSEHOLD_NAME_LENGTH = 100
+const MAX_EDITABLE_HOUSEHOLD_NAME_LENGTH = MAX_HOUSEHOLD_NAME_LENGTH - HOUSEHOLD_SUFFIX.length
+
+function editableHouseholdName(name: string) {
+  const trimmedName = name.trim()
+  return trimmedName.toLowerCase().endsWith(HOUSEHOLD_SUFFIX)
+    ? trimmedName.slice(0, -HOUSEHOLD_SUFFIX.length).trimEnd()
+    : trimmedName
+}
+
 export default function HouseholdSettings({ embedded = false }: { embedded?: boolean }) {
   const { user, updateHouseholdName } = useAuth()
   const { data: household, error: loadError, mutate } = useSWR<Household>(cacheKeys.household, householdApi.get)
@@ -24,7 +35,7 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
   const [invitationError, setInvitationError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (household) setName(current => current || household.name)
+    if (household) setName(current => current || editableHouseholdName(household.name))
   }, [household])
 
   async function run(action: () => Promise<Household>) {
@@ -47,7 +58,7 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
     try {
       const updated = await householdApi.rename(name)
       await mutate(updated, { revalidate: false })
-      setName(updated.name)
+      setName(editableHouseholdName(updated.name))
       updateHouseholdName(updated.id, updated.name)
       setSaved(true)
     } catch (cause) {
@@ -122,9 +133,13 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
     <section className="card">
       <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-sage text-pine"><Icon name="home" className="h-4 w-4" /></span><div><h3 className="text-xl">Household details</h3><p className="mt-1 text-sm text-ink-soft">This is the shared space everyone sees.</p></div></div>
       {isOwner ? <>
-        <form onSubmit={rename} className="mt-5 flex max-w-xl flex-col gap-3 sm:flex-row">
-          <input className="field" aria-label="Household name" maxLength={100} required value={name}
-            onChange={event => { setName(event.target.value); setSaved(false) }} />
+        <p className="mt-4 text-sm text-stone-500">Enter the household name and <span className="font-semibold text-stone-700">'s household</span> will be added automatically.</p>
+        <form onSubmit={rename} className="mt-3 flex max-w-xl flex-col gap-3 sm:flex-row">
+          <div className="flex min-w-0 flex-1 items-stretch">
+            <input className="field min-w-0 flex-1 rounded-r-none" aria-label="Household name" placeholder="e.g. Smith" maxLength={MAX_EDITABLE_HOUSEHOLD_NAME_LENGTH} required value={name}
+              onChange={event => { setName(event.target.value); setSaved(false) }} />
+            <span aria-hidden="true" className="inline-flex shrink-0 items-center rounded-r-xl border border-l-0 bg-stone-50 px-3 text-sm text-stone-500">{HOUSEHOLD_SUFFIX}</span>
+          </div>
           <button className="btn-primary" disabled={saving || !name.trim()}>{saving ? 'Saving…' : 'Save'}</button>
         </form>
         {saved && <p role="status" className="mt-2 text-sm text-emerald-700">Household name saved.</p>}

@@ -80,4 +80,18 @@ describe('HouseholdPage', () => {
     expect(screen.queryByRole('button', { name: /^Saving…$/ })).not.toBeInTheDocument()
     cancelRequest.resolve(household)
   })
+
+  it('lets the owner enter a name without typing the household suffix', async () => {
+    const updatedHousehold = { ...household, name: "Smith's household" }
+    mocks.householdApi.rename.mockResolvedValue(updatedHousehold)
+    renderPage()
+
+    const nameInput = await screen.findByRole('textbox', { name: 'Household name' })
+    fireEvent.change(nameInput, { target: { value: 'Smith' } })
+    fireEvent.click(screen.getByRole('button', { name: /^Save$/ }))
+
+    await waitFor(() => expect(mocks.householdApi.rename).toHaveBeenCalledWith('Smith'))
+    expect(nameInput).toHaveValue('Smith')
+    expect(screen.getAllByText("'s household")).toHaveLength(2)
+  })
 })

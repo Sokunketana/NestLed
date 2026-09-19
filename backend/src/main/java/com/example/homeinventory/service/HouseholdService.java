@@ -24,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class HouseholdService {
+    private static final int MAX_HOUSEHOLD_NAME_LENGTH = 100;
+    private static final String HOUSEHOLD_SUFFIX = "'s household";
+
     private final AppUserService appUserService;
     private final AppUserRepository userRepository;
     private final HouseholdRepository householdRepository;
@@ -48,7 +51,7 @@ public class HouseholdService {
     @Transactional
     public HouseholdResponse rename(OidcUser principal, String name) {
         HouseholdMembership owner = requiredOwner(principal);
-        owner.getHousehold().setName(name.trim());
+        owner.getHousehold().setName(normalizeHouseholdName(name));
         householdRepository.save(owner.getHousehold());
         return toResponse(owner);
     }
@@ -148,5 +151,16 @@ public class HouseholdService {
                 .toList();
         return new HouseholdResponse(household.getId(), household.getName(), currentMembership.getRole(),
                 members, invitations);
+    }
+
+    private String normalizeHouseholdName(String name) {
+        String trimmedName = name.trim();
+        String normalizedName = trimmedName.toLowerCase(Locale.ROOT).endsWith(HOUSEHOLD_SUFFIX)
+                ? trimmedName
+                : trimmedName + HOUSEHOLD_SUFFIX;
+        if (normalizedName.length() > MAX_HOUSEHOLD_NAME_LENGTH) {
+            throw new BadRequestException("Household name must be 100 characters or fewer");
+        }
+        return normalizedName;
     }
 }

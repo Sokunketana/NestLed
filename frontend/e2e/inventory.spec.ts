@@ -152,6 +152,39 @@ test('item filters stay clear on desktop and compact on mobile', async ({ page }
   await expect(page.getByLabel('Filter by room')).toBeVisible()
 })
 
+test('a custom room color is chosen in the app-styled modal', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+
+  await page.goto('/rooms')
+  await page.getByRole('button', { name: 'Choose a custom color' }).click()
+
+  const colorDialog = page.getByRole('dialog', { name: 'Choose a custom color' })
+  await expect(colorDialog).toBeVisible()
+  const panelBounds = await colorDialog.boundingBox()
+  expect(panelBounds).not.toBeNull()
+  expect(panelBounds!.x).toBeGreaterThan(272)
+  expect(panelBounds!.y + panelBounds!.height).toBeLessThanOrEqual(720)
+  const dragHandle = page.getByTestId('color-panel-drag-handle')
+  const dragHandleBounds = await dragHandle.boundingBox()
+  expect(dragHandleBounds).not.toBeNull()
+  await page.mouse.move(dragHandleBounds!.x + 80, dragHandleBounds!.y + 30)
+  await page.mouse.down()
+  await page.mouse.move(dragHandleBounds!.x, dragHandleBounds!.y + 30, { steps: 4 })
+  await page.mouse.up()
+  const movedPanelBounds = await colorDialog.boundingBox()
+  expect(movedPanelBounds!.x).toBeLessThan(panelBounds!.x - 60)
+  await page.getByRole('tab', { name: 'Location' }).click()
+  await expect(page.getByRole('tab', { name: 'Location' })).toHaveAttribute('aria-selected', 'true')
+  await expect(colorDialog).toBeHidden()
+
+  await page.getByRole('button', { name: 'Choose a custom color' }).click()
+  await page.getByLabel('Hex color').fill('#336699')
+  await expect(page.getByLabel('Hex color')).toHaveValue('#336699')
+  await page.getByRole('button', { name: 'Use this color' }).click()
+  await expect(colorDialog).toBeHidden()
+  await expect(page.getByText('Custom color #336699')).toBeVisible()
+})
+
 test('an owner can export household data from profile settings', async ({ page }) => {
   await mockAuthenticatedApi(page)
   await page.route(/\/api\/household\/export/, route => {

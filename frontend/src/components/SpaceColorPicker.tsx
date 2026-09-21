@@ -47,7 +47,6 @@ export default function SpaceColorPicker({ value, onChange, disabled = false }: 
         {customColorSelected ? <Icon name="check" className="h-4 w-4 text-white drop-shadow" /> : <span>+</span>}
       </button>
     </div>
-    <p className="mt-2 text-xs text-ink-soft">{selectedPreset?.label || `Custom color ${currentColor}`} <span className="text-stone-300">·</span> You can change this later.</p>
     {isCustomPickerOpen && <CustomColorModal
       anchorRef={customColorButtonRef}
       value={currentColor}

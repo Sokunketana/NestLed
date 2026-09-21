@@ -186,7 +186,7 @@ test('a custom room color is chosen in the app-styled modal', async ({ page }) =
 
   await page.getByRole('button', { name: 'Choose a custom color' }).click()
   await page.getByLabel('Hue').press('End')
-  await expect(page.getByText(/Custom color #[0-9A-F]{6}/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Choose a custom color' })).toHaveAttribute('aria-pressed', 'true')
   await page.getByRole('button', { name: 'Close color picker' }).click()
   await expect(colorDialog).toBeHidden()
 })
@@ -209,7 +209,7 @@ test('categories use the anchored custom color picker', async ({ page }) => {
   expect(Math.min(leftGap, rightGap)).toBeLessThanOrEqual(12)
 
   await page.getByLabel('Hue').press('End')
-  await expect(page.getByText(/Custom color #[0-9A-F]{6}/)).toBeVisible()
+  await expect(customColorButton).toHaveAttribute('aria-pressed', 'true')
   await page.getByRole('button', { name: 'Close color picker' }).click()
   await expect(colorDialog).toBeHidden()
 })

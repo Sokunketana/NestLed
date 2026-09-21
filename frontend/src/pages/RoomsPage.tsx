@@ -33,10 +33,6 @@ export default function RoomsPage() {
   const locationList = locations ?? []
   const loadError = roomsError || locationsError
   const totalItems = (rooms ?? []).reduce((sum, room) => sum + room.itemCount, 0)
-  const quickAddColor = getSpaceColor(
-    addMode === 'room' ? roomForm.color : locationForm.color,
-    addMode === 'room' ? defaultRoomColor : defaultLocationColor,
-  )
 
   useEffect(() => {
     if (setupMode === 'location') {
@@ -184,10 +180,7 @@ export default function RoomsPage() {
       </section>
 
       <section id="quick-add" className="card h-fit scroll-mt-24 xl:sticky xl:top-24">
-        <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: withColorAlpha(quickAddColor, '20'), color: quickAddColor }}><Icon name={addMode === 'room' ? 'home' : 'map'} className="h-5 w-5" /></span>
-          <div><p className="eyebrow">Quick add</p><h2 className="mt-1 text-xl">Add to your map</h2><p className="mt-1 text-sm leading-relaxed text-ink-soft">Keep the setup light and focused.</p></div>
-        </div>
+        <div><p className="eyebrow">Quick add</p><h2 className="mt-1 text-xl">Add to your map</h2><p className="mt-1 text-sm leading-relaxed text-ink-soft">Keep the setup light and focused.</p></div>
 
         <div className="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-cream p-1" role="tablist" aria-label="What would you like to add?">
           <button type="button" role="tab" aria-selected={addMode === 'room'} className={`rounded-lg px-3 py-2 text-sm font-bold transition ${addMode === 'room' ? 'bg-white text-deep shadow-sm' : 'text-ink-soft hover:text-ink'}`} onClick={() => setAddMode('room')}>Room</button>

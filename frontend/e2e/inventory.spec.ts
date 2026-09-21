@@ -158,7 +158,7 @@ test('a custom room color is chosen in the app-styled modal', async ({ page }) =
   await page.goto('/rooms')
   await page.getByRole('button', { name: 'Choose a custom color' }).click()
 
-  const colorDialog = page.getByRole('dialog', { name: 'Choose a custom color' })
+  const colorDialog = page.getByRole('dialog', { name: 'Custom color picker' })
   await expect(colorDialog).toBeVisible()
   const panelBounds = await colorDialog.boundingBox()
   expect(panelBounds).not.toBeNull()
@@ -179,11 +179,10 @@ test('a custom room color is chosen in the app-styled modal', async ({ page }) =
   await expect(colorDialog).toBeHidden()
 
   await page.getByRole('button', { name: 'Choose a custom color' }).click()
-  await page.getByLabel('Hex color').fill('#336699')
-  await expect(page.getByLabel('Hex color')).toHaveValue('#336699')
-  await page.getByRole('button', { name: 'Use this color' }).click()
+  await page.getByLabel('Hue').press('End')
+  await expect(page.getByText(/Custom color #[0-9A-F]{6}/)).toBeVisible()
+  await page.getByRole('button', { name: 'Close color picker' }).click()
   await expect(colorDialog).toBeHidden()
-  await expect(page.getByText('Custom color #336699')).toBeVisible()
 })
 
 test('an owner can export household data from profile settings', async ({ page }) => {

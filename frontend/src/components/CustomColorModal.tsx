@@ -1,10 +1,10 @@
-import { KeyboardEvent, PointerEvent, useEffect, useId, useRef, useState } from 'react'
+import { KeyboardEvent, PointerEvent, useEffect, useRef, useState } from 'react'
 import Icon from './Icon'
-import { getSpaceColor, isSpaceColor } from '../spaceColors'
+import { getSpaceColor } from '../spaceColors'
 
 type CustomColorModalProps = {
   value: string
-  onApply: (color: string) => void
+  onChange: (color: string) => void
   onClose: () => void
 }
 
@@ -49,18 +49,15 @@ function hsvToHex({ h, s, v }: HsvColor) {
   return `#${[red, green, blue].map(channel => Math.round((channel + match) * 255).toString(16).padStart(2, '0')).join('').toUpperCase()}`
 }
 
-export default function CustomColorModal({ value, onApply, onClose }: CustomColorModalProps) {
+export default function CustomColorModal({ value, onChange, onClose }: CustomColorModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const colorFieldRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
   const panelDrag = useRef<PanelDrag | null>(null)
   const onCloseRef = useRef(onClose)
-  const titleId = useId()
-  const descriptionId = useId()
   const initialColor = getSpaceColor(value)
   const [hsv, setHsv] = useState(() => hexToHsv(initialColor))
-  const [hexInput, setHexInput] = useState(initialColor)
-  const color = isSpaceColor(hexInput) ? hexInput.toUpperCase() : hsvToHex(hsv)
+  const color = hsvToHex(hsv)
 
   useEffect(() => {
     onCloseRef.current = onClose
@@ -96,7 +93,7 @@ export default function CustomColorModal({ value, onApply, onClose }: CustomColo
 
   function setColor(nextHsv: HsvColor) {
     setHsv(nextHsv)
-    setHexInput(hsvToHex(nextHsv))
+    onChange(hsvToHex(nextHsv))
   }
 
   function updateFromPointer(event: PointerEvent<HTMLDivElement>) {
@@ -116,12 +113,6 @@ export default function CustomColorModal({ value, onApply, onClose }: CustomColo
     else return
     event.preventDefault()
     setColor(next)
-  }
-
-  function updateHex(nextValue: string) {
-    const normalized = nextValue.startsWith('#') ? nextValue : `#${nextValue}`
-    setHexInput(normalized.toUpperCase())
-    if (isSpaceColor(normalized)) setHsv(hexToHsv(normalized))
   }
 
   function startPanelDrag(event: PointerEvent<HTMLDivElement>) {
@@ -163,25 +154,20 @@ export default function CustomColorModal({ value, onApply, onClose }: CustomColo
   return (
     <dialog
       ref={dialogRef}
-      aria-labelledby={titleId}
-      aria-describedby={descriptionId}
-      className="custom-color-panel fixed z-50 max-h-[calc(100dvh-1.5rem)] max-w-md overflow-y-auto rounded-3xl border border-line bg-surface p-0 text-ink shadow-2xl"
+      aria-label="Custom color picker"
+      className="custom-color-panel fixed z-50 max-h-[calc(100dvh-1.5rem)] max-w-sm overflow-y-auto rounded-3xl border border-line bg-surface p-0 text-ink shadow-2xl"
     >
-      <div className="p-5 sm:p-7">
+      <div className="p-3 sm:p-4">
         <div
           data-testid="color-panel-drag-handle"
           title="Drag to move"
-          className="flex touch-none cursor-grab select-none items-start justify-between gap-4 active:cursor-grabbing"
+          className="flex touch-none cursor-grab select-none items-center justify-between active:cursor-grabbing"
           onPointerDown={startPanelDrag}
           onPointerMove={movePanel}
           onPointerUp={stopPanelDrag}
           onPointerCancel={stopPanelDrag}
         >
-          <div>
-            <p className="eyebrow flex items-center gap-2"><span aria-hidden="true" className="text-base leading-none text-stone-400">⠿</span> Make it yours</p>
-            <h2 id={titleId} className="mt-1 text-2xl">Choose a custom color</h2>
-            <p id={descriptionId} className="mt-1.5 text-sm leading-relaxed text-ink-soft">Pick from the color field or enter an exact hex value. You can keep using the page while this panel is open.</p>
-          </div>
+          <span aria-hidden="true" className="px-2 text-xl leading-none text-stone-400">⠿</span>
           <button type="button" className="btn-secondary h-9 w-9 shrink-0 p-0" onClick={onClose} aria-label="Close color picker">
             <Icon name="x" className="h-4 w-4" />
           </button>
@@ -196,7 +182,7 @@ export default function CustomColorModal({ value, onApply, onClose }: CustomColo
           aria-valuemax={100}
           aria-valuenow={hsv.s}
           aria-valuetext={`${hsv.s}% saturation, ${hsv.v}% brightness`}
-          className="relative mt-6 aspect-[16/10] w-full touch-none overflow-hidden rounded-2xl shadow-inner ring-1 ring-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine"
+          className="relative mt-3 aspect-[16/10] w-full touch-none overflow-hidden rounded-2xl shadow-inner ring-1 ring-black/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pine"
           style={{ background: `linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, hsl(${hsv.h} 100% 50%))` }}
           onPointerDown={event => {
             isDragging.current = true
@@ -218,41 +204,15 @@ export default function CustomColorModal({ value, onApply, onClose }: CustomColo
           />
         </div>
 
-        <label className="label mt-5" htmlFor={`${titleId}-hue`}>Hue</label>
         <input
-          id={`${titleId}-hue`}
           aria-label="Hue"
-          className="color-hue-slider"
+          className="color-hue-slider mt-4"
           type="range"
           min="0"
           max="359"
           value={hsv.h}
           onChange={event => setColor({ ...hsv, h: Number(event.target.value) })}
         />
-
-        <div className="mt-5 flex items-end gap-3">
-          <span className="h-12 w-12 shrink-0 rounded-xl border-4 border-white shadow-sm ring-1 ring-line" style={{ backgroundColor: color }} aria-hidden="true" />
-          <div className="min-w-0 flex-1">
-            <label className="label" htmlFor={`${titleId}-hex`}>Hex color</label>
-            <input
-              id={`${titleId}-hex`}
-              className={`field font-mono uppercase ${isSpaceColor(hexInput) ? '' : 'border-red-400 focus:border-red-500'}`}
-              value={hexInput}
-              maxLength={7}
-              spellCheck={false}
-              aria-invalid={!isSpaceColor(hexInput)}
-              onChange={event => updateHex(event.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="mt-7 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <button type="button" className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button type="button" className="btn-primary" disabled={!isSpaceColor(hexInput)} onClick={() => onApply(color)}>
-            <Icon name="check" className="h-4 w-4" />
-            Use this color
-          </button>
-        </div>
       </div>
     </dialog>
   )

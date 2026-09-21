@@ -13,28 +13,24 @@ beforeAll(() => {
 })
 
 describe('SpaceColorPicker', () => {
-  it('opens the app-styled custom picker and applies a hex color', () => {
+  it('opens the app-styled custom picker and applies color changes live', () => {
     const onChange = vi.fn()
     render(<SpaceColorPicker value="#D96F55" onChange={onChange} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Choose a custom color' }))
 
-    expect(screen.getByRole('dialog', { name: 'Choose a custom color' })).toBeVisible()
-    const hexInput = screen.getByLabelText('Hex color')
-    fireEvent.change(hexInput, { target: { value: '#336699' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Use this color' }))
+    expect(screen.getByRole('dialog', { name: 'Custom color picker' })).toBeVisible()
+    fireEvent.change(screen.getByLabelText('Hue'), { target: { value: '210' } })
 
-    expect(onChange).toHaveBeenCalledWith('#336699')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(onChange).toHaveBeenCalledOnce()
+    expect(onChange.mock.calls[0]?.[0]).toMatch(/^#[0-9A-F]{6}$/)
+    expect(screen.getByRole('dialog', { name: 'Custom color picker' })).toBeVisible()
   })
 
-  it('keeps an invalid hex value from being applied', () => {
+  it('closes from the icon-only close control', () => {
     render(<SpaceColorPicker value="#D96F55" onChange={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Choose a custom color' }))
-
-    fireEvent.change(screen.getByLabelText('Hex color'), { target: { value: '#NOPE' } })
-
-    expect(screen.getByRole('button', { name: 'Use this color' })).toBeDisabled()
-    expect(screen.getByLabelText('Hex color')).toHaveAttribute('aria-invalid', 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'Close color picker' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

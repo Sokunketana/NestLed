@@ -49,7 +49,7 @@ export default function SpaceColorPicker({ value, onChange, disabled = false }: 
     {isCustomPickerOpen && <CustomColorModal
       value={currentColor}
       onClose={() => setIsCustomPickerOpen(false)}
-      onApply={color => { onChange(color); setIsCustomPickerOpen(false) }}
+      onChange={onChange}
     />}
   </fieldset>
 }

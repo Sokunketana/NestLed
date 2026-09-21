@@ -6,6 +6,7 @@ import { cacheKeys, revalidateInventory } from '../api/cache'
 import ConfirmationModal from '../components/ConfirmationModal'
 import Icon from '../components/Icon'
 import { ErrorMessage, Loading } from '../components/PageState'
+import SpaceActionsMenu from '../components/SpaceActionsMenu'
 import SpaceColorPicker from '../components/SpaceColorPicker'
 import type { Category } from '../types'
 
@@ -57,7 +58,7 @@ export default function CategoriesPage() {
         <div className="flex flex-wrap items-start justify-between gap-2 px-1 sm:col-span-2 sm:items-center"><p className="text-sm font-bold text-ink">Your labels</p><span className="text-xs text-ink-soft">Use them to make search effortless</span></div>
         {categories.map(category => <article className="card group relative overflow-hidden transition hover:-translate-y-0.5 hover:shadow-soft" key={category.id}>
           <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: category.color || '#78716c' }} />
-          <div className="flex items-start justify-between gap-3 pt-1"><span className="grid h-10 w-10 place-items-center rounded-xl bg-cream text-pine"><Icon name="tag" className="h-5 w-5" /></span><div className="flex gap-1"><button type="button" title={`Edit ${category.name}`} aria-label={`Edit ${category.name}`} className="btn-secondary h-9 w-9 p-0" onClick={() => { setEditing(category.id); setForm({ name: category.name, color: category.color || '#145247' }) }}><Icon name="edit" className="h-4 w-4" /></button><button type="button" title={`Delete ${category.name}`} aria-label={`Delete ${category.name}`} className="btn-danger h-9 w-9 p-0" onClick={() => setDeleteTarget(category)}><Icon name="trash" className="h-4 w-4" /></button></div></div>
+          <div className="flex items-start justify-between gap-3 pt-1"><span className="grid h-10 w-10 place-items-center rounded-xl bg-cream text-pine"><Icon name="tag" className="h-5 w-5" /></span><SpaceActionsMenu name={category.name} onEdit={() => { setEditing(category.id); setForm({ name: category.name, color: category.color || '#145247' }) }} onDelete={() => setDeleteTarget(category)} /></div>
           <h2 className="mt-5 text-xl group-hover:text-pine">{category.name}</h2><Link to={`/items?categoryId=${category.id}`} className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-pine">{category.itemCount} {category.itemCount === 1 ? 'item' : 'items'} <Icon name="arrow-right" className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" /></Link>
         </article>)}
         {!categories.length && <div className="card border-dashed py-14 text-center sm:col-span-2"><Icon name="tag" className="mx-auto h-7 w-7 text-pine" /><p className="mt-3 font-semibold">No categories yet.</p><p className="mt-1 text-sm text-ink-soft">Add a label to make your first items easier to find.</p></div>}

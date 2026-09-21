@@ -6,6 +6,7 @@ import { cacheKeys, revalidateInventory } from '../api/cache'
 import ConfirmationModal from '../components/ConfirmationModal'
 import Icon from '../components/Icon'
 import { ErrorMessage, Loading } from '../components/PageState'
+import SpaceColorPicker from '../components/SpaceColorPicker'
 import type { Category } from '../types'
 
 export default function CategoriesPage() {
@@ -65,7 +66,7 @@ export default function CategoriesPage() {
       <form id="category-form" className="card self-start scroll-mt-24" onSubmit={submit}>
         <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-gold/15 text-amber-700"><Icon name="tag" className="h-4 w-4" /></span><div><h2 className="text-xl">{editing ? 'Edit category' : 'Add a category'}</h2><p className="mt-1 text-sm text-ink-soft">Choose a simple label you’ll recognize at a glance.</p></div></div>
         <div className="mt-5"><label className="label">Name *</label><input className="field" required maxLength={100} value={form.name} onChange={event => setForm({ ...form, name: event.target.value })} placeholder="Electronics" /></div>
-        <div className="mt-4"><label className="label">Color *</label><div className="flex gap-3"><input aria-label="Category color" className="h-11 w-14 cursor-pointer rounded-xl border-line bg-white p-1" type="color" value={form.color} onChange={event => setForm({ ...form, color: event.target.value })} /><input className="field" required pattern="#[0-9A-Fa-f]{6}" value={form.color} onChange={event => setForm({ ...form, color: event.target.value })} /></div></div>
+        <div className="mt-4"><SpaceColorPicker value={form.color} onChange={color => setForm(current => ({ ...current, color }))} /></div>
         <div className="mt-5 flex flex-wrap gap-2"><button className="btn-primary"><Icon name={editing ? 'check' : 'plus'} className="h-4 w-4" />{editing ? 'Save category' : 'Add category'}</button>{editing && <button type="button" className="btn-secondary" onClick={cancelEdit}>Cancel</button>}</div>
       </form>
     </div>

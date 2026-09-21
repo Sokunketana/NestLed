@@ -70,8 +70,7 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="eyebrow">Your spaces</p><h2 className="mt-2 text-2xl">Rooms at a glance</h2></div><Link to="/rooms" className="inline-flex items-center gap-2 text-sm font-bold text-pine">Manage rooms <Icon name="arrow-right" className="h-4 w-4" /></Link></div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.rooms.map(room => { const color = getSpaceColor(room.color, defaultRoomColor); return <Link to={`/items?roomId=${room.id}`} className="card group overflow-hidden p-0 transition hover:-translate-y-0.5 hover:shadow-soft" key={room.id}>
-          <div className="flex h-24 items-start justify-between p-5" style={{ backgroundColor: withColorAlpha(color, '26') }}>
-            <span className="grid h-10 w-10 place-items-center rounded-xl" style={{ backgroundColor: withColorAlpha(color, '18'), color }}><Icon name="home" className="h-5 w-5" /></span>
+          <div className="flex h-24 items-start justify-end p-5" style={{ backgroundColor: withColorAlpha(color, '26') }}>
             <span className="rounded-full bg-white/80 px-2.5 py-1 text-xs font-bold text-stone-600">{room.itemCount} {room.itemCount === 1 ? 'item' : 'items'}</span>
           </div>
           <div className="flex items-center justify-between gap-3 p-5"><div><h3 className="text-xl group-hover:text-pine">{room.name}</h3><p className="mt-1 text-sm text-ink-soft">Browse this room</p></div><Icon name="arrow-right" className="h-5 w-5 text-stone-400 transition group-hover:translate-x-1 group-hover:text-pine" /></div>

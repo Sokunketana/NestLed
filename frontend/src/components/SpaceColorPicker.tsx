@@ -1,4 +1,6 @@
+import { useRef, useState } from 'react'
 import Icon from './Icon'
+import CustomColorModal from './CustomColorModal'
 import { getSpaceColor, isSpaceColor, spaceColorOptions } from '../spaceColors'
 
 type SpaceColorPickerProps = {
@@ -8,6 +10,8 @@ type SpaceColorPickerProps = {
 }
 
 export default function SpaceColorPicker({ value, onChange, disabled = false }: SpaceColorPickerProps) {
+  const customColorButtonRef = useRef<HTMLButtonElement>(null)
+  const [isCustomPickerOpen, setIsCustomPickerOpen] = useState(false)
   const currentColor = getSpaceColor(value)
   const selectedPreset = spaceColorOptions.find(option => option.value.toLowerCase() === currentColor.toLowerCase())
   const customColorSelected = isSpaceColor(value) && !selectedPreset
@@ -30,15 +34,24 @@ export default function SpaceColorPicker({ value, onChange, disabled = false }: 
           {selected && <Icon name="check" className="h-4 w-4 text-white drop-shadow" />}
         </button>
       })}
-      <label
+      <button
+        ref={customColorButtonRef}
+        type="button"
         title="Custom color"
         className="relative grid h-8 w-8 cursor-pointer place-items-center overflow-hidden rounded-full border-2 border-white bg-cream text-sm font-bold text-ink-soft shadow-sm ring-1 ring-line transition hover:scale-105"
         style={customColorSelected ? { backgroundColor: currentColor } : undefined}
+        aria-label="Choose a custom color"
+        aria-pressed={customColorSelected}
+        onClick={() => setIsCustomPickerOpen(true)}
       >
         {customColorSelected ? <Icon name="check" className="h-4 w-4 text-white drop-shadow" /> : <span>+</span>}
-        <input aria-label="Custom color" type="color" value={currentColor} onChange={event => onChange(event.target.value.toUpperCase())} className="absolute inset-0 cursor-pointer opacity-0" />
-      </label>
+      </button>
     </div>
-    <p className="mt-2 text-xs text-ink-soft">{selectedPreset?.label || `Custom color ${currentColor}`} <span className="text-stone-300">·</span> You can change this later.</p>
+    {isCustomPickerOpen && <CustomColorModal
+      anchorRef={customColorButtonRef}
+      value={currentColor}
+      onClose={() => setIsCustomPickerOpen(false)}
+      onChange={onChange}
+    />}
   </fieldset>
 }

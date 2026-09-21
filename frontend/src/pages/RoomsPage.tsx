@@ -33,10 +33,6 @@ export default function RoomsPage() {
   const locationList = locations ?? []
   const loadError = roomsError || locationsError
   const totalItems = (rooms ?? []).reduce((sum, room) => sum + room.itemCount, 0)
-  const quickAddColor = getSpaceColor(
-    addMode === 'room' ? roomForm.color : locationForm.color,
-    addMode === 'room' ? defaultRoomColor : defaultLocationColor,
-  )
 
   useEffect(() => {
     if (setupMode === 'location') {
@@ -150,19 +146,14 @@ export default function RoomsPage() {
             return <article className="relative" key={room.id}>
               <div className="h-1.5" style={{ backgroundColor: withColorAlpha(roomColor, '35') }} aria-hidden="true" />
               <div className="p-5 sm:p-6">
-                <div className="flex items-start gap-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl" style={{ backgroundColor: withColorAlpha(roomColor, '18'), color: roomColor }}><Icon name="home" className="h-5 w-5" /></span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-xl">{room.name}</h3>
-                        <p className="mt-1 text-sm text-ink-soft">{room.itemCount} {room.itemCount === 1 ? 'item' : 'items'} across {roomLocations.length} {roomLocations.length === 1 ? 'location' : 'locations'}</p>
-                      </div>
-                      <SpaceActionsMenu name={room.name} onEdit={() => setEditingTarget({ type: 'room', value: room })} onDelete={() => setDeleteTarget({ type: 'room', value: room })} />
-                    </div>
-                    {room.description && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-500">{room.description}</p>}
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-xl">{room.name}</h3>
+                    <p className="mt-1 text-sm text-ink-soft">{room.itemCount} {room.itemCount === 1 ? 'item' : 'items'} across {roomLocations.length} {roomLocations.length === 1 ? 'location' : 'locations'}</p>
                   </div>
+                  <SpaceActionsMenu name={room.name} onEdit={() => setEditingTarget({ type: 'room', value: room })} onDelete={() => setDeleteTarget({ type: 'room', value: room })} />
                 </div>
+                {room.description && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-500">{room.description}</p>}
 
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
                   {roomLocations.map(location => {
@@ -189,10 +180,7 @@ export default function RoomsPage() {
       </section>
 
       <section id="quick-add" className="card h-fit scroll-mt-24 xl:sticky xl:top-24">
-        <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ backgroundColor: withColorAlpha(quickAddColor, '20'), color: quickAddColor }}><Icon name={addMode === 'room' ? 'home' : 'map'} className="h-5 w-5" /></span>
-          <div><p className="eyebrow">Quick add</p><h2 className="mt-1 text-xl">Add to your map</h2><p className="mt-1 text-sm leading-relaxed text-ink-soft">Keep the setup light and focused.</p></div>
-        </div>
+        <div><p className="eyebrow">Quick add</p><h2 className="mt-1 text-xl">Add to your map</h2><p className="mt-1 text-sm leading-relaxed text-ink-soft">Keep the setup light and focused.</p></div>
 
         <div className="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-cream p-1" role="tablist" aria-label="What would you like to add?">
           <button type="button" role="tab" aria-selected={addMode === 'room'} className={`rounded-lg px-3 py-2 text-sm font-bold transition ${addMode === 'room' ? 'bg-white text-deep shadow-sm' : 'text-ink-soft hover:text-ink'}`} onClick={() => setAddMode('room')}>Room</button>

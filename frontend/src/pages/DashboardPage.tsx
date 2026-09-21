@@ -13,7 +13,7 @@ const activityDate = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', t
 const quickActions: Array<{ to: string; label: string; description: string; icon: IconName; iconClass: string }> = [
   { to: '/items/new', label: 'Add an item', description: 'Record something new in your home.', icon: 'plus', iconClass: 'bg-coral/10 text-[#a64d39]' },
   { to: '/items', label: 'Browse items', description: 'Search and explore your inventory.', icon: 'box', iconClass: 'bg-mint text-pine' },
-  { to: '/rooms#quick-add', label: 'Add a room', description: 'Give another space a place on the map.', icon: 'home', iconClass: 'bg-sage text-pine' },
+  { to: '/rooms#quick-add', label: 'Add a room', description: 'Create another room.', icon: 'home', iconClass: 'bg-sage text-pine' },
   { to: '/categories#category-form', label: 'Add a category', description: 'Create a label for easier filtering.', icon: 'tag', iconClass: 'bg-gold/15 text-amber-700' },
 ]
 
@@ -49,14 +49,14 @@ export default function DashboardPage() {
       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {quickActions.map(action => <Link to={action.to} className="card group flex items-start gap-3 p-4 transition hover:-translate-y-0.5 hover:border-pine/30 hover:shadow-soft" key={action.label}>
           <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${action.iconClass}`}><Icon name={action.icon} className="h-5 w-5" /></span>
-          <span className="min-w-0"><span className="block font-bold group-hover:text-pine">{action.label}</span><span className="mt-1 block text-sm leading-relaxed text-ink-soft">{action.description}</span></span>
-          <Icon name="arrow-right" className="mt-1 h-4 w-4 shrink-0 text-stone-400 transition group-hover:translate-x-0.5 group-hover:text-pine" />
+          <span className="min-w-0 flex-1"><span className="block font-bold group-hover:text-pine">{action.label}</span><span className="mt-1 block text-sm leading-relaxed text-ink-soft">{action.description}</span></span>
+          <Icon name="arrow-right" className="ml-auto h-4 w-4 shrink-0 self-center text-stone-400 transition group-hover:translate-x-0.5 group-hover:text-pine" />
         </Link>)}
       </div>
     </section>
 
     <section className="mt-10" aria-labelledby="recent-activity-title">
-      <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="eyebrow">What’s changed</p><h2 id="recent-activity-title" className="mt-2 text-2xl">Recent activity</h2></div><Link to="/movements" className="inline-flex items-center gap-2 text-sm font-bold text-pine hover:text-deep">View movement history <Icon name="arrow-right" className="h-4 w-4" /></Link></div>
+      <div><p className="eyebrow">What’s changed</p><div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2"><h2 id="recent-activity-title" className="text-2xl">Recent activity</h2><Link to="/movements" aria-label="View movement history" className="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-pine hover:text-deep">View history <Icon name="arrow-right" className="h-4 w-4" /></Link></div></div>
       {recentActivity.length ? <div className="mt-5 grid gap-3 lg:grid-cols-2">
         {recentActivity.map(activity => <Link to={`/items/${activity.itemId}`} className="card group flex min-w-0 items-start gap-3 p-4 transition hover:-translate-y-0.5 hover:border-pine/30 hover:shadow-soft" key={`${activity.type}-${activity.itemId}-${activity.occurredAt}`}>
           <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${activity.type === 'ITEM_MOVED' ? 'bg-sage text-pine' : 'bg-coral/10 text-[#a64d39]'}`}><Icon name={activity.type === 'ITEM_MOVED' ? 'arrow-right' : 'plus'} className="h-5 w-5" /></span>
@@ -67,7 +67,7 @@ export default function DashboardPage() {
     </section>
 
     <section className="mt-10">
-      <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="eyebrow">Your spaces</p><h2 className="mt-2 text-2xl">Rooms at a glance</h2></div><Link to="/rooms" className="inline-flex items-center gap-2 text-sm font-bold text-pine">Manage rooms <Icon name="arrow-right" className="h-4 w-4" /></Link></div>
+      <div><p className="eyebrow">Your spaces</p><div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2"><h2 className="text-2xl">Rooms at a glance</h2><Link to="/rooms" className="inline-flex shrink-0 items-center gap-1.5 text-sm font-bold text-pine">Manage rooms <Icon name="arrow-right" className="h-4 w-4" /></Link></div></div>
       <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.rooms.map(room => { const color = getSpaceColor(room.color, defaultRoomColor); return <Link to={`/items?roomId=${room.id}`} className="card group overflow-hidden p-0 transition hover:-translate-y-0.5 hover:shadow-soft" key={room.id}>
           <div className="flex h-24 items-start justify-end p-5" style={{ backgroundColor: withColorAlpha(color, '26') }}>

@@ -73,17 +73,28 @@ export default function CustomColorModal({ anchorRef, value, onChange, onClose }
       const panelBounds = dialog.getBoundingClientRect()
       const anchorBounds = anchorRef.current.getBoundingClientRect()
       const gap = 12
+      const isMobile = window.matchMedia?.('(max-width: 639px)')?.matches ?? window.innerWidth < 640
+      const centeredLeft = Math.max(8, Math.min(
+        anchorBounds.left + anchorBounds.width / 2 - panelBounds.width / 2,
+        window.innerWidth - panelBounds.width - 8,
+      ))
       const fitsRight = window.innerWidth - anchorBounds.right >= panelBounds.width + gap
       const fitsLeft = anchorBounds.left >= panelBounds.width + gap
-      const left = fitsRight
-        ? anchorBounds.right + gap
-        : fitsLeft
-          ? anchorBounds.left - panelBounds.width - gap
-          : Math.max(8, Math.min(anchorBounds.left + anchorBounds.width / 2 - panelBounds.width / 2, window.innerWidth - panelBounds.width - 8))
-      const top = Math.max(8, Math.min(
-        anchorBounds.top + anchorBounds.height / 2 - panelBounds.height / 2,
-        window.innerHeight - panelBounds.height - 8,
-      ))
+      const left = isMobile
+        ? centeredLeft
+        : fitsRight
+          ? anchorBounds.right + gap
+          : fitsLeft
+            ? anchorBounds.left - panelBounds.width - gap
+            : centeredLeft
+      const top = isMobile
+        ? anchorBounds.top - panelBounds.height - gap >= 8
+          ? anchorBounds.top - panelBounds.height - gap
+          : Math.max(8, Math.min(anchorBounds.bottom + gap, window.innerHeight - panelBounds.height - 8))
+        : Math.max(8, Math.min(
+          anchorBounds.top + anchorBounds.height / 2 - panelBounds.height / 2,
+          window.innerHeight - panelBounds.height - 8,
+        ))
 
       dialog.style.left = `${left}px`
       dialog.style.top = `${top}px`

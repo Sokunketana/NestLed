@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import useSWR from 'swr'
 import { itemMovementApi } from '../api/itemMovementApi'
 import { cacheKeys } from '../api/cache'
@@ -24,32 +25,48 @@ function localDateKey(value: string) {
 }
 
 export default function MovementHistoryPage() {
+  const [params, setParams] = useSearchParams()
+  const query = params.get('q') ?? ''
   const { data: movements, error } = useSWR<ItemMovement[]>(cacheKeys.movements, itemMovementApi.list)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(query)
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
 
   const visibleMovements = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase()
+    const normalizedQuery = query.trim().toLocaleLowerCase()
     return (movements ?? []).filter(movement => {
       const movedOn = localDateKey(movement.movedAt)
-      const matchesText = !query || [
+      const matchesText = !normalizedQuery || [
         movement.itemName,
         movement.fromRoomName,
         movement.fromLocationName,
         movement.toRoomName,
         movement.toLocationName,
-      ].some(value => value.toLocaleLowerCase().includes(query))
+      ].some(value => value.toLocaleLowerCase().includes(normalizedQuery))
       return matchesText && (!fromDate || movedOn >= fromDate) && (!toDate || movedOn <= toDate)
     })
-  }, [movements, search, fromDate, toDate])
+  }, [movements, query, fromDate, toDate])
 
-  const hasFilters = Boolean(search.trim() || fromDate || toDate)
+  const hasFilters = Boolean(query.trim() || fromDate || toDate)
+
+  useEffect(() => {
+    setSearch(query)
+  }, [query])
+
+  function submitSearch(event: FormEvent) {
+    event.preventDefault()
+    const next = new URLSearchParams(params)
+    const trimmedSearch = search.trim()
+    if (trimmedSearch) next.set('q', trimmedSearch)
+    else next.delete('q')
+    setParams(next)
+  }
 
   function clearFilters() {
     setSearch('')
     setFromDate('')
     setToDate('')
+    setParams({})
   }
 
   return <>
@@ -72,20 +89,26 @@ export default function MovementHistoryPage() {
     <div className="mt-7 rounded-[1.35rem] border border-line bg-white/70 p-3 shadow-card sm:p-4">
       <div className="mb-3 flex items-center gap-2 px-1 text-sm font-bold text-ink"><Icon name="history" className="h-4 w-4 text-pine" />Filter activity</div>
       <div className="grid gap-4 md:grid-cols-[minmax(16rem,1fr)_auto_auto_auto] md:items-end">
-        <div>
+        <form onSubmit={submitSearch}>
           <label className="label" htmlFor="movement-search">Search history</label>
-          <div className="relative">
-            <Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
-            <input
-              id="movement-search"
-              className="field pl-10"
-              type="search"
-              placeholder="Item, room, or storage location"
-              value={search}
-              onChange={event => setSearch(event.target.value)}
-            />
+          <div className="flex gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
+              <input
+                id="movement-search"
+                className="field pl-10"
+                type="search"
+                placeholder="Item, room, or storage location"
+                value={search}
+                onChange={event => setSearch(event.target.value)}
+              />
+            </div>
+            <button className="btn-primary shrink-0 px-3 sm:px-4" type="submit">
+              <Icon name="search" className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline">Search</span>
+            </button>
           </div>
-        </div>
+        </form>
         <div>
           <label className="label" htmlFor="movement-from-date">From</label>
           <input

@@ -150,19 +150,14 @@ export default function RoomsPage() {
             return <article className="relative" key={room.id}>
               <div className="h-1.5" style={{ backgroundColor: withColorAlpha(roomColor, '35') }} aria-hidden="true" />
               <div className="p-5 sm:p-6">
-                <div className="flex items-start gap-3">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl" style={{ backgroundColor: withColorAlpha(roomColor, '18'), color: roomColor }}><Icon name="home" className="h-5 w-5" /></span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="truncate text-xl">{room.name}</h3>
-                        <p className="mt-1 text-sm text-ink-soft">{room.itemCount} {room.itemCount === 1 ? 'item' : 'items'} across {roomLocations.length} {roomLocations.length === 1 ? 'location' : 'locations'}</p>
-                      </div>
-                      <SpaceActionsMenu name={room.name} onEdit={() => setEditingTarget({ type: 'room', value: room })} onDelete={() => setDeleteTarget({ type: 'room', value: room })} />
-                    </div>
-                    {room.description && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-500">{room.description}</p>}
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate text-xl">{room.name}</h3>
+                    <p className="mt-1 text-sm text-ink-soft">{room.itemCount} {room.itemCount === 1 ? 'item' : 'items'} across {roomLocations.length} {roomLocations.length === 1 ? 'location' : 'locations'}</p>
                   </div>
+                  <SpaceActionsMenu name={room.name} onEdit={() => setEditingTarget({ type: 'room', value: room })} onDelete={() => setDeleteTarget({ type: 'room', value: room })} />
                 </div>
+                {room.description && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-stone-500">{room.description}</p>}
 
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
                   {roomLocations.map(location => {

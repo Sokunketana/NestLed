@@ -79,7 +79,14 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   }, [user?.pictureUrl])
 
   useEffect(() => {
-    if (manageRouteActive) setManageOpen(true)
+    if (manageRouteActive) {
+      setManageOpen(true)
+      return
+    }
+
+    // Keep the desktop sidebar's expanded state, but reclaim mobile space
+    // after navigating back to one of the primary tabs.
+    if (window.matchMedia('(max-width: 1023px)').matches) setManageOpen(false)
   }, [manageRouteActive])
 
   useEffect(() => {

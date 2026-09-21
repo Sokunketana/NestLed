@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Icon from './Icon'
 import CustomColorModal from './CustomColorModal'
 import { getSpaceColor, isSpaceColor, spaceColorOptions } from '../spaceColors'
@@ -10,6 +10,7 @@ type SpaceColorPickerProps = {
 }
 
 export default function SpaceColorPicker({ value, onChange, disabled = false }: SpaceColorPickerProps) {
+  const customColorButtonRef = useRef<HTMLButtonElement>(null)
   const [isCustomPickerOpen, setIsCustomPickerOpen] = useState(false)
   const currentColor = getSpaceColor(value)
   const selectedPreset = spaceColorOptions.find(option => option.value.toLowerCase() === currentColor.toLowerCase())
@@ -34,6 +35,7 @@ export default function SpaceColorPicker({ value, onChange, disabled = false }: 
         </button>
       })}
       <button
+        ref={customColorButtonRef}
         type="button"
         title="Custom color"
         className="relative grid h-8 w-8 cursor-pointer place-items-center overflow-hidden rounded-full border-2 border-white bg-cream text-sm font-bold text-ink-soft shadow-sm ring-1 ring-line transition hover:scale-105"
@@ -47,6 +49,7 @@ export default function SpaceColorPicker({ value, onChange, disabled = false }: 
     </div>
     <p className="mt-2 text-xs text-ink-soft">{selectedPreset?.label || `Custom color ${currentColor}`} <span className="text-stone-300">·</span> You can change this later.</p>
     {isCustomPickerOpen && <CustomColorModal
+      anchorRef={customColorButtonRef}
       value={currentColor}
       onClose={() => setIsCustomPickerOpen(false)}
       onChange={onChange}

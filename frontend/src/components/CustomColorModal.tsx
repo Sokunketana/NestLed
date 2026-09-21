@@ -1,8 +1,10 @@
 import { KeyboardEvent, PointerEvent, useEffect, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import Icon from './Icon'
 import { getSpaceColor } from '../spaceColors'
 
 type CustomColorModalProps = {
+  anchorRef: RefObject<HTMLElement | null>
   value: string
   onChange: (color: string) => void
   onClose: () => void
@@ -49,7 +51,7 @@ function hsvToHex({ h, s, v }: HsvColor) {
   return `#${[red, green, blue].map(channel => Math.round((channel + match) * 255).toString(16).padStart(2, '0')).join('').toUpperCase()}`
 }
 
-export default function CustomColorModal({ value, onChange, onClose }: CustomColorModalProps) {
+export default function CustomColorModal({ anchorRef, value, onChange, onClose }: CustomColorModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const colorFieldRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
@@ -67,6 +69,29 @@ export default function CustomColorModal({ value, onChange, onClose }: CustomCol
     const dialog = dialogRef.current
     const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
     dialog?.show()
+    if (dialog && anchorRef.current) {
+      const panelBounds = dialog.getBoundingClientRect()
+      const anchorBounds = anchorRef.current.getBoundingClientRect()
+      const gap = 12
+      const fitsRight = window.innerWidth - anchorBounds.right >= panelBounds.width + gap
+      const fitsLeft = anchorBounds.left >= panelBounds.width + gap
+      const left = fitsRight
+        ? anchorBounds.right + gap
+        : fitsLeft
+          ? anchorBounds.left - panelBounds.width - gap
+          : Math.max(8, Math.min(anchorBounds.left + anchorBounds.width / 2 - panelBounds.width / 2, window.innerWidth - panelBounds.width - 8))
+      const top = Math.max(8, Math.min(
+        anchorBounds.top + anchorBounds.height / 2 - panelBounds.height / 2,
+        window.innerHeight - panelBounds.height - 8,
+      ))
+
+      dialog.style.left = `${left}px`
+      dialog.style.top = `${top}px`
+      dialog.style.right = 'auto'
+      dialog.style.bottom = 'auto'
+      dialog.style.margin = '0'
+      dialog.style.transform = 'none'
+    }
     colorFieldRef.current?.focus()
 
     const closeOnEscape = (event: globalThis.KeyboardEvent) => {
@@ -89,7 +114,7 @@ export default function CustomColorModal({ value, onChange, onClose }: CustomCol
       if (dialog?.open) dialog.close()
       if (dialog?.contains(document.activeElement)) previouslyFocused?.focus()
     }
-  }, [])
+  }, [anchorRef])
 
   function setColor(nextHsv: HsvColor) {
     setHsv(nextHsv)

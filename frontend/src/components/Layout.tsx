@@ -130,15 +130,15 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
         </NavLink>
 
         <div className="mt-6 sm:mt-8">
-          <nav className="mt-2 flex gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+          <nav aria-label="Primary navigation" className="mt-2 flex gap-1 overflow-x-auto rounded-2xl bg-white/[.045] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:rounded-none lg:bg-transparent lg:p-0">
             {primaryLinks.map(({ to, label, icon }) => <NavLink key={to} to={to} end={to === '/'}
-              className={({ isActive }) => `group flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-semibold transition ${isActive ? 'bg-white text-deep shadow-sm' : 'text-emerald-50/85 hover:bg-white/10 hover:text-white'}`}>
+              className={({ isActive }) => `group flex min-w-max flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-2.5 py-2.5 text-sm font-semibold transition lg:flex-none lg:justify-start lg:gap-3 lg:px-3 ${isActive ? 'bg-white text-deep shadow-sm' : 'text-emerald-50/85 hover:bg-white/10 hover:text-white'}`}>
               <Icon name={icon} className="h-[1.05rem] w-[1.05rem] shrink-0 opacity-80" />
               <span>{label}</span>
             </NavLink>)}
           </nav>
-          <details className="group mt-3" open={manageOpen} onToggle={event => setManageOpen(event.currentTarget.open)}>
-            <summary className="flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-emerald-50/85 transition hover:bg-white/10 hover:text-white">
+          <details className="group mt-3 border-t border-white/10 pt-3 lg:border-0 lg:pt-0" open={manageOpen} onToggle={event => setManageOpen(event.currentTarget.open)}>
+            <summary className={`flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition hover:bg-white/10 hover:text-white ${manageRouteActive ? 'bg-white/10 text-white' : 'text-emerald-50/85'}`}>
               <Icon name="sliders" className="h-[1.05rem] w-[1.05rem] shrink-0 opacity-80" />
               <span className="flex-1">Manage</span>
               <Icon name="chevron-down" className="h-4 w-4 transition group-open:rotate-180" />

@@ -28,18 +28,18 @@ export default function DashboardPage() {
   const { data, error } = useSWR<Dashboard>(cacheKeys.dashboard, dashboardApi.get)
   if (error) return <ErrorMessage message={error} />
   if (!data) return <Loading />
-  const stats: Array<{ label: string; value: string | number; note: string; icon: IconName }> = [
-    { label: 'Total items', value: data.totalItems, note: 'All catalogued belongings', icon: 'box' },
-    { label: 'Rooms', value: data.totalRooms, note: 'Spaces in your home', icon: 'home' },
-    { label: 'Categories', value: data.totalCategories, note: 'Ways your items are grouped', icon: 'tag' },
-    { label: 'Estimated value', value: money.format(data.totalEstimatedValue), note: 'Across recorded items', icon: 'sparkles' },
+  const stats: Array<{ label: string; value: string | number; note: string }> = [
+    { label: 'Total items', value: data.totalItems, note: 'All catalogued belongings' },
+    { label: 'Rooms', value: data.totalRooms, note: 'Spaces in your home' },
+    { label: 'Categories', value: data.totalCategories, note: 'Ways your items are grouped' },
+    { label: 'Estimated value', value: money.format(data.totalEstimatedValue), note: 'Across recorded items' },
   ]
   const recentActivity = data.recentActivity ?? []
 
   return <>
     <section aria-label="Inventory stats" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {stats.map(({ label, value, note, icon }) => <div className="card relative overflow-hidden" key={label}>
-        <div className="flex items-start justify-between gap-3"><p className="text-sm font-semibold text-stone-500">{label}</p><span className="grid h-9 w-9 place-items-center rounded-xl bg-mint text-pine"><Icon name={icon} className="h-4 w-4" /></span></div>
+      {stats.map(({ label, value, note }) => <div className="card relative overflow-hidden" key={label}>
+        <p className="text-sm font-semibold text-stone-500">{label}</p>
         <p className="mt-5 text-3xl font-bold tracking-tight">{value}</p><p className="mt-1 text-xs text-ink-soft">{note}</p>
       </div>)}
     </section>

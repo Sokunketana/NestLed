@@ -55,7 +55,7 @@ export default function CategoriesPage() {
 
     <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_24rem]">
       <section className="grid content-start gap-4 sm:grid-cols-2" aria-label="Categories">
-        <div className="flex flex-wrap items-start justify-between gap-2 px-1 sm:col-span-2 sm:items-center"><p className="text-sm font-bold text-ink">Your labels</p><span className="text-xs text-ink-soft">Use them to make search effortless</span></div>
+        <div className="px-1 sm:col-span-2"><p className="text-sm font-bold text-ink">Your labels</p></div>
         {categories.map(category => <article className="card group relative overflow-hidden transition hover:-translate-y-0.5 hover:shadow-soft" key={category.id}>
           <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: category.color || '#78716c' }} />
           <div className="flex items-start justify-between gap-3 pt-1"><h2 className="text-xl group-hover:text-pine">{category.name}</h2><SpaceActionsMenu name={category.name} onEdit={() => { setEditing(category.id); setForm({ name: category.name, color: category.color || '#145247' }) }} onDelete={() => setDeleteTarget(category)} /></div>

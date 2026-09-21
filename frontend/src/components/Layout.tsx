@@ -172,8 +172,8 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
             </div>
             <button className="btn-primary h-11 shrink-0 px-3 sm:px-4"><Icon name="search" className="h-4 w-4 sm:hidden" /><span className="hidden sm:inline">Search</span></button>
           </form>
-          <Link to="/items/new" className="btn-primary order-1 h-11 shrink-0 px-3 sm:order-none sm:px-4" aria-label="Add item">
-            <Icon name="plus" className="h-4 w-4" /><span className="hidden sm:inline">Add item</span>
+          <Link to="/items/new" className="btn-primary order-1 h-11 shrink-0 rounded-xl px-3 sm:order-none sm:px-4" aria-label="Add item">
+            <Icon name="plus" className="h-4 w-4" /><span>Add item</span>
           </Link>
           <div ref={profileMenuRef} className="relative order-1 ml-auto shrink-0 sm:order-none">
             <button

@@ -115,20 +115,23 @@ test('anonymous visitors see the sign-in page', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible()
 })
 
-test('an authenticated user can browse items and open item details', async ({ page }) => {
+test('an authenticated user can drill down from a room to item details', async ({ page }) => {
   await mockAuthenticatedApi(page)
 
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Quick actions' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Rooms at a glance' })).toBeVisible()
 
-  await page.getByRole('link', { name: 'Browse items' }).click()
-  await expect(page.getByRole('heading', { name: 'All items' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Passport' })).toBeVisible()
+  await page.getByRole('button', { name: /Bedroom See locations/ }).click()
+  await expect(page.getByRole('heading', { name: 'Locations in Bedroom' })).toBeVisible()
+  await page.getByRole('button', { name: /Top drawer See items/ }).click()
+  await expect(page.getByRole('heading', { name: 'Items in Top drawer' })).toBeVisible()
 
-  await page.getByRole('link', { name: /Passport/ }).first().click()
+  await page.getByRole('link', { name: /Passport/ }).click()
   await expect(page).toHaveURL(/\/items\/1$/)
   await expect(page.getByRole('heading', { name: 'Passport', exact: true })).toBeVisible()
   await expect(page.getByText('Bedroom → Top drawer')).toBeVisible()
+  await page.getByRole('link', { name: 'Back to Top drawer' }).click()
+  await expect(page.getByRole('heading', { name: 'Items in Top drawer' })).toBeVisible()
 })
 
 test('item filters stay clear on desktop and compact on mobile', async ({ page }) => {

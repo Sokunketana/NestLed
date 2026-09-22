@@ -112,7 +112,7 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
             <span><strong className="font-serif text-[1.35rem] tracking-tight text-deep">Nestled</strong><small className="block max-w-28 truncate text-[0.68rem] text-ink-soft">{user?.householdName || 'Home inventory'}</small></span>
           </Link>
           <form onSubmit={submit} className="order-3 flex min-w-0 basis-full gap-2 sm:order-none sm:mx-auto sm:max-w-7xl sm:flex-1 sm:basis-auto sm:gap-3 min-[1600px]:absolute min-[1600px]:inset-x-0 min-[1600px]:top-1/2 min-[1600px]:w-full min-[1600px]:-translate-y-1/2 min-[1600px]:px-10">
-            <div className="relative min-w-0 flex-1 min-[1600px]:w-full min-[1600px]:flex-none"><Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
+            <div className="relative min-w-0 flex-1"><Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
               <input aria-label="Global item search" className="field h-11 pl-10" placeholder="Find an item…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <button className="btn-primary h-11 shrink-0 px-3 sm:px-4"><Icon name="search" className="h-4 w-4 sm:hidden" /><span className="hidden sm:inline">Search</span></button>

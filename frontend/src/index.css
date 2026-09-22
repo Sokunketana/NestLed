@@ -25,7 +25,6 @@
   .field { @apply w-full rounded-xl bg-white px-3.5 py-2.5 outline-none transition placeholder:text-stone-400; border: 1px solid #e5dfd4; }
   .field:focus { border-color: #145247; box-shadow: 0 0 0 3px rgba(20, 82, 71, 0.1); }
   .label { @apply mb-1.5 block text-sm font-semibold text-stone-700; }
-  .eyebrow { @apply text-[0.68rem] font-bold uppercase tracking-[0.2em]; color: #145247; }
   .page-title { @apply leading-tight; font-size: clamp(2rem, 7vw, 2.5rem); }
   summary { list-style: none; }
   summary::-webkit-details-marker { display: none; }

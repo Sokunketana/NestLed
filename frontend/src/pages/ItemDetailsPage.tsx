@@ -32,7 +32,7 @@ export default function ItemDetailsPage() {
   ]
   return <>
     <Link to="/items" className="inline-flex items-center gap-2 text-sm font-bold text-pine"><Icon name="arrow-left" className="h-4 w-4" />Back to items</Link>
-    <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><p className="eyebrow">Item details</p><h1 className="page-title mt-2 break-words">{item.name}</h1><p className="mt-3 break-words text-sm text-stone-500">Home → {item.roomName} → {item.storageLocationName}</p></div>
+    <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><h1 className="page-title break-words">{item.name}</h1><p className="mt-3 break-words text-sm text-stone-500">Home → {item.roomName} → {item.storageLocationName}</p></div>
       <div className="flex w-full gap-2 sm:w-auto"><Link className="btn-secondary flex-1 sm:flex-none" to={`/items/${item.id}/edit`}><Icon name="edit" className="h-4 w-4" />Edit</Link><button className="btn-danger flex-1 sm:flex-none" onClick={() => setShowDeleteConfirmation(true)}><Icon name="trash" className="h-4 w-4" />Delete</button></div>
     </div>
     <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">

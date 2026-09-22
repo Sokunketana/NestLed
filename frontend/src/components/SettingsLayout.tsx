@@ -9,8 +9,7 @@ const settingsLinks = [
 export default function SettingsLayout() {
   return <div className="space-y-7">
     <div>
-      <p className="eyebrow">Account</p>
-      <h1 className="page-title mt-2">Profile & settings</h1>
+      <h1 className="page-title">Profile & settings</h1>
       <p className="mt-2 text-stone-500">Manage your account, household, and inventory data.</p>
     </div>
 

@@ -16,8 +16,7 @@ export default function OnboardingWelcome({ onStart }: { onStart: () => void }) 
     >
       <div className="flex items-start gap-4">
         <div>
-          <p className="eyebrow">Welcome to Nestled</p>
-          <h1 className="mt-2 text-2xl sm:text-3xl">Let’s set up your home together</h1>
+          <h1 className="text-2xl sm:text-3xl">Let’s set up your home together</h1>
           <p className="mt-3 max-w-xl leading-relaxed text-ink-soft">
             Before you add an item, we’ll create the simple structure that gives everything a place.
             We’ll guide you through three quick steps.

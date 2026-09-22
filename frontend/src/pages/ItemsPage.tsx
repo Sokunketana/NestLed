@@ -135,8 +135,7 @@ export default function ItemsPage() {
   return <>
     <div className="flex flex-wrap items-end justify-between gap-5">
       <div>
-        <p className="eyebrow">Your belongings</p>
-        <div className="mt-2 flex flex-wrap items-center gap-3"><h1 className="page-title">{title}</h1>{items && <span className="rounded-full bg-sage px-2.5 py-1 text-xs font-bold text-pine">{items.length} {items.length === 1 ? 'entry' : 'entries'}</span>}</div>
+        <div className="flex flex-wrap items-center gap-3"><h1 className="page-title">{title}</h1>{items && <span className="rounded-full bg-sage px-2.5 py-1 text-xs font-bold text-pine">{items.length} {items.length === 1 ? 'entry' : 'entries'}</span>}</div>
       </div>
       <div className="flex flex-wrap gap-2">
         {items?.length ? (

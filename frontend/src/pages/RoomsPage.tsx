@@ -120,8 +120,7 @@ export default function RoomsPage() {
   return <>
     <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <p className="eyebrow">Home setup</p>
-        <h1 className="page-title mt-2">Rooms & locations</h1>
+        <h1 className="page-title">Rooms & locations</h1>
         <p className="mt-2 max-w-2xl text-stone-500">A simple map of the rooms and the places where your things live.</p>
         <p className="mt-3 text-sm font-semibold text-ink-soft">{rooms.length} {rooms.length === 1 ? 'room' : 'rooms'} <span className="mx-1.5 text-stone-300">·</span> {locationList.length} {locationList.length === 1 ? 'location' : 'locations'} <span className="mx-1.5 text-stone-300">·</span> {totalItems} {totalItems === 1 ? 'item' : 'items'}</p>
       </div>
@@ -132,7 +131,7 @@ export default function RoomsPage() {
     <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
       <section className="card p-0" aria-label="Rooms and storage locations">
         <div className="flex flex-wrap items-end justify-between gap-3 border-b border-line px-5 py-5 sm:px-6">
-          <div><p className="eyebrow">Your home map</p><h2 className="mt-2 text-2xl">Rooms</h2></div>
+          <div><h2 className="text-2xl">Rooms</h2></div>
           <button type="button" className="inline-flex items-center gap-1.5 text-sm font-bold text-pine hover:text-deep" onClick={() => showQuickAdd('location')}>
             <Icon name="plus" className="h-4 w-4" />Add location
           </button>
@@ -180,7 +179,7 @@ export default function RoomsPage() {
       </section>
 
       <section id="quick-add" className="card h-fit scroll-mt-24 xl:sticky xl:top-24">
-        <div><p className="eyebrow">Quick add</p><h2 className="mt-1 text-xl">Add to your map</h2><p className="mt-1 text-sm leading-relaxed text-ink-soft">Keep the setup light and focused.</p></div>
+        <div><h2 className="text-xl">Add to your map</h2><p className="mt-1 text-sm leading-relaxed text-ink-soft">Keep the setup light and focused.</p></div>
 
         <div className="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-cream p-1" role="tablist" aria-label="What would you like to add?">
           <button type="button" role="tab" aria-selected={addMode === 'room'} className={`rounded-lg px-3 py-2 text-sm font-bold transition ${addMode === 'room' ? 'bg-white text-deep shadow-sm' : 'text-ink-soft hover:text-ink'}`} onClick={() => setAddMode('room')}>Room</button>

@@ -1,24 +1,12 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import type { MouseEvent } from 'react'
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import ConfirmationModal from './ConfirmationModal'
-import Icon, { type IconName } from './Icon'
+import Icon from './Icon'
 import { useAuth } from '../auth/AuthContext'
 import OnboardingWelcome from './OnboardingWelcome'
 import SetupGuide, { type SetupData } from './SetupGuide'
 import TutorialRequiredModal from './TutorialRequiredModal'
-
-const primaryLinks: Array<{ to: string; label: string; icon: IconName }> = [
-  { to: '/', label: 'Overview', icon: 'home' },
-  { to: '/home', label: 'Home tree', icon: 'map' },
-  { to: '/items', label: 'Items', icon: 'box' },
-]
-
-const manageLinks: Array<{ to: string; label: string; icon: IconName }> = [
-  { to: '/rooms', label: 'Rooms & locations', icon: 'map' },
-  { to: '/categories', label: 'Categories', icon: 'tag' },
-  { to: '/movements', label: 'Movement history', icon: 'history' },
-]
 
 export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   const [search, setSearch] = useState('')
@@ -31,8 +19,6 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout, completeOnboarding } = useAuth()
-  const manageRouteActive = manageLinks.some(link => location.pathname.startsWith(link.to))
-  const [manageOpen, setManageOpen] = useState(manageRouteActive)
   const setupComplete = Boolean(onboarding?.rooms.length && onboarding.locations.length && onboarding.categories.length)
   const onboardingActive = Boolean(onboarding && user?.onboardingCompleted === false && !setupComplete)
   const showOnboardingWelcome = onboardingActive && !onboardingStarted
@@ -79,17 +65,6 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   }, [user?.pictureUrl])
 
   useEffect(() => {
-    if (manageRouteActive) {
-      setManageOpen(true)
-      return
-    }
-
-    // Keep the desktop sidebar's expanded state, but reclaim mobile space
-    // after navigating back to one of the primary tabs.
-    if (window.matchMedia('(max-width: 1023px)').matches) setManageOpen(false)
-  }, [manageRouteActive])
-
-  useEffect(() => {
     if (setupComplete && user?.onboardingCompleted === false && !completionRequested.current) {
       completionRequested.current = true
       void completeOnboarding().catch(() => { completionRequested.current = false })
@@ -129,53 +104,20 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
     }
   }, [])
 
-  return <div className="min-h-screen lg:flex" onClickCapture={handleNavigationAttempt}>
-    <aside className="relative z-20 bg-deep px-3 py-4 text-white sm:px-4 lg:fixed lg:inset-y-0 lg:h-screen lg:w-[17rem] lg:px-5 lg:py-6">
-      <div className="relative flex flex-col lg:h-full lg:min-h-full">
-        <NavLink to="/" className="group flex shrink-0 items-center gap-3 rounded-2xl px-2 py-1">
-          <span><strong className="font-serif text-[1.35rem] tracking-tight">Nestled</strong><small className="block text-xs text-emerald-100/75">{user?.householdName || 'Home inventory'}</small></span>
-        </NavLink>
-
-        <div className="mt-6 sm:mt-8">
-          <nav aria-label="Primary navigation" className="mt-2 flex gap-1 overflow-x-auto rounded-2xl bg-white/[.045] p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:rounded-none lg:bg-transparent lg:p-0">
-            {primaryLinks.map(({ to, label, icon }) => <NavLink key={to} to={to} end={to === '/'}
-              className={({ isActive }) => `group flex min-w-max flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-2.5 py-2.5 text-sm font-semibold transition lg:flex-none lg:justify-start lg:gap-3 lg:px-3 ${isActive ? 'bg-white text-deep shadow-sm' : 'text-emerald-50/85 hover:bg-white/10 hover:text-white'}`}>
-              <Icon name={icon} className="h-[1.05rem] w-[1.05rem] shrink-0 opacity-80" />
-              <span>{label}</span>
-            </NavLink>)}
-          </nav>
-          <details className="group mt-3 border-t border-white/10 pt-3 lg:border-0 lg:pt-0" open={manageOpen} onToggle={event => setManageOpen(event.currentTarget.open)}>
-            <summary className={`flex cursor-pointer list-none items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition hover:bg-white/10 hover:text-white ${manageRouteActive ? 'bg-white/10 text-white' : 'text-emerald-50/85'}`}>
-              <Icon name="sliders" className="h-[1.05rem] w-[1.05rem] shrink-0 opacity-80" />
-              <span className="flex-1">Manage</span>
-              <Icon name="chevron-down" className="h-4 w-4 transition group-open:rotate-180" />
-            </summary>
-            <nav className="mt-1 space-y-1 pl-3">
-              {manageLinks.map(({ to, label, icon }) => <NavLink key={to} to={to}
-                className={({ isActive }) => `group flex items-center gap-3 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-semibold transition ${isActive ? 'bg-white text-deep shadow-sm' : 'text-emerald-50/75 hover:bg-white/10 hover:text-white'}`}>
-                <Icon name={icon} className="h-4 w-4 shrink-0 opacity-80" />
-                <span>{label}</span>
-              </NavLink>)}
-            </nav>
-          </details>
-        </div>
-
-      </div>
-    </aside>
-
-    <main className="min-w-0 flex-1 overflow-x-clip lg:ml-[17rem]">
+  return <div className="min-h-screen" onClickCapture={handleNavigationAttempt}>
+    <main className="min-w-0 overflow-x-clip">
       <header className="sticky top-0 z-10 border-b border-line/80 bg-cream/90 backdrop-blur-md">
-        <div className="relative mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:gap-5 sm:px-5 lg:gap-4 lg:px-10">
-          <form onSubmit={submit} className="order-2 flex min-w-0 basis-full gap-2 sm:order-none sm:flex-1 sm:basis-auto sm:gap-3 lg:w-full">
-            <div className="relative flex-1"><Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
+        <div className="relative flex w-full flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:gap-4 sm:px-5 lg:px-8 min-[1600px]:justify-between">
+          <Link to="/" className="group order-1 flex shrink-0 items-center gap-2 rounded-xl py-1 sm:order-none">
+            <span><strong className="font-serif text-[1.35rem] tracking-tight text-deep">Nestled</strong><small className="block max-w-28 truncate text-[0.68rem] text-ink-soft">{user?.householdName || 'Home inventory'}</small></span>
+          </Link>
+          <form onSubmit={submit} className="order-3 flex min-w-0 basis-full gap-2 sm:order-none sm:mx-auto sm:max-w-7xl sm:flex-1 sm:basis-auto sm:gap-3 min-[1600px]:absolute min-[1600px]:inset-x-0 min-[1600px]:top-1/2 min-[1600px]:w-full min-[1600px]:-translate-y-1/2 min-[1600px]:px-10">
+            <div className="relative min-w-0 flex-1"><Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
               <input aria-label="Global item search" className="field h-11 pl-10" placeholder="Find an item…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <button className="btn-primary h-11 shrink-0 px-3 sm:px-4"><Icon name="search" className="h-4 w-4 sm:hidden" /><span className="hidden sm:inline">Search</span></button>
           </form>
-          <Link to="/items/new" className="btn-primary order-1 h-11 shrink-0 justify-center whitespace-nowrap rounded-xl px-3 sm:order-none sm:px-4" aria-label="Add item">
-            <Icon name="plus" className="h-4 w-4" /><span>Add item</span>
-          </Link>
-          <div ref={profileMenuRef} className="relative order-1 ml-auto shrink-0 sm:order-none">
+          <div ref={profileMenuRef} className="relative order-2 ml-auto shrink-0 sm:order-none">
             <button
               type="button"
               className="group grid h-11 w-11 place-items-center rounded-full border border-line bg-surface p-1.5 transition hover:border-stone-300 hover:bg-white"

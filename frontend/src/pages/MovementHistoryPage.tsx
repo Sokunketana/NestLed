@@ -72,8 +72,7 @@ export default function MovementHistoryPage() {
   return <>
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <p className="eyebrow">Inventory activity</p>
-        <h1 className="page-title mt-2">Movement history</h1>
+        <h1 className="page-title">Movement history</h1>
         <p className="mt-2 max-w-2xl text-stone-500">
           See when belongings changed rooms or storage locations in this household.
         </p>

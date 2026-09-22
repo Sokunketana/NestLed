@@ -11,8 +11,7 @@ export default function LoginPage() {
       <div className="absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-white/[0.04]" aria-hidden="true" />
       <div className="relative flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-coral/20 text-sage"><Icon name="home" className="h-5 w-5" /></span><strong className="font-serif text-2xl">Nestled</strong></div>
       <div className="relative max-w-xl">
-        <p className="eyebrow text-emerald-200">A calmer way to keep track</p>
-        <h1 className="mt-4 text-4xl leading-[1.05] text-white sm:text-5xl xl:text-6xl">Everything has a place.</h1>
+        <h1 className="text-4xl leading-[1.05] text-white sm:text-5xl xl:text-6xl">Everything has a place.</h1>
         <p className="mt-5 max-w-lg text-base leading-relaxed text-emerald-100/80">Keep the details of your home close at hand—from the passport in the top drawer to the spare charger in the guest room.</p>
       </div>
       <p className="relative text-sm text-emerald-100/60">Your household, beautifully organized.</p>
@@ -21,8 +20,7 @@ export default function LoginPage() {
     <section className="flex items-center justify-center py-8 sm:py-12">
       <div className="card w-full max-w-md p-5 sm:p-9">
         <div className="flex items-center gap-3 lg:hidden"><span className="grid h-11 w-11 place-items-center rounded-2xl bg-deep text-sage"><Icon name="home" className="h-5 w-5" /></span><strong className="font-serif text-2xl text-deep">Nestled</strong></div>
-        <p className="eyebrow mt-6 lg:mt-0">Home inventory</p>
-        <h2 className="page-title mt-2 text-deep">Welcome back.</h2>
+        <h2 className="page-title mt-6 text-deep lg:mt-0">Welcome back.</h2>
         <p className="mt-3 leading-relaxed text-stone-600">Sign in to view and manage the things that make your home yours.</p>
         {(denied || error) && <p role="alert" className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{denied ? 'Sign-in could not be completed. Use a Google account with a verified email and try again.' : error}</p>}
         <button type="button" className="btn-primary mt-7 w-full py-3" onClick={login}><span className="grid h-5 w-5 place-items-center rounded-full bg-white text-xs font-bold text-pine">G</span>Sign in with Google</button>

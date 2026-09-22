@@ -175,7 +175,7 @@ export default function ItemFormPage() {
       onConfirm={createConfirmedDuplicate}
     />}
     <Link to={editing ? `/items/${id}` : '/items'} className="inline-flex items-center gap-2 text-sm font-bold text-pine"><Icon name="arrow-left" className="h-4 w-4" />Cancel</Link>
-    <div className="mt-5 max-w-3xl"><p className="eyebrow">{editing ? 'Update record' : 'New record'}</p><h1 className="page-title mt-2">{editing ? 'Edit item' : 'Add an item'}</h1><p className="mt-2 text-stone-500">Start with the item’s name and place. Add extra details only when they’re useful.</p></div>
+    <div className="mt-5 max-w-3xl"><h1 className="page-title">{editing ? 'Edit item' : 'Add an item'}</h1><p className="mt-2 text-stone-500">Start with the item’s name and place. Add extra details only when they’re useful.</p></div>
     {!roomList.length || !locationList.length || !categoryList.length ? <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Create at least one <Link className="underline" to="/rooms">room and storage location</Link> and <Link className="underline" to="/categories">category</Link> before adding an item.</div> : null}
     <form onSubmit={submit} className="mt-8 space-y-6">
       {error && <ErrorMessage message={error} />}

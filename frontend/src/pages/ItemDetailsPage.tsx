@@ -2,37 +2,40 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import useSWR from 'swr'
 import { itemApi } from '../api/itemApi'
+import { itemMovementApi } from '../api/itemMovementApi'
 import { cacheKeys, revalidateInventory } from '../api/cache'
 import ConfirmationModal from '../components/ConfirmationModal'
 import ItemPhoto from '../components/ItemPhoto'
 import { ErrorMessage, Loading } from '../components/PageState'
 import Icon from '../components/Icon'
-import type { Item } from '../types'
+import type { Item, ItemMovement } from '../types'
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 
 export default function ItemDetailsPage() {
   const { id } = useParams(); const navigate = useNavigate()
   const { data: item, error } = useSWR<Item>(id ? cacheKeys.item(Number(id)) : null, () => itemApi.get(Number(id)))
+  const { data: movements, error: movementsError } = useSWR<ItemMovement[]>(id ? cacheKeys.movements : null, itemMovementApi.list)
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false)
   async function remove() {
     if (!item) return
     await itemApi.remove(item.id)
     await revalidateInventory({ dashboard: true, items: true, locations: true, movements: true, rooms: true })
-    navigate('/items')
+    navigate(`/?roomId=${item.roomId}&locationId=${item.storageLocationId}`)
   }
   if (error) return <ErrorMessage message={error instanceof Error ? error.message : 'Unable to load this item.'} />
   if (!item) return <Loading />
   const valueEach = item.estimatedValue == null ? 'Not recorded' : money.format(item.estimatedValue)
   const totalValue = item.estimatedValue == null ? 'Not recorded' : money.format(item.estimatedValue * item.quantity)
+  const itemMovements = (movements ?? []).filter(movement => movement.itemId === item.id)
   const fields = [
     ['Category', item.categoryName], ['Condition', item.condition], ['Quantity', item.quantity],
     ['Value each', valueEach], ['Total value', totalValue],
     ['Purchase date', item.purchaseDate || 'Not recorded'], ['Warranty expires', item.warrantyExpirationDate || 'Not recorded'],
   ]
   return <>
-    <Link to="/items" className="inline-flex items-center gap-2 text-sm font-bold text-pine"><Icon name="arrow-left" className="h-4 w-4" />Back to items</Link>
-    <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><p className="eyebrow">Item details</p><h1 className="page-title mt-2 break-words">{item.name}</h1><p className="mt-3 break-words text-sm text-stone-500">Home → {item.roomName} → {item.storageLocationName}</p></div>
+    <Link to={`/?roomId=${item.roomId}&locationId=${item.storageLocationId}`} className="inline-flex items-center gap-2 text-sm font-bold text-pine"><Icon name="arrow-left" className="h-4 w-4" />Back to {item.storageLocationName}</Link>
+    <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><h1 className="page-title break-words">{item.name}</h1><p className="mt-3 break-words text-sm text-stone-500">Home → {item.roomName} → {item.storageLocationName}</p></div>
       <div className="flex w-full gap-2 sm:w-auto"><Link className="btn-secondary flex-1 sm:flex-none" to={`/items/${item.id}/edit`}><Icon name="edit" className="h-4 w-4" />Edit</Link><button className="btn-danger flex-1 sm:flex-none" onClick={() => setShowDeleteConfirmation(true)}><Icon name="trash" className="h-4 w-4" />Delete</button></div>
     </div>
     <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
@@ -47,6 +50,7 @@ export default function ItemDetailsPage() {
         <p className="mt-5 text-xs text-stone-400">Added {new Date(item.createdAt).toLocaleDateString()} · Updated {new Date(item.updatedAt).toLocaleDateString()}</p>
       </section>
     </div>
+    <section className="card mt-6"><div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-gold/15 text-amber-700"><Icon name="history" className="h-4 w-4" /></span><h2 className="text-xl">Movement history</h2></div>{movementsError ? <p className="mt-4 text-sm text-red-700">Unable to load movement history.</p> : !movements ? <p className="mt-4 text-sm text-ink-soft">Loading movement history…</p> : itemMovements.length ? <div className="mt-5 space-y-4">{itemMovements.map(movement => <div className="relative border-l-2 border-sage pl-4" key={movement.id}><span className="absolute -left-[0.4rem] top-0.5 h-2.5 w-2.5 rounded-full bg-pine ring-4 ring-sage/40" /><p className="text-sm font-semibold">{movement.fromRoomName} / {movement.fromLocationName} <span className="font-normal text-stone-400">to</span> {movement.toRoomName} / {movement.toLocationName}</p><p className="mt-1 text-xs text-stone-400">{new Date(movement.movedAt).toLocaleString()}</p></div>)}</div> : <p className="mt-4 rounded-xl bg-cream px-4 py-3 text-sm leading-relaxed text-ink-soft">No moves recorded. This item has stayed here since it was added.</p>}</section>
     {showDeleteConfirmation && <ConfirmationModal title={`Delete “${item.name}”?`} description="This item and its inventory record will be permanently deleted. This action cannot be undone." onClose={() => setShowDeleteConfirmation(false)} onConfirm={remove} />}
   </>
 }

@@ -18,8 +18,7 @@ export default function TutorialRequiredModal({ stepLabel, onContinue }: Tutoria
           <Icon name="map" className="h-5 w-5" />
         </span>
         <div>
-          <p className="eyebrow">Setup in progress</p>
-          <h2 className="mt-2 text-2xl">Complete the tutorial first</h2>
+          <h2 className="text-2xl">Complete the tutorial first</h2>
         </div>
       </div>
       <p className="mt-4 leading-relaxed text-ink-soft">

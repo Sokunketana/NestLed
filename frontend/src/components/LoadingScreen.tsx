@@ -12,7 +12,6 @@ export default function LoadingScreen() {
         <span className="loading-mark"><Icon name="home" className="h-8 w-8" /></span>
       </div>
 
-      <p className="eyebrow">Nestled</p>
       <h1 className="loading-title">Making room for your home.</h1>
       <p className="loading-description">Checking your session and preparing your inventory…</p>
 

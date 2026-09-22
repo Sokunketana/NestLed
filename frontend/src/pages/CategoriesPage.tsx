@@ -48,7 +48,7 @@ export default function CategoriesPage() {
 
   return <>
     <div className="flex flex-wrap items-end justify-between gap-5">
-      <div><p className="eyebrow">Group related things</p><h1 className="page-title mt-2">Categories</h1><p className="mt-2 max-w-2xl text-stone-500">Simple labels make a growing inventory easy to scan and filter.</p></div>
+      <div><h1 className="page-title">Categories</h1><p className="mt-2 max-w-2xl text-stone-500">Simple labels make a growing inventory easy to scan and filter.</p></div>
       <div className="shrink-0 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine">{categories.length} {categories.length === 1 ? 'category' : 'categories'}</div>
     </div>
     {(error || loadError) && <div className="mt-6"><ErrorMessage message={error || (loadError instanceof Error ? loadError.message : 'Unable to load categories.')} /></div>}

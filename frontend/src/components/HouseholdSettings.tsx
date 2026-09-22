@@ -113,10 +113,9 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
   <div id={embedded ? 'household' : undefined} className="space-y-7">
     <div className="flex flex-wrap items-end justify-between gap-5">
       <div>
-        <p className="eyebrow">Shared home</p>
         {embedded
-          ? <><h2 className="mt-2 text-2xl">Household</h2><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></>
-          : <><h1 className="page-title mt-2">Household</h1><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></>}
+          ? <><h2 className="text-2xl">Household</h2><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></>
+          : <><h1 className="page-title">Household</h1><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></>}
       </div>
       <div className="flex shrink-0 items-center gap-2 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine"><Icon name="users" className="h-4 w-4" />Shared space</div>
     </div>
@@ -145,8 +144,7 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
     </section>
 
     {user && user.pendingInvitations.length > 0 && <section className="card">
-      <p className="eyebrow">Incoming</p>
-      <h3 className="mt-1 text-xl">Household invitations</h3>
+      <h3 className="text-xl">Household invitations</h3>
       <p className="mt-1 text-sm text-stone-500">Accepting an invitation moves you to that household. You can belong to only one household at a time.</p>
       {invitationError && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{invitationError}</p>}
       <div className="mt-4 divide-y">

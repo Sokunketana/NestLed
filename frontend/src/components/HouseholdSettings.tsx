@@ -120,9 +120,8 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
     {(error || loadError) && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error || loadMessage}</p>}
 
     <section className="card">
-      <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-sage text-pine"><Icon name="home" className="h-4 w-4" /></span><div><h3 className="text-xl">Household name</h3><p className="mt-1 text-sm text-ink-soft">This is the name everyone in your household sees.</p></div></div>
+      <div className="flex items-start gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center text-pine"><Icon name="home" className="h-4 w-4" /></span><div><h3 className="text-xl">Household name</h3><p className="mt-1 text-sm text-ink-soft">This is the name everyone in your household sees.</p></div></div>
       {isOwner ? <>
-        <p className="mt-4 text-sm text-stone-500">Enter the household name and <span className="font-semibold text-stone-700">'s household</span> will be added automatically.</p>
         <form onSubmit={rename} className="mt-3 flex max-w-xl flex-col gap-3 sm:flex-row">
           <div className="flex min-w-0 flex-1 items-stretch">
             <input className="field min-w-0 flex-1 rounded-r-none" aria-label="Household name" placeholder="e.g. Smith" maxLength={MAX_EDITABLE_HOUSEHOLD_NAME_LENGTH} required value={name}
@@ -165,7 +164,7 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
     </section>}
 
     {isOwner && <section className="card">
-      <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-coral/10 text-coral"><Icon name="users" className="h-4 w-4" /></span><div><h3 className="text-xl">Invite someone</h3><p className="mt-1 text-sm text-stone-500">Use the email address they use with Google. They can accept or decline after signing in.</p></div></div>
+      <div className="flex items-start gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center text-pine"><Icon name="users" className="h-4 w-4" /></span><div><h3 className="text-xl">Invite someone</h3><p className="mt-1 text-sm text-stone-500">Use the email address they use with Google. They can accept or decline after signing in.</p></div></div>
       <form onSubmit={invite} className="mt-5 flex max-w-xl flex-col gap-3 sm:flex-row">
         <input className="field" type="email" aria-label="Email address" placeholder="family@example.com"
           maxLength={320} required value={email} onChange={event => setEmail(event.target.value)} />
@@ -174,7 +173,7 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
     </section>}
 
     <section className="card">
-      <div className="flex items-start gap-3"><span className="grid h-9 w-9 place-items-center rounded-xl bg-cream text-pine"><Icon name="users" className="h-4 w-4" /></span><div><h3 className="text-xl">Members</h3><p className="mt-1 text-sm text-ink-soft">People who can view and update this home.</p></div></div>
+      <div className="flex items-start gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center text-pine"><Icon name="users" className="h-4 w-4" /></span><div><h3 className="text-xl">Members</h3><p className="mt-1 text-sm text-ink-soft">People who can view and update this home.</p></div></div>
       <div className="mt-4 divide-y">
         {household.members.map(member => <div key={member.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0 sm:flex-nowrap">
           {member.pictureUrl

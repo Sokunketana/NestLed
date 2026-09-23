@@ -180,7 +180,8 @@ test('an item can be moved from its details page', async ({ page }) => {
   }))
 
   await page.goto('/items/1')
-  await page.getByRole('button', { name: 'Move', exact: true }).click()
+  await page.getByRole('button', { name: 'Actions for Passport' }).click()
+  await page.getByRole('menuitem', { name: 'Move' }).click()
 
   const dialog = page.getByRole('dialog', { name: 'Move 1 item' })
   await expect(dialog).toBeVisible()
@@ -190,7 +191,7 @@ test('an item can be moved from its details page', async ({ page }) => {
   const moveRequest = page.waitForRequest('**/api/items/bulk-move')
   await dialog.getByRole('button', { name: 'Move 1 item', exact: true }).click()
   expect((await moveRequest).postDataJSON()).toEqual({ itemIds: [item.id], roomId: secondRoom.id, storageLocationId: secondLocation.id })
-  await expect(page.getByRole('status', { name: 'Moved to Office → Desk drawer.' })).toBeVisible()
+  await expect(page.getByText('Moved to Office → Desk drawer.', { exact: true })).toBeVisible()
 })
 
 test('item filters stay clear on desktop and compact on mobile', async ({ page }) => {

@@ -11,6 +11,7 @@ import ConfirmationModal from '../components/ConfirmationModal'
 import ItemPhoto from '../components/ItemPhoto'
 import { ErrorMessage, Loading } from '../components/PageState'
 import Icon from '../components/Icon'
+import SpaceActionsMenu from '../components/SpaceActionsMenu'
 import type { BulkMoveItemsResponse, Item, ItemMovement, Room, StorageLocation } from '../types'
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
@@ -48,7 +49,7 @@ export default function ItemDetailsPage() {
   return <>
     <Link to={`/?roomId=${item.roomId}&locationId=${item.storageLocationId}`} className="inline-flex items-center gap-2 text-sm font-bold text-pine"><Icon name="arrow-left" className="h-4 w-4" />Back to {item.storageLocationName}</Link>
     <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><h1 className="page-title break-words">{item.name}</h1><p className="mt-3 break-words text-sm text-stone-500">Home → {item.roomName} → {item.storageLocationName}</p></div>
-      <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:flex-nowrap"><Link className="btn-secondary flex-1 sm:flex-none" to={`/items/${item.id}/edit`}><Icon name="edit" className="h-4 w-4" />Edit</Link><button type="button" className="btn-primary flex-1 sm:flex-none" onClick={() => { setMoveSuccess(''); setShowMoveDialog(true) }}><Icon name="map" className="h-4 w-4" />Move</button><button className="btn-danger flex-1 sm:flex-none" onClick={() => setShowDeleteConfirmation(true)}><Icon name="trash" className="h-4 w-4" />Delete</button></div>
+      <div className="flex w-full justify-end sm:w-auto"><SpaceActionsMenu name={item.name} onEdit={() => navigate(`/items/${item.id}/edit`)} onMove={() => { setMoveSuccess(''); setShowMoveDialog(true) }} onDelete={() => setShowDeleteConfirmation(true)} /></div>
     </div>
     {moveSuccess && <p role="status" className="mt-4 rounded-xl bg-mint px-4 py-3 text-sm font-semibold text-emerald-800">{moveSuccess}</p>}
     <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">

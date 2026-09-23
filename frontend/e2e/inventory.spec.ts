@@ -29,6 +29,24 @@ const location = {
   itemCount: 1,
 }
 
+const secondRoom = {
+  id: 2,
+  name: 'Office',
+  description: 'Work room',
+  color: '#145247',
+  itemCount: 0,
+}
+
+const secondLocation = {
+  id: 2,
+  name: 'Desk drawer',
+  description: 'Office storage',
+  color: '#D8A52B',
+  roomId: 2,
+  roomName: 'Office',
+  itemCount: 0,
+}
+
 const category = {
   id: 1,
   name: 'Documents',
@@ -58,7 +76,10 @@ const item = {
   updatedAt: '2026-09-01T10:00:00',
 }
 
-async function mockAuthenticatedApi(page: Page) {
+async function mockAuthenticatedApi(page: Page, setup: { rooms?: typeof room[]; locations?: typeof location[] } = {}) {
+  const rooms = setup.rooms ?? [room]
+  const locations = setup.locations ?? [location]
+
   await page.route('**/api/auth/me', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
@@ -79,12 +100,22 @@ async function mockAuthenticatedApi(page: Page) {
   await page.route('**/api/rooms*', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify([room]),
+    body: JSON.stringify(rooms),
   }))
   await page.route('**/api/storage-locations*', route => route.fulfill({
     status: 200,
     contentType: 'application/json',
-    body: JSON.stringify([location]),
+    body: JSON.stringify(locations),
+  }))
+  await page.route('**/api/auth/csrf', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ headerName: 'X-XSRF-TOKEN', parameterName: '_csrf', token: 'test-token' }),
+  }))
+  await page.route('**/api/item-movements', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify([]),
   }))
   await page.route('**/api/categories*', route => route.fulfill({
     status: 200,
@@ -119,7 +150,7 @@ test('an authenticated user can drill down from a room to item details', async (
   await mockAuthenticatedApi(page)
 
   await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'Rooms at a glance' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Rooms' })).toBeVisible()
 
   await page.getByRole('button', { name: /Bedroom See locations/ }).click()
   await expect(page.getByRole('heading', { name: 'Locations in Bedroom' })).toBeVisible()
@@ -132,6 +163,35 @@ test('an authenticated user can drill down from a room to item details', async (
   await expect(page.getByText('Bedroom → Top drawer')).toBeVisible()
   await page.getByRole('link', { name: 'Back to Top drawer' }).click()
   await expect(page.getByRole('heading', { name: 'Items in Top drawer' })).toBeVisible()
+})
+
+test('an item can be moved from its details page', async ({ page }) => {
+  await mockAuthenticatedApi(page, { rooms: [room, secondRoom], locations: [location, secondLocation] })
+  await page.route('**/api/items/bulk-move', route => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({
+      movedCount: 1,
+      roomId: secondRoom.id,
+      roomName: secondRoom.name,
+      storageLocationId: secondLocation.id,
+      storageLocationName: secondLocation.name,
+    }),
+  }))
+
+  await page.goto('/items/1')
+  await page.getByRole('button', { name: 'Actions for Passport' }).click()
+  await page.getByRole('menuitem', { name: 'Move' }).click()
+
+  const dialog = page.getByRole('dialog', { name: 'Move 1 item' })
+  await expect(dialog).toBeVisible()
+  await dialog.getByLabel('Destination room').selectOption(String(secondRoom.id))
+  await dialog.getByLabel('Destination storage location').selectOption(String(secondLocation.id))
+
+  const moveRequest = page.waitForRequest('**/api/items/bulk-move')
+  await dialog.getByRole('button', { name: 'Move 1 item', exact: true }).click()
+  expect((await moveRequest).postDataJSON()).toEqual({ itemIds: [item.id], roomId: secondRoom.id, storageLocationId: secondLocation.id })
+  await expect(page.getByText('Moved to Office → Desk drawer.', { exact: true })).toBeVisible()
 })
 
 test('item filters stay clear on desktop and compact on mobile', async ({ page }) => {

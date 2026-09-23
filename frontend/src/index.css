@@ -21,7 +21,7 @@
   .btn-primary { @apply btn text-white shadow-sm hover:shadow-md; background: #145247; }
   .btn-primary:hover { background: #123f38; }
   .btn-secondary { @apply btn text-ink hover:border-stone-300 hover:bg-white; background: #fffdf9; border: 1px solid #e5dfd4; }
-  .btn-danger { @apply btn bg-red-50 text-red-700 hover:bg-red-100; }
+  .btn-danger { @apply btn bg-red-100 text-red-700 hover:bg-red-200; }
   .field { @apply w-full rounded-xl bg-white px-3.5 py-2.5 outline-none transition placeholder:text-stone-400; border: 1px solid #e5dfd4; }
   .field:focus { border-color: #145247; box-shadow: 0 0 0 3px rgba(20, 82, 71, 0.1); }
   .label { @apply mb-1.5 block text-sm font-semibold text-stone-700; }

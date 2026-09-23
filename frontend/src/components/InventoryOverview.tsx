@@ -190,7 +190,7 @@ export default function InventoryOverview({ dashboard, rooms, locations, categor
         </BreadcrumbList>
       </Breadcrumb>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="inventory-level-title" className="min-w-0 text-2xl">{selectedLocation ? `Items in ${selectedLocation.name}` : selectedRoom ? `Locations in ${selectedRoom.name}` : 'Rooms at a glance'}</h2>
+        <h2 id="inventory-level-title" className="min-w-0 text-2xl">{selectedLocation ? `Items in ${selectedLocation.name}` : selectedRoom ? `Locations in ${selectedRoom.name}` : 'Rooms'}</h2>
         <button type="button" className="btn-primary" onClick={() => selectedLocation ? setShowAddItem(true) : setShowAddSpace(selectedRoom ? 'location' : 'room')}><Icon name="plus" className="h-4 w-4" />Add {selectedLocation ? 'item' : selectedRoom ? 'location' : 'room'}</button>
       </div>
 

@@ -39,6 +39,9 @@ ALTER TABLE IF EXISTS storage_locations
 ALTER TABLE IF EXISTS app_users
     ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN^^^
 
+ALTER TABLE IF EXISTS app_users
+    ADD COLUMN IF NOT EXISTS custom_display_name VARCHAR(200)^^^
+
 UPDATE app_users
 SET onboarding_completed = TRUE
 WHERE onboarding_completed IS NULL^^^

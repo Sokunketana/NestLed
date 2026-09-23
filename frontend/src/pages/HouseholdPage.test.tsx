@@ -99,7 +99,7 @@ describe('HouseholdPage', () => {
 
     await waitFor(() => expect(mocks.householdApi.rename).toHaveBeenCalledWith('Smith'))
     expect(nameInput).toHaveValue('Smith')
-    expect(screen.getAllByText("'s household")).toHaveLength(2)
+    expect(screen.getAllByText("'s household")).toHaveLength(1)
     expect(mocks.updateHouseholdName).toHaveBeenCalledWith(1, "Smith's household")
   })
 })

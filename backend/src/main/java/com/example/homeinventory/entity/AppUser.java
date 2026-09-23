@@ -39,6 +39,9 @@ public class AppUser {
     @Column(name = "display_name", length = 200)
     private String displayName;
 
+    @Column(name = "custom_display_name", length = 200)
+    private String customDisplayName;
+
     @Column(name = "picture_url", length = 1000)
     private String pictureUrl;
 
@@ -77,6 +80,10 @@ public class AppUser {
         this.pictureUrl = pictureUrl;
     }
 
+    public void updateDisplayName(String displayName) {
+        this.customDisplayName = displayName;
+    }
+
     public void joinHousehold(Household household, HouseholdRole role) {
         this.household = household;
         this.householdRole = role;
@@ -105,7 +112,7 @@ public class AppUser {
     public String getOidcIssuer() { return oidcIssuer; }
     public String getOidcSubject() { return oidcSubject; }
     public String getEmail() { return email; }
-    public String getDisplayName() { return displayName; }
+    public String getDisplayName() { return customDisplayName != null ? customDisplayName : displayName; }
     public String getPictureUrl() { return pictureUrl; }
     public Household getHousehold() { return household; }
     public HouseholdRole getHouseholdRole() { return householdRole; }

@@ -6,6 +6,7 @@ import com.example.homeinventory.entity.AppUser;
 import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.HouseholdMembership;
 import com.example.homeinventory.entity.HouseholdRole;
+import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.repository.AppUserRepository;
 import com.example.homeinventory.repository.HouseholdInvitationRepository;
 import com.example.homeinventory.repository.HouseholdMembershipRepository;
@@ -67,6 +68,20 @@ public class AppUserService {
     @Transactional
     public AuthenticatedUserResponse getProfile(OidcUser oidcUser) {
         AppUser appUser = getRequired(oidcUser);
+        HouseholdMembership membership = ensureMembership(appUser);
+        return toResponse(appUser, membership);
+    }
+
+    @Transactional
+    public AuthenticatedUserResponse updateDisplayName(OidcUser oidcUser, String displayName) {
+        String normalizedName = normalizeOptional(displayName);
+        if (normalizedName == null) {
+            throw new BadRequestException("Name is required");
+        }
+
+        AppUser appUser = getRequired(oidcUser);
+        appUser.updateDisplayName(normalizedName);
+        userRepository.save(appUser);
         HouseholdMembership membership = ensureMembership(appUser);
         return toResponse(appUser, membership);
     }

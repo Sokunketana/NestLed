@@ -2,8 +2,10 @@ package com.example.homeinventory.controller;
 
 import com.example.homeinventory.dto.AuthenticatedUserResponse;
 import com.example.homeinventory.dto.CsrfTokenResponse;
+import com.example.homeinventory.dto.UpdateDisplayNameRequest;
 import com.example.homeinventory.service.AccountDeletionService;
 import com.example.homeinventory.service.AppUserService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -11,6 +13,8 @@ import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,6 +33,12 @@ public class AuthController {
     @GetMapping("/me")
     AuthenticatedUserResponse me(@AuthenticationPrincipal OidcUser oidcUser) {
         return appUserService.getProfile(oidcUser);
+    }
+
+    @PutMapping("/me")
+    AuthenticatedUserResponse updateDisplayName(@AuthenticationPrincipal OidcUser oidcUser,
+                                                @Valid @RequestBody UpdateDisplayNameRequest request) {
+        return appUserService.updateDisplayName(oidcUser, request.displayName());
     }
 
     @DeleteMapping("/account")

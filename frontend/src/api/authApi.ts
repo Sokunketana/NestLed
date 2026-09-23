@@ -20,6 +20,9 @@ export type AuthenticatedUser = {
 export const authApi = {
   loginUrl: backendUrl('/oauth2/authorization/google'),
   me: () => request<AuthenticatedUser>('/auth/me'),
+  updateDisplayName: (displayName: string) => request<AuthenticatedUser>('/auth/me', {
+    method: 'PUT', body: JSON.stringify({ displayName }),
+  }),
   deleteAccount: () => request<void>('/auth/account', { method: 'DELETE' }),
   completeOnboarding: () => request<void>('/auth/onboarding/complete', { method: 'POST' }),
   logout: async () => {

@@ -111,13 +111,10 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
 
   return <>
   <div id={embedded ? 'household' : undefined} className="space-y-7">
-    <div className="flex flex-wrap items-end justify-between gap-5">
-      <div>
-        {embedded
-          ? <><h2 className="text-2xl">Household</h2><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></>
-          : <><h1 className="page-title">Household</h1><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></>}
-      </div>
-      <div className="flex shrink-0 items-center gap-2 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine"><Icon name="users" className="h-4 w-4" />Shared space</div>
+    <div>
+      {embedded
+        ? <><h2 className="text-2xl">Household</h2><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></>
+        : <><h1 className="page-title">Household</h1><p className="mt-2 text-stone-500">Everyone here shares the same rooms, locations, categories, and items.</p></>}
     </div>
 
     {(error || loadError) && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error || loadMessage}</p>}
@@ -172,7 +169,7 @@ export default function HouseholdSettings({ embedded = false }: { embedded?: boo
       <form onSubmit={invite} className="mt-5 flex max-w-xl flex-col gap-3 sm:flex-row">
         <input className="field" type="email" aria-label="Email address" placeholder="family@example.com"
           maxLength={320} required value={email} onChange={event => setEmail(event.target.value)} />
-        <button className="btn-primary" disabled={busy || !email.trim()}><Icon name="plus" className="h-4 w-4" />Invite</button>
+        <button className="btn-primary" disabled={busy || !email.trim()}>Invite</button>
       </form>
     </section>}
 

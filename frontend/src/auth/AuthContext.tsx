@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import useSWR from 'swr'
 import { authApi, type AuthenticatedUser } from '../api/authApi'
-import { cacheKeys, clearUserScopedCache } from '../api/cache'
+import { cacheKeys, clearUserScopedCache, revalidateInventory } from '../api/cache'
 import { ApiRequestError } from '../api/http'
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
@@ -14,6 +14,7 @@ type AuthContextValue = {
   login: () => void
   logout: () => Promise<void>
   deleteAccount: () => Promise<void>
+  updateDisplayName: (displayName: string) => Promise<void>
   completeOnboarding: () => Promise<void>
   updateHouseholdName: (id: number, name: string) => void
 }
@@ -44,6 +45,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await clearUserScopedCache()
         await mutate(undefined, { revalidate: false })
       }
+    },
+    updateDisplayName: async (displayName: string) => {
+      const updatedUser = await authApi.updateDisplayName(displayName)
+      await mutate(updatedUser, { revalidate: false })
+      void revalidateInventory({ household: true })
     },
     completeOnboarding: async () => {
       await authApi.completeOnboarding()

@@ -111,7 +111,7 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
           <Link to="/" className="group order-1 flex shrink-0 items-center gap-2 rounded-xl py-1 sm:order-none">
             <span><strong className="font-serif text-[1.35rem] tracking-tight text-deep">Nestled</strong><small className="block max-w-28 truncate text-[0.68rem] text-ink-soft">{user?.householdName || 'Home inventory'}</small></span>
           </Link>
-          <form onSubmit={submit} className="order-3 flex min-w-0 basis-full gap-2 sm:order-none sm:mx-auto sm:max-w-7xl sm:flex-1 sm:basis-auto sm:gap-3 min-[1600px]:absolute min-[1600px]:inset-x-0 min-[1600px]:top-1/2 min-[1600px]:w-full min-[1600px]:-translate-y-1/2 min-[1600px]:px-10">
+          <form onSubmit={submit} className="order-3 flex min-w-0 basis-full gap-2 sm:order-none sm:mx-0 sm:w-0 sm:max-w-none sm:flex-1 sm:basis-auto sm:gap-3 min-[1600px]:absolute min-[1600px]:inset-x-auto min-[1600px]:left-1/2 min-[1600px]:right-auto min-[1600px]:top-1/2 min-[1600px]:w-full min-[1600px]:max-w-5xl min-[1600px]:-translate-x-1/2 min-[1600px]:-translate-y-1/2 min-[1600px]:px-0">
             <div className="relative min-w-0 flex-1"><Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
               <input aria-label="Global item search" className="field h-11 pl-10" placeholder="Find an item…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>

@@ -145,7 +145,7 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
                 onClick={() => setShowProfileMenu(false)}
               >
                 <Icon name="sliders" className="h-4 w-4 text-ink-soft" />
-                Profile & settings
+                Settings
               </Link>
               <button
                 type="button"

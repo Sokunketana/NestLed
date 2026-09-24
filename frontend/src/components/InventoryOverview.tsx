@@ -7,6 +7,7 @@ import { ErrorMessage, Loading } from './PageState'
 import AddSpaceModal from './AddSpaceModal'
 import Icon from './Icon'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from './ui/breadcrumb'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import type { Category, Dashboard, Item, ItemCondition, ItemPayload, Room, StorageLocation } from '../types'
 import { defaultLocationColor, defaultRoomColor, getSpaceColor, withColorAlpha } from '../spaceColors'
 
@@ -101,16 +102,16 @@ function AddItemModal({ rooms, locations, categories, defaultRoomId, defaultLoca
         <section className="rounded-2xl border border-line bg-white/70 p-4 sm:p-5">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="sm:col-span-2"><span className="label">Item name *</span><input autoFocus required maxLength={150} className="field" placeholder="e.g. Passport" value={name} onChange={event => setName(event.target.value)} /></label>
-            <label><span className="label">Room *</span><select required className="field" value={roomId || ''} onChange={event => changeRoom(Number(event.target.value))}><option value="">Select room</option>{rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}</select></label>
-            <label><span className="label">Location *</span><select required className="field" value={storageLocationId || ''} onChange={event => setStorageLocationId(Number(event.target.value))} disabled={!roomId}><option value="">{roomId && !roomLocations.length ? 'No locations yet' : 'Select location'}</option>{roomLocations.map(location => <option key={location.id} value={location.id}>{location.name}</option>)}</select></label>
-            <label><span className="label">Category *</span><select required className="field" value={categoryId || ''} onChange={event => setCategoryId(Number(event.target.value))}><option value="">Select category</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
+            <label><span className="label">Room *</span><Select required value={roomId ? String(roomId) : ''} onValueChange={value => changeRoom(Number(value))}><SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger><SelectContent><SelectItem value="">Select room</SelectItem>{rooms.map(room => <SelectItem key={room.id} value={String(room.id)}>{room.name}</SelectItem>)}</SelectContent></Select></label>
+            <label><span className="label">Location *</span><Select required value={storageLocationId ? String(storageLocationId) : ''} onValueChange={value => setStorageLocationId(Number(value))} disabled={!roomId}><SelectTrigger><SelectValue placeholder={roomId && !roomLocations.length ? 'No locations yet' : 'Select location'} /></SelectTrigger><SelectContent><SelectItem value="">{roomId && !roomLocations.length ? 'No locations yet' : 'Select location'}</SelectItem>{roomLocations.map(location => <SelectItem key={location.id} value={String(location.id)}>{location.name}</SelectItem>)}</SelectContent></Select></label>
+            <label><span className="label">Category *</span><Select required value={categoryId ? String(categoryId) : ''} onValueChange={value => setCategoryId(Number(value))}><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent><SelectItem value="">Select category</SelectItem>{categories.map(category => <SelectItem key={category.id} value={String(category.id)}>{category.name}</SelectItem>)}</SelectContent></Select></label>
             <label><span className="label">Quantity</span><input className="field" type="number" min="1" required value={quantity} onChange={event => setQuantity(Math.max(1, Number(event.target.value)))} /></label>
           </div>
         </section>
         <details className="rounded-2xl border border-line bg-white/70 p-4 group sm:p-5">
           <summary className="flex cursor-pointer list-none items-center gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sage text-pine"><Icon name="sliders" className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block font-bold">More details</span><span className="mt-0.5 block text-xs text-ink-soft">Optional description, condition, and notes</span></span><Icon name="chevron-down" className="h-4 w-4 text-stone-400 transition group-open:rotate-180" /></summary>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <label><span className="label">Condition</span><select className="field" value={condition} onChange={event => setCondition(event.target.value as ItemCondition)}>{['NEW', 'GOOD', 'FAIR', 'DAMAGED'].map(value => <option key={value} value={value}>{value}</option>)}</select></label>
+            <label><span className="label">Condition</span><Select value={condition} onValueChange={value => setCondition(value as ItemCondition)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['NEW', 'GOOD', 'FAIR', 'DAMAGED'].map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select></label>
             <div />
             <label className="sm:col-span-2"><span className="label">Description</span><textarea className="field min-h-20" maxLength={1000} placeholder="Helpful identifying details" value={description} onChange={event => setDescription(event.target.value)} /></label>
             <label className="sm:col-span-2"><span className="label">Notes</span><textarea className="field min-h-20" maxLength={2000} placeholder="Serial number or anything else useful" value={notes} onChange={event => setNotes(event.target.value)} /></label>

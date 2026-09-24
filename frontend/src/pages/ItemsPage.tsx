@@ -10,6 +10,7 @@ import BulkMoveItemsModal from '../components/BulkMoveItemsModal'
 import ItemPhoto from '../components/ItemPhoto'
 import { Empty, ErrorMessage, Loading } from '../components/PageState'
 import Icon from '../components/Icon'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import type { BulkMoveItemsResponse, Category, Item, Room, StorageLocation } from '../types'
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
@@ -172,26 +173,35 @@ export default function ItemsPage() {
       <div id="item-filter-fields" className={`${showFilters ? 'grid' : 'hidden'} gap-3 p-4 sm:grid sm:grid-cols-3 sm:p-5`}>
         <label className="block">
           <span className="label">Room</span>
-          <select aria-label="Filter by room" className="field bg-white" value={roomId} onChange={event => filter('roomId', event.target.value)}>
-            <option value="">All rooms</option>
-            {roomList.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
-          </select>
+          <Select value={roomId} onValueChange={value => filter('roomId', value)}>
+            <SelectTrigger aria-label="Filter by room" className="bg-white"><SelectValue placeholder="All rooms" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All rooms</SelectItem>
+              {roomList.map(room => <SelectItem key={room.id} value={String(room.id)}>{room.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
         <label className="block">
           <span className="label">Storage location</span>
-          <select aria-label="Filter by storage location" className="field bg-white" value={storageLocationId} onChange={event => filter('storageLocationId', event.target.value)}>
-            <option value="">All locations</option>
-            {locationList.filter(location => !roomId || String(location.roomId) === roomId).map(location => (
-              <option key={location.id} value={location.id}>{location.name}</option>
-            ))}
-          </select>
+          <Select value={storageLocationId} onValueChange={value => filter('storageLocationId', value)}>
+            <SelectTrigger aria-label="Filter by storage location" className="bg-white"><SelectValue placeholder="All locations" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All locations</SelectItem>
+              {locationList.filter(location => !roomId || String(location.roomId) === roomId).map(location => (
+                <SelectItem key={location.id} value={String(location.id)}>{location.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </label>
         <label className="block">
           <span className="label">Category</span>
-          <select aria-label="Filter by category" className="field bg-white" value={categoryId} onChange={event => filter('categoryId', event.target.value)}>
-            <option value="">All categories</option>
-            {categoryList.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}
-          </select>
+          <Select value={categoryId} onValueChange={value => filter('categoryId', value)}>
+            <SelectTrigger aria-label="Filter by category" className="bg-white"><SelectValue placeholder="All categories" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All categories</SelectItem>
+              {categoryList.map(category => <SelectItem key={category.id} value={String(category.id)}>{category.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
       </div>
       {activeFilterCount > 0 && (

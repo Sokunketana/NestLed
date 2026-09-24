@@ -11,6 +11,7 @@ import SpaceEditModal, { SpaceEditForm, SpaceEditTarget } from '../components/Sp
 import SpaceColorPicker from '../components/SpaceColorPicker'
 import SpaceActionsMenu from '../components/SpaceActionsMenu'
 import { ApiRequestError } from '../api/http'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import type { Room, StorageLocation } from '../types'
 import { defaultLocationColor, defaultRoomColor, getSpaceColor, withColorAlpha } from '../spaceColors'
 
@@ -195,10 +196,13 @@ export default function RoomsPage() {
           <button className="btn-primary mt-5 w-full"><Icon name="plus" className="h-4 w-4" />Add room</button>
         </form> : <form className="mt-5" onSubmit={saveLocation}>
           <label className="label" htmlFor="new-location-room">Room *</label>
-          <select id="new-location-room" className="field" required value={locationForm.roomId || ''} onChange={event => setLocationForm(current => ({ ...current, roomId: Number(event.target.value) }))} disabled={!rooms.length}>
-            <option value="">Select room</option>
-            {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
-          </select>
+          <Select required value={locationForm.roomId ? String(locationForm.roomId) : ''} onValueChange={value => setLocationForm(current => ({ ...current, roomId: Number(value) }))} disabled={!rooms.length}>
+            <SelectTrigger id="new-location-room"><SelectValue placeholder="Select room" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Select room</SelectItem>
+              {rooms.map(room => <SelectItem key={room.id} value={String(room.id)}>{room.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <label className="label mt-4" htmlFor="new-location-name">Location name *</label>
           <input id="new-location-name" className="field" required maxLength={100} value={locationForm.name} onChange={event => setLocationForm(current => ({ ...current, name: event.target.value }))} placeholder="Top drawer" />
           <label className="label mt-4" htmlFor="new-location-description">Description <span className="font-normal text-stone-400">(optional)</span></label>

@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useId, useRef, useState } from 'react'
 import Icon from './Icon'
 import SpaceColorPicker from './SpaceColorPicker'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import { defaultLocationColor, defaultRoomColor, getSpaceColor } from '../spaceColors'
 import type { Room, StorageLocation } from '../types'
 
@@ -115,17 +116,13 @@ export default function SpaceEditModal({ target, rooms, onClose, onSave }: Space
         {isLocation && (
           <div className="mt-4">
             <label className="label" htmlFor={`${titleId}-room`}>Room *</label>
-            <select
-              id={`${titleId}-room`}
-              className="field"
-              required
-              value={form.roomId || ''}
-              onChange={event => setForm(current => ({ ...current, roomId: Number(event.target.value) }))}
-              disabled={isSaving}
-            >
-              <option value="">Select room</option>
-              {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
-            </select>
+            <Select required value={form.roomId ? String(form.roomId) : ''} onValueChange={value => setForm(current => ({ ...current, roomId: Number(value) }))} disabled={isSaving}>
+              <SelectTrigger id={`${titleId}-room`}><SelectValue placeholder="Select room" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Select room</SelectItem>
+                {rooms.map(room => <SelectItem key={room.id} value={String(room.id)}>{room.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         )}
 

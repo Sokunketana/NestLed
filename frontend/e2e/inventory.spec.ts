@@ -277,7 +277,7 @@ test('categories use the anchored custom color picker', async ({ page }) => {
   await expect(colorDialog).toBeHidden()
 })
 
-test('an owner can export household data from profile settings', async ({ page }) => {
+test('an owner can export household data from settings', async ({ page }) => {
   await mockAuthenticatedApi(page)
   await page.route(/\/api\/household\/export/, route => {
     const url = new URL(route.request().url())
@@ -301,8 +301,8 @@ test('an owner can export household data from profile settings', async ({ page }
 
   await page.goto('/')
   await page.getByRole('button', { name: /Open account menu/ }).click()
-  await page.getByRole('menuitem', { name: 'Profile & settings' }).click()
-  await expect(page.getByRole('heading', { name: 'Profile & settings' })).toBeVisible()
+  await page.getByRole('menuitem', { name: 'Settings' }).click()
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
   await page.getByRole('link', { name: 'Data' }).click()
   await expect(page.getByRole('heading', { name: 'Household data' })).toBeVisible()
 
@@ -314,7 +314,7 @@ test('an owner can export household data from profile settings', async ({ page }
   await expect((await download).suggestedFilename()).toBe('our-home-inventory.json')
 })
 
-test('an owner can review and import household data from profile settings', async ({ page }) => {
+test('an owner can review and import household data from settings', async ({ page }) => {
   await mockAuthenticatedApi(page)
   await page.route(/\/api\/auth\/csrf/, route => route.fulfill({
     status: 200,
@@ -350,8 +350,8 @@ test('an owner can review and import household data from profile settings', asyn
 
   await page.goto('/')
   await page.getByRole('button', { name: /Open account menu/ }).click()
-  await page.getByRole('menuitem', { name: 'Profile & settings' }).click()
-  await expect(page.getByRole('heading', { name: 'Profile & settings' })).toBeVisible()
+  await page.getByRole('menuitem', { name: 'Settings' }).click()
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible()
   await page.getByRole('link', { name: 'Data' }).click()
   await expect(page.getByRole('heading', { name: 'Household data' })).toBeVisible()
 

@@ -29,6 +29,34 @@
   summary { list-style: none; }
   summary::-webkit-details-marker { display: none; }
 
+  .login-shell { background: #f5f2eb; }
+
+  .login-panel {
+    background: rgba(255, 253, 249, .92);
+    border: 1px solid rgba(229, 223, 212, .95);
+    border-radius: 1.5rem;
+    box-shadow: 0 22px 60px rgba(31, 49, 43, .09), 0 2px 5px rgba(31, 49, 43, .04);
+  }
+
+  .login-google-button {
+    @apply flex items-center justify-center rounded-xl px-4 py-3.5 text-sm font-bold text-white transition;
+    background: #145247;
+    box-shadow: 0 10px 20px rgba(20, 82, 71, .15);
+  }
+
+  .login-google-button:hover { background: #123f38; box-shadow: 0 12px 24px rgba(20, 82, 71, .22); transform: translateY(-1px); }
+  .login-google-button:active { transform: translateY(0); }
+
+  .login-alert {
+    padding: .8rem 1rem;
+    color: #b33f2c;
+    background: #fff2ef;
+    border: 1px solid #f1c8bf;
+    border-radius: .85rem;
+    font-size: .82rem;
+    line-height: 1.5;
+  }
+
   .custom-color-panel {
     top: 50%;
     right: auto;

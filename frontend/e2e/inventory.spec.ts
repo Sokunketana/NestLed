@@ -185,8 +185,10 @@ test('an item can be moved from its details page', async ({ page }) => {
 
   const dialog = page.getByRole('dialog', { name: 'Move 1 item' })
   await expect(dialog).toBeVisible()
-  await dialog.getByLabel('Destination room').selectOption(String(secondRoom.id))
-  await dialog.getByLabel('Destination storage location').selectOption(String(secondLocation.id))
+  await dialog.getByLabel('Destination room').click()
+  await page.getByRole('option', { name: secondRoom.name, exact: true }).click()
+  await dialog.getByLabel('Destination storage location').click()
+  await page.getByRole('option', { name: secondLocation.name, exact: true }).click()
 
   const moveRequest = page.waitForRequest('**/api/items/bulk-move')
   await dialog.getByRole('button', { name: 'Move 1 item', exact: true }).click()
@@ -201,7 +203,8 @@ test('item filters stay clear on desktop and compact on mobile', async ({ page }
   await expect(page.getByRole('heading', { name: 'Refine your items' })).toBeVisible()
   await expect(page.getByLabel('Filter by room')).toBeVisible()
 
-  await page.getByLabel('Filter by room').selectOption('1')
+  await page.getByLabel('Filter by room').click()
+  await page.getByRole('option', { name: room.name, exact: true }).click()
   await expect(page).toHaveURL(/roomId=1/)
   await expect(page.getByRole('button', { name: 'Room: Bedroom' })).toBeVisible()
 

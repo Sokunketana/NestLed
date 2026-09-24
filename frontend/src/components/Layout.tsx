@@ -107,7 +107,7 @@ export default function Layout({ onboarding }: { onboarding?: SetupData }) {
   return <div className="min-h-screen" onClickCapture={handleNavigationAttempt}>
     <main className="min-w-0 overflow-x-clip">
       <header className="sticky top-0 z-10 border-b border-line/80 bg-cream/90 backdrop-blur-md">
-        <div className="relative flex w-full flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:gap-4 sm:px-5 lg:px-8 min-[1600px]:justify-between">
+        <div className="relative mx-auto flex w-full max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:gap-4 sm:px-5 lg:px-8 min-[1600px]:justify-between">
           <Link to="/" className="group order-1 flex shrink-0 items-center gap-2 rounded-xl py-1 sm:order-none">
             <span><strong className="font-serif text-[1.35rem] tracking-tight text-deep">Nestled</strong><small className="block max-w-28 truncate text-[0.68rem] text-ink-soft">{user?.householdName || 'Home inventory'}</small></span>
           </Link>

@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { itemApi } from '../api/itemApi'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 import type { BulkMoveItemsResponse, Room, StorageLocation } from '../types'
 
 type BulkMoveItemsModalProps = {
@@ -18,7 +19,7 @@ export default function BulkMoveItemsModal({
   onMoved,
 }: BulkMoveItemsModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
-  const roomSelectRef = useRef<HTMLSelectElement>(null)
+  const roomSelectRef = useRef<HTMLButtonElement>(null)
   const titleId = useId()
   const descriptionId = useId()
   const errorId = useId()
@@ -94,37 +95,28 @@ export default function BulkMoveItemsModal({
 
         <div className="mt-6">
           <label className="label" htmlFor={`${titleId}-room`}>Destination room</label>
-          <select
-            ref={roomSelectRef}
-            id={`${titleId}-room`}
-            className="field"
-            value={roomId}
-            onChange={event => {
-              setRoomId(event.target.value)
+          <Select required value={roomId} onValueChange={value => {
+              setRoomId(value)
               setStorageLocationId('')
               setError('')
-            }}
-            disabled={isMoving}
-            required
-          >
-            <option value="">Select a room</option>
-            {rooms.map(room => <option key={room.id} value={room.id}>{room.name}</option>)}
-          </select>
+            }} disabled={isMoving}>
+            <SelectTrigger ref={roomSelectRef} id={`${titleId}-room`}><SelectValue placeholder="Select a room" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Select a room</SelectItem>
+              {rooms.map(room => <SelectItem key={room.id} value={String(room.id)}>{room.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="mt-4">
           <label className="label" htmlFor={`${titleId}-location`}>Destination storage location</label>
-          <select
-            id={`${titleId}-location`}
-            className="field"
-            value={storageLocationId}
-            onChange={event => { setStorageLocationId(event.target.value); setError('') }}
-            disabled={!roomId || isMoving}
-            required
-          >
-            <option value="">Select a storage location</option>
-            {availableLocations.map(location => <option key={location.id} value={location.id}>{location.name}</option>)}
-          </select>
+          <Select required value={storageLocationId} onValueChange={value => { setStorageLocationId(value); setError('') }} disabled={!roomId || isMoving}>
+            <SelectTrigger id={`${titleId}-location`}><SelectValue placeholder="Select a storage location" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Select a storage location</SelectItem>
+              {availableLocations.map(location => <SelectItem key={location.id} value={String(location.id)}>{location.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
           {roomId && !availableLocations.length && (
             <p className="mt-2 text-sm text-amber-700">This room does not have a storage location yet.</p>
           )}

@@ -46,6 +46,12 @@ public class HouseholdImportService {
     private static final String EXPORT_FORMAT = "nestled-household-export";
     private static final int EXPORT_VERSION = 1;
     private static final int MAX_ISSUES = 50;
+    private static final long MAX_IMPORT_FILE_SIZE = 6L * 1024L * 1024L;
+    private static final int MAX_ROOMS = 200;
+    private static final int MAX_STORAGE_LOCATIONS = 1000;
+    private static final int MAX_CATEGORIES = 200;
+    private static final int MAX_ITEMS = 5000;
+    private static final int MAX_MOVEMENT_HISTORY = 10000;
     private static final Pattern COLOR_PATTERN = Pattern.compile("^#[0-9A-Fa-f]{6}$");
 
     private final HouseholdAccessService householdAccessService;
@@ -173,6 +179,11 @@ public class HouseholdImportService {
         if (source.categories() == null) addIssue(errors, "categories", "The categories list is required");
         if (source.items() == null) addIssue(errors, "items", "The items list is required");
         if (source.movementHistory() == null) addIssue(errors, "movementHistory", "The movement history list is required");
+        validateListSize(source.rooms(), MAX_ROOMS, "rooms", errors);
+        validateListSize(source.storageLocations(), MAX_STORAGE_LOCATIONS, "storageLocations", errors);
+        validateListSize(source.categories(), MAX_CATEGORIES, "categories", errors);
+        validateListSize(source.items(), MAX_ITEMS, "items", errors);
+        validateListSize(source.movementHistory(), MAX_MOVEMENT_HISTORY, "movementHistory", errors);
         if (!errors.isEmpty()) {
             return new ImportAnalysis(source, 0, 0, 0, 0, 0, 0, 0, errors, warnings);
         }
@@ -347,12 +358,21 @@ public class HouseholdImportService {
 
     private HouseholdExportResponse parse(MultipartFile file) {
         if (file == null || file.isEmpty()) throw new BadRequestException("Choose a JSON export file to import");
+        if (file.getSize() > MAX_IMPORT_FILE_SIZE) {
+            throw new BadRequestException("Import file must be 6 MB or smaller");
+        }
         try (InputStream input = file.getInputStream()) {
             return objectMapper.readValue(input, HouseholdExportResponse.class);
         } catch (JsonProcessingException exception) {
             throw new BadRequestException("The import file is not valid Nestled JSON");
         } catch (IOException exception) {
             throw new BadRequestException("The import file could not be read");
+        }
+    }
+
+    private void validateListSize(List<?> values, int maximum, String path, List<ImportIssue> errors) {
+        if (values != null && values.size() > maximum) {
+            addIssue(errors, path, "The " + path + " list cannot contain more than " + maximum + " records");
         }
     }
 

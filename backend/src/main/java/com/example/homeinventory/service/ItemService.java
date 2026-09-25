@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @Transactional(readOnly = true)
 public class ItemService {
+    private static final int MAX_BULK_MOVE_ITEMS = 200;
     private static final Logger log = LoggerFactory.getLogger(ItemService.class);
 
     private final ItemRepository itemRepository;
@@ -208,6 +209,9 @@ public class ItemService {
     private Set<Long> normalizedItemIds(BulkMoveItemsRequest request) {
         if (request == null || request.itemIds() == null || request.itemIds().isEmpty()) {
             throw new BadRequestException("Select at least one item to move");
+        }
+        if (request.itemIds().size() > MAX_BULK_MOVE_ITEMS) {
+            throw new BadRequestException("Select no more than 200 items at a time");
         }
         if (request.roomId() == null || request.roomId() <= 0
                 || request.storageLocationId() == null || request.storageLocationId() <= 0

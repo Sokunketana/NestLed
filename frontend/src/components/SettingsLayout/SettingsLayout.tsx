@@ -10,7 +10,6 @@ export default function SettingsLayout() {
   return <div className="space-y-7">
     <div>
       <h1 className="page-title">Settings</h1>
-      <p className="mt-2 text-stone-500">Manage your account, household, and inventory data.</p>
     </div>
 
     <nav aria-label="Settings sections" className="flex gap-1 overflow-x-auto rounded-2xl bg-cream p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

@@ -7,6 +7,7 @@ import { useAuth } from '../../auth/AuthContext'
 import OnboardingWelcome from '../OnboardingWelcome'
 import SetupGuide from '../SetupGuide'
 import TutorialRequiredModal from '../TutorialRequiredModal'
+import BrandLogo from '../BrandLogo'
 import type { LayoutProps } from './Layout.type'
 
 export default function Layout({ onboarding }: LayoutProps) {
@@ -108,11 +109,11 @@ export default function Layout({ onboarding }: LayoutProps) {
   return <div className="min-h-screen" onClickCapture={handleNavigationAttempt}>
     <main className="min-w-0 overflow-x-clip">
       <header className="sticky top-0 z-10 border-b border-line/80 bg-cream/90 backdrop-blur-md">
-        <div className="relative mx-auto flex w-full max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:gap-4 sm:px-5 lg:px-8 min-[1600px]:justify-between">
+        <div className="relative mx-auto flex w-full max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:gap-4 sm:px-5 lg:px-8 min-[1600px]:grid min-[1600px]:grid-cols-[auto_minmax(0,1fr)_auto]">
           <Link to="/" className="group order-1 flex shrink-0 items-center gap-2 rounded-xl py-1 sm:order-none">
-            <span><strong className="font-serif text-[1.35rem] tracking-tight text-deep">Nestled</strong><small className="block max-w-28 truncate text-[0.68rem] text-ink-soft">{user?.householdName || 'Home inventory'}</small></span>
+            <BrandLogo householdName={user?.householdName} showHousehold />
           </Link>
-          <form onSubmit={submit} className="order-3 flex min-w-0 basis-full gap-2 sm:order-none sm:mx-0 sm:w-0 sm:max-w-none sm:flex-1 sm:basis-auto sm:gap-3 min-[1600px]:absolute min-[1600px]:inset-x-auto min-[1600px]:left-1/2 min-[1600px]:right-auto min-[1600px]:top-1/2 min-[1600px]:w-full min-[1600px]:max-w-5xl min-[1600px]:-translate-x-1/2 min-[1600px]:-translate-y-1/2 min-[1600px]:px-0">
+          <form onSubmit={submit} className="order-3 flex min-w-0 basis-full gap-2 sm:order-none sm:mx-0 sm:w-0 sm:max-w-none sm:flex-1 sm:basis-auto sm:gap-3 min-[1600px]:static min-[1600px]:w-auto min-[1600px]:max-w-none min-[1600px]:translate-x-0 min-[1600px]:translate-y-0 min-[1600px]:px-0">
             <div className="relative min-w-0 flex-1"><Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
               <input aria-label="Global item search" className="field h-11 pl-10" placeholder="Find an item…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>

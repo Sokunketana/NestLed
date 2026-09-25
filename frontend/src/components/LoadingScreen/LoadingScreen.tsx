@@ -1,5 +1,3 @@
-import Icon from '../Icon'
-
 export default function LoadingScreen() {
   return <main className="loading-screen" aria-busy="true" aria-live="polite">
     <div className="loading-screen__glow loading-screen__glow--top" aria-hidden="true" />
@@ -9,7 +7,7 @@ export default function LoadingScreen() {
       <div className="loading-visual" aria-hidden="true">
         <span className="loading-ring loading-ring--outer" />
         <span className="loading-ring loading-ring--inner" />
-        <span className="loading-mark"><Icon name="home" className="h-8 w-8" /></span>
+        <span className="loading-wordmark">Nestled</span>
       </div>
 
       <h1 className="loading-title">Making room for your home.</h1>

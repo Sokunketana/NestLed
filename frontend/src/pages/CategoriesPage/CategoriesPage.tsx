@@ -1,0 +1,76 @@
+import { FormEvent, useState } from 'react'
+import { Link } from 'react-router-dom'
+import useSWR from 'swr'
+import { categoryApi } from '../../api/categoryApi'
+import { cacheKeys, revalidateInventory } from '../../api/cache'
+import ConfirmationModal from '../../components/ConfirmationModal'
+import Icon from '../../components/Icon'
+import { ErrorMessage, Loading } from '../../components/PageState'
+import SpaceActionsMenu from '../../components/SpaceActionsMenu'
+import SpaceColorPicker from '../../components/SpaceColorPicker'
+import type { Category } from '../../types'
+
+export default function CategoriesPage() {
+  const { data: categories, error: loadError } = useSWR<Category[]>(cacheKeys.categories, categoryApi.list)
+  const [form, setForm] = useState({ name: '', color: '#145247' })
+  const [editing, setEditing] = useState<number>()
+  const [error, setError] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<Category>()
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setError('')
+    try {
+      if (editing) await categoryApi.update(editing, form)
+      else await categoryApi.create(form)
+      setForm({ name: '', color: '#145247' })
+      setEditing(undefined)
+      await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to save category.')
+    }
+  }
+
+  async function remove() {
+    if (!deleteTarget) return
+    await categoryApi.remove(deleteTarget.id)
+    await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
+    setDeleteTarget(undefined)
+  }
+
+  function cancelEdit() {
+    setEditing(undefined)
+    setForm({ name: '', color: '#145247' })
+  }
+
+  if (!categories && loadError) return <ErrorMessage message={loadError instanceof Error ? loadError.message : 'Unable to load categories.'} />
+  if (!categories) return <Loading />
+
+  return <>
+    <div className="flex flex-wrap items-end justify-between gap-5">
+      <div><h1 className="page-title">Categories</h1><p className="mt-2 max-w-2xl text-stone-500">Simple labels make a growing inventory easy to scan and filter.</p></div>
+      <div className="shrink-0 rounded-full bg-sage px-3.5 py-2 text-sm font-bold text-pine">{categories.length} {categories.length === 1 ? 'category' : 'categories'}</div>
+    </div>
+    {(error || loadError) && <div className="mt-6"><ErrorMessage message={error || (loadError instanceof Error ? loadError.message : 'Unable to load categories.')} /></div>}
+
+    <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_24rem]">
+      <section className="grid content-start gap-4 sm:grid-cols-2" aria-label="Categories">
+        <div className="px-1 sm:col-span-2"><p className="text-sm font-bold text-ink">Your labels</p></div>
+        {categories.map(category => <article className="card group relative overflow-hidden transition hover:-translate-y-0.5 hover:shadow-soft" key={category.id}>
+          <div className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: category.color || '#78716c' }} />
+          <div className="flex items-start justify-between gap-3 pt-1"><h2 className="text-xl group-hover:text-pine">{category.name}</h2><SpaceActionsMenu name={category.name} onEdit={() => { setEditing(category.id); setForm({ name: category.name, color: category.color || '#145247' }) }} onDelete={() => setDeleteTarget(category)} /></div>
+          <Link to={`/items?categoryId=${category.id}`} className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-pine">{category.itemCount} {category.itemCount === 1 ? 'item' : 'items'} <Icon name="arrow-right" className="h-3.5 w-3.5 transition group-hover:translate-x-0.5" /></Link>
+        </article>)}
+        {!categories.length && <div className="card border-dashed py-14 text-center sm:col-span-2"><p className="font-semibold">No categories yet.</p><p className="mt-1 text-sm text-ink-soft">Add a label to make your first items easier to find.</p></div>}
+      </section>
+
+      <form id="category-form" className="card self-start scroll-mt-24" onSubmit={submit}>
+        <div><h2 className="text-xl">{editing ? 'Edit category' : 'Add a category'}</h2><p className="mt-1 text-sm text-ink-soft">Choose a simple label you’ll recognize at a glance.</p></div>
+        <div className="mt-5"><label className="label">Name *</label><input className="field" required maxLength={100} value={form.name} onChange={event => setForm({ ...form, name: event.target.value })} placeholder="Electronics" /></div>
+        <div className="mt-4"><SpaceColorPicker value={form.color} onChange={color => setForm(current => ({ ...current, color }))} /></div>
+        <div className="mt-5 flex flex-wrap gap-2"><button className="btn-primary"><Icon name={editing ? 'check' : 'plus'} className="h-4 w-4" />{editing ? 'Save category' : 'Add category'}</button>{editing && <button type="button" className="btn-secondary" onClick={cancelEdit}>Cancel</button>}</div>
+      </form>
+    </div>
+    {deleteTarget && <ConfirmationModal title={`Delete “${deleteTarget.name}”?`} description="This category can only be deleted when no items use it." onClose={() => setDeleteTarget(undefined)} onConfirm={remove} />}
+  </>
+}

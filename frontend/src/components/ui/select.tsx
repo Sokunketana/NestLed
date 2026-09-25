@@ -10,23 +10,8 @@ import {
   type ComponentPropsWithoutRef,
   type FormEvent,
   type KeyboardEvent,
-  type ReactNode,
 } from 'react'
-
-type SelectContextValue = {
-  value: string
-  onValueChange: (value: string) => void
-  open: boolean
-  setOpen: (open: boolean) => void
-  disabled: boolean
-  required: boolean
-  triggerRef: React.MutableRefObject<HTMLButtonElement | null>
-  rootRef: React.MutableRefObject<HTMLDivElement | null>
-  contentId: string
-  labels: Record<string, string>
-  registerLabel: (value: string, label: string) => void
-  unregisterLabel: (value: string) => void
-}
+import type { SelectContentProps, SelectContextValue, SelectItemProps, SelectProps, SelectTriggerProps, SelectValueProps } from './select.type'
 
 const SelectContext = createContext<SelectContextValue | null>(null)
 
@@ -34,16 +19,6 @@ function useSelect() {
   const context = useContext(SelectContext)
   if (!context) throw new Error('Select components must be used inside Select')
   return context
-}
-
-type SelectProps = {
-  children: ReactNode
-  value?: string
-  defaultValue?: string
-  onValueChange?: (value: string) => void
-  disabled?: boolean
-  required?: boolean
-  name?: string
 }
 
 export function Select({
@@ -129,8 +104,6 @@ export function Select({
   )
 }
 
-type SelectTriggerProps = ComponentPropsWithoutRef<'button'>
-
 export const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
   function SelectTrigger({ className = '', children, onClick, onKeyDown, ...props }, forwardedRef) {
     const { value, open, setOpen, disabled, required, triggerRef, contentId } = useSelect()
@@ -181,17 +154,10 @@ export const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
   },
 )
 
-type SelectValueProps = {
-  placeholder?: ReactNode
-  className?: string
-}
-
 export function SelectValue({ placeholder = 'Select an option', className = '' }: SelectValueProps) {
   const { value, labels } = useSelect()
   return <span className={className}>{value ? labels[value] ?? value : <span className="text-stone-400">{placeholder}</span>}</span>
 }
-
-type SelectContentProps = ComponentPropsWithoutRef<'div'>
 
 export function SelectContent({ className = '', children, onKeyDown, ...props }: SelectContentProps) {
   const { value, open, setOpen, triggerRef, contentId } = useSelect()
@@ -250,10 +216,6 @@ export function SelectContent({ className = '', children, onKeyDown, ...props }:
       {children}
     </div>
   )
-}
-
-type SelectItemProps = Omit<ComponentPropsWithoutRef<'button'>, 'value'> & {
-  value: string
 }
 
 export function SelectItem({ value, className = '', children, disabled = false, onClick, onKeyDown, ...props }: SelectItemProps) {

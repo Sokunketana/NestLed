@@ -1,11 +1,5 @@
-import { createContext, forwardRef, useContext, useEffect, useId, useRef, useState, type ComponentPropsWithoutRef, type KeyboardEvent, type ReactNode } from 'react'
-
-type DropdownMenuContextValue = {
-  open: boolean
-  setOpen: (open: boolean) => void
-  triggerRef: React.MutableRefObject<HTMLButtonElement | null>
-  contentId: string
-}
+import { createContext, forwardRef, useContext, useEffect, useId, useRef, useState, type ComponentPropsWithoutRef, type KeyboardEvent } from 'react'
+import type { DropdownMenuContentProps, DropdownMenuContextValue, DropdownMenuItemProps, DropdownMenuProps } from './dropdown-menu.type'
 
 const DropdownMenuContext = createContext<DropdownMenuContextValue | null>(null)
 
@@ -15,7 +9,7 @@ function useDropdownMenu() {
   return context
 }
 
-export function DropdownMenu({ children }: { children: ReactNode }) {
+export function DropdownMenu({ children }: DropdownMenuProps) {
   const [open, setOpen] = useState(false)
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const contentId = useId()
@@ -52,10 +46,6 @@ export const DropdownMenuTrigger = forwardRef<HTMLButtonElement, ComponentPropsW
     />
   },
 )
-
-type DropdownMenuContentProps = ComponentPropsWithoutRef<'div'> & {
-  onEscapeKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void
-}
 
 export function DropdownMenuContent({ className = '', onEscapeKeyDown, onKeyDown, onBlur, ...props }: DropdownMenuContentProps) {
   const { open, setOpen, triggerRef, contentId } = useDropdownMenu()
@@ -130,11 +120,6 @@ export function DropdownMenuContent({ className = '', onEscapeKeyDown, onKeyDown
     }}
     {...props}
   />
-}
-
-type DropdownMenuItemProps = ComponentPropsWithoutRef<'button'> & {
-  onSelect?: () => void
-  variant?: 'default' | 'destructive'
 }
 
 export function DropdownMenuItem({ className = '', onClick, onSelect, variant = 'default', ...props }: DropdownMenuItemProps) {

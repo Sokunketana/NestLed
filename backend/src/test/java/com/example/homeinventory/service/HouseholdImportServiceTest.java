@@ -9,6 +9,7 @@ import com.example.homeinventory.entity.Item;
 import com.example.homeinventory.entity.ItemCondition;
 import com.example.homeinventory.entity.Room;
 import com.example.homeinventory.entity.StorageLocation;
+import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.repository.CategoryRepository;
 import com.example.homeinventory.repository.ItemRepository;
 import com.example.homeinventory.repository.RoomRepository;
@@ -88,6 +89,33 @@ class HouseholdImportServiceTest {
         when(fixture.membership.getRole()).thenReturn(HouseholdRole.MEMBER);
 
         assertThrows(AccessDeniedException.class, () -> fixture.service.preview(fixture.file(fixture.export(1))));
+    }
+
+    @Test
+    void rejectsImportsWithTooManyRecordsBeforeDatabaseAccess() throws Exception {
+        Fixture fixture = new Fixture();
+        HouseholdExportResponse source = fixture.export(1);
+        source = new HouseholdExportResponse(source.format(), source.version(), source.exportedAt(), source.household(),
+                java.util.stream.IntStream.range(0, 201)
+                        .mapToObj(index -> new HouseholdExportResponse.RoomData("Room " + index, null, null))
+                        .toList(),
+                source.storageLocations(), source.categories(), source.items(), source.movementHistory());
+
+        var preview = fixture.service.preview(fixture.file(source));
+
+        assertFalse(preview.canImport());
+        assertTrue(preview.errors().stream().anyMatch(issue -> issue.path().equals("rooms")));
+        verify(fixture.rooms, org.mockito.Mockito.never()).findByHouseholdIdOrderByNameAsc(20L);
+    }
+
+    @Test
+    void rejectsOversizedImportFiles() {
+        Fixture fixture = new Fixture();
+        MockMultipartFile oversized = new MockMultipartFile(
+                "file", "backup.json", MediaType.APPLICATION_JSON_VALUE,
+                new byte[6 * 1024 * 1024 + 1]);
+
+        assertThrows(BadRequestException.class, () -> fixture.service.preview(oversized));
     }
 
     private static class Fixture {

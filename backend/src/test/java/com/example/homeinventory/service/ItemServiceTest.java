@@ -252,6 +252,17 @@ class ItemServiceTest {
                 () -> service.bulkMove(new BulkMoveItemsRequest(List.of(), 3L, 30L)));
     }
 
+    @Test
+    void bulkMoveRejectsOversizedSelectionWhenCalledDirectly() {
+        ItemService service = service(mock(ItemRepository.class), mock(RoomService.class),
+                mock(CategoryService.class), mock(StorageLocationService.class),
+                mock(PhotoStorageService.class), household());
+
+        assertThrows(BadRequestException.class,
+                () -> service.bulkMove(new BulkMoveItemsRequest(
+                        java.util.stream.LongStream.rangeClosed(1, 201).boxed().toList(), 3L, 30L)));
+    }
+
     private ItemService service(ItemRepository items, RoomService rooms, CategoryService categories,
                                 StorageLocationService locations, PhotoStorageService photos,
                                 Household household) {

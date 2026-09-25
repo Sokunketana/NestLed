@@ -86,15 +86,6 @@ public class AppUserService {
         return toResponse(appUser, membership);
     }
 
-    @Transactional
-    public void completeOnboarding(OidcUser oidcUser) {
-        AppUser appUser = getRequired(oidcUser);
-        if (!appUser.isOnboardingCompleted()) {
-            appUser.completeOnboarding();
-            userRepository.save(appUser);
-        }
-    }
-
     private HouseholdMembership ensureMembership(AppUser appUser) {
         HouseholdMembership membership = membershipRepository.findByUserId(appUser.getId()).orElse(null);
         if (membership == null && appUser.getHousehold() != null) {
@@ -130,7 +121,7 @@ public class AppUserService {
         return new AuthenticatedUserResponse(
                 appUser.getId(), appUser.getEmail(), appUser.getDisplayName(), appUser.getPictureUrl(),
                 membership.getHousehold().getId(), membership.getHousehold().getName(), membership.getRole(),
-                invitations, appUser.isOnboardingCompleted());
+                invitations);
     }
 
     private String defaultHouseholdName(AppUser appUser) {

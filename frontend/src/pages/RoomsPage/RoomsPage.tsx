@@ -1,5 +1,5 @@
-import { FormEvent, useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { FormEvent, useState } from 'react'
+import { Link } from 'react-router-dom'
 import useSWR from 'swr'
 import { roomApi } from '../../api/roomApi'
 import { storageLocationApi } from '../../api/storageLocationApi'
@@ -18,11 +18,9 @@ import type { AddMode, DeleteTarget } from './RoomsPage.type'
 const roomDeleteConflictMessage = 'This room cannot be deleted while it contains items or storage locations. Move or delete the items, then delete the storage locations first.'
 
 export default function RoomsPage() {
-  const [searchParams] = useSearchParams()
-  const setupMode = searchParams.get('setup')
   const { data: rooms, error: roomsError } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
   const { data: locations, error: locationsError } = useSWR<StorageLocation[]>(cacheKeys.locations, storageLocationApi.list)
-  const [addMode, setAddMode] = useState<AddMode>(setupMode === 'location' ? 'location' : 'room')
+  const [addMode, setAddMode] = useState<AddMode>('room')
   const [roomForm, setRoomForm] = useState({ name: '', description: '', color: defaultRoomColor })
   const [locationForm, setLocationForm] = useState({ name: '', description: '', color: defaultLocationColor, roomId: 0 })
   const [editingTarget, setEditingTarget] = useState<SpaceEditTarget>()
@@ -32,14 +30,6 @@ export default function RoomsPage() {
   const locationList = locations ?? []
   const loadError = roomsError || locationsError
   const totalItems = (rooms ?? []).reduce((sum, room) => sum + room.itemCount, 0)
-
-  useEffect(() => {
-    if (setupMode === 'location') {
-      setAddMode('location')
-      if (rooms?.[0]) setLocationForm(current => ({ ...current, roomId: current.roomId || rooms[0].id }))
-      requestAnimationFrame(() => document.getElementById('quick-add')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
-    }
-  }, [rooms, setupMode])
 
   async function refreshInventory() {
     await revalidateInventory({ dashboard: true, itemDetails: true, items: true, locations: true, movements: true, rooms: true })
@@ -178,7 +168,7 @@ export default function RoomsPage() {
       </section>
 
       <section id="quick-add" className="card h-fit scroll-mt-24 xl:sticky xl:top-24">
-        <div><h2 className="text-xl">Add to your map</h2><p className="mt-1 text-sm leading-relaxed text-ink-soft">Keep the setup light and focused.</p></div>
+        <div><h2 className="text-xl">Add to your map</h2><p className="mt-1 text-sm leading-relaxed text-ink-soft">Create a room or storage location for your home.</p></div>
 
         <div className="mt-5 grid grid-cols-2 gap-1 rounded-xl bg-cream p-1" role="tablist" aria-label="What would you like to add?">
           <button type="button" role="tab" aria-selected={addMode === 'room'} className={`rounded-lg px-3 py-2 text-sm font-bold transition ${addMode === 'room' ? 'bg-white text-deep shadow-sm' : 'text-ink-soft hover:text-ink'}`} onClick={() => setAddMode('room')}>Room</button>

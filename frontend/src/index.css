@@ -33,38 +33,52 @@
 
   .login-card-shell { position: relative; z-index: 1; }
 
+  .brand-logo {
+    display: inline-flex;
+    align-items: center;
+    color: #123f38;
+  }
+
+  .brand-logo__copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1;
+  }
+
+  .brand-logo__copy strong {
+    font-family: 'Fraunces', serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: -.035em;
+  }
+
+  .brand-logo__copy small {
+    max-width: 8rem;
+    margin-top: .24rem;
+    overflow: hidden;
+    color: #6d7974;
+    font-size: .66rem;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand-logo--large {
+    transform: translateY(-1px);
+  }
+
+  .brand-logo--large .brand-logo__copy strong {
+    font-size: 1.65rem;
+  }
+
   .login-brand {
     display: inline-flex;
     width: 100%;
     align-items: center;
     justify-content: center;
-    gap: .65rem;
   }
-
-  .login-brand-mark {
-    display: inline-flex;
-    width: 1.9rem;
-    height: 1.9rem;
-    align-items: flex-end;
-    justify-content: center;
-    gap: .18rem;
-    padding: .32rem;
-    background: #dcebe3;
-    border: 1px solid rgba(20, 82, 71, .12);
-    border-radius: .65rem;
-    color: #145247;
-    box-shadow: 0 5px 12px rgba(20, 82, 71, .1);
-  }
-
-  .login-brand-mark span {
-    display: block;
-    width: .34rem;
-    background: currentColor;
-    border-radius: .2rem .2rem .08rem .08rem;
-  }
-
-  .login-brand-mark span:first-child { height: .7rem; }
-  .login-brand-mark span:last-child { height: 1rem; }
 
   .login-panel {
     background: rgba(255, 253, 249, .96);
@@ -262,12 +276,16 @@
   transform: translateX(50%);
 }
 
-.loading-mark {
+.loading-wordmark {
   position: absolute;
   inset: 1.9rem;
   display: grid;
   place-items: center;
   color: #145247;
+  font-family: 'Fraunces', serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -.045em;
   background: #dcebe3;
   border: 1px solid rgba(20, 82, 71, .12);
   border-radius: 1.65rem;

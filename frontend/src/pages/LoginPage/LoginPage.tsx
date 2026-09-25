@@ -1,4 +1,5 @@
 import { useAuth } from '../../auth/AuthContext'
+import BrandLogo from '../../components/BrandLogo'
 
 export default function LoginPage() {
   const { error, login } = useAuth()
@@ -7,11 +8,7 @@ export default function LoginPage() {
   return <main className="login-shell flex min-h-screen items-center justify-center overflow-hidden px-4 py-6 sm:px-6">
     <section className="login-card-shell w-full max-w-sm">
       <div className="login-brand mb-7 text-center">
-        <span className="login-brand-mark" aria-hidden="true">
-          <span />
-          <span />
-        </span>
-        <strong className="font-serif text-[1.65rem] leading-none tracking-tight text-deep">Nestled</strong>
+        <BrandLogo size="large" />
       </div>
 
       <div className="login-panel p-6 sm:p-9">

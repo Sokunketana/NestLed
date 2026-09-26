@@ -4,11 +4,12 @@ import useSWR from 'swr'
 import { cacheKeys, revalidateInventory } from '../../api/cache'
 import { itemApi } from '../../api/itemApi'
 import { ErrorMessage, Loading } from '../PageState'
+import AddCategoryModal from '../AddCategoryModal'
 import AddSpaceModal from '../AddSpaceModal'
 import Icon from '../Icon'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '../ui/breadcrumb'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import type { Item, ItemCondition, ItemPayload, Room, StorageLocation } from '../../types'
+import type { Category, Item, ItemCondition, ItemPayload, Room, StorageLocation } from '../../types'
 import { defaultLocationColor, defaultRoomColor, getSpaceColor, withColorAlpha } from '../../spaceColors'
 import type { AddItemModalProps, CompactItemCardProps, InventoryOverviewProps, LocationCardProps, RoomCardProps } from './InventoryOverview.type'
 
@@ -24,6 +25,7 @@ function AddItemModal({ rooms, locations, categories, defaultRoomId, defaultLoca
       ? defaultLocationId
       : initialLocations[0]?.id ?? 0,
   )
+  const [categoryOptions, setCategoryOptions] = useState(categories)
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? 0)
   const [quantity, setQuantity] = useState(1)
   const [condition, setCondition] = useState<ItemCondition>('GOOD')
@@ -31,6 +33,7 @@ function AddItemModal({ rooms, locations, categories, defaultRoomId, defaultLoca
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [showAddCategory, setShowAddCategory] = useState(false)
 
   const roomLocations = locations.filter(location => location.roomId === roomId)
 
@@ -72,6 +75,17 @@ function AddItemModal({ rooms, locations, categories, defaultRoomId, defaultLoca
     }
   }
 
+  async function handleCategorySaved(category: Category) {
+    setCategoryOptions(current => [...current.filter(option => option.id !== category.id), category].sort((left, right) => left.name.localeCompare(right.name)))
+    setCategoryId(category.id)
+    setShowAddCategory(false)
+    try {
+      await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
+    } catch {
+      // The new category is already available in this modal; a later refresh can update the rest of the app.
+    }
+  }
+
   return <div className="fixed inset-0 z-40 grid place-items-center bg-ink/45 p-4 backdrop-blur-sm" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) onClose() }}>
     <section className="max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[1.75rem] border border-line bg-surface shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="add-item-title">
       <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-5 sm:px-7">
@@ -88,7 +102,10 @@ function AddItemModal({ rooms, locations, categories, defaultRoomId, defaultLoca
             <label className="sm:col-span-2"><span className="label">Item name *</span><input autoFocus required maxLength={150} className="field" placeholder="e.g. Passport" value={name} onChange={event => setName(event.target.value)} /></label>
             <label><span className="label">Room *</span><Select required value={roomId ? String(roomId) : ''} onValueChange={value => changeRoom(Number(value))}><SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger><SelectContent><SelectItem value="">Select room</SelectItem>{rooms.map(room => <SelectItem key={room.id} value={String(room.id)}>{room.name}</SelectItem>)}</SelectContent></Select></label>
             <label><span className="label">Location *</span><Select required value={storageLocationId ? String(storageLocationId) : ''} onValueChange={value => setStorageLocationId(Number(value))} disabled={!roomId}><SelectTrigger><SelectValue placeholder={roomId && !roomLocations.length ? 'No locations yet' : 'Select location'} /></SelectTrigger><SelectContent><SelectItem value="">{roomId && !roomLocations.length ? 'No locations yet' : 'Select location'}</SelectItem>{roomLocations.map(location => <SelectItem key={location.id} value={String(location.id)}>{location.name}</SelectItem>)}</SelectContent></Select></label>
-            <label><span className="label">Category *</span><Select required value={categoryId ? String(categoryId) : ''} onValueChange={value => setCategoryId(Number(value))}><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent><SelectItem value="">Select category</SelectItem>{categories.map(category => <SelectItem key={category.id} value={String(category.id)}>{category.name}</SelectItem>)}</SelectContent></Select></label>
+            <div>
+              <div className="mb-1.5 flex items-center justify-between gap-2"><span className="label mb-0">Category *</span><button type="button" className="inline-flex items-center gap-1 text-sm font-semibold text-pine hover:underline" onClick={() => setShowAddCategory(true)} disabled={saving}><Icon name="plus" className="h-3.5 w-3.5" />Add category</button></div>
+              <Select required value={categoryId ? String(categoryId) : ''} onValueChange={value => setCategoryId(Number(value))}><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent><SelectItem value="">Select category</SelectItem>{categoryOptions.map(category => <SelectItem key={category.id} value={String(category.id)}>{category.name}</SelectItem>)}</SelectContent></Select>
+            </div>
             <label><span className="label">Quantity</span><input className="field" type="number" min="1" required value={quantity} onChange={event => setQuantity(Math.max(1, Number(event.target.value)))} /></label>
           </div>
         </section>
@@ -104,6 +121,7 @@ function AddItemModal({ rooms, locations, categories, defaultRoomId, defaultLoca
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" className="btn-secondary" onClick={onClose} disabled={saving}>Cancel</button><button type="submit" className="btn-primary" disabled={saving || !rooms.length || !locations.length || !categories.length}><Icon name="plus" className="h-4 w-4" />{saving ? 'Saving…' : 'Add item'}</button></div>
       </form>
     </section>
+    {showAddCategory && <AddCategoryModal onClose={() => setShowAddCategory(false)} onSaved={handleCategorySaved} />}
   </div>
 }
 

@@ -12,6 +12,7 @@ import ItemPhoto from '../../components/ItemPhoto'
 import { ErrorMessage, Loading } from '../../components/PageState'
 import Icon from '../../components/Icon'
 import SpaceActionsMenu from '../../components/SpaceActionsMenu'
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '../../components/ui/breadcrumb'
 import type { BulkMoveItemsResponse, Item, ItemMovement, Room, StorageLocation } from '../../types'
 
 const money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
@@ -48,7 +49,7 @@ export default function ItemDetailsPage() {
   ]
   return <>
     <Link to={`/?roomId=${item.roomId}&locationId=${item.storageLocationId}`} className="inline-flex items-center gap-2 text-sm font-bold text-pine"><Icon name="arrow-left" className="h-4 w-4" />Back to {item.storageLocationName}</Link>
-    <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><h1 className="page-title break-words">{item.name}</h1><p className="mt-3 break-words text-sm text-stone-500">Home → {item.roomName} → {item.storageLocationName}</p></div>
+    <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><h1 className="page-title break-words">{item.name}</h1><Breadcrumb className="mt-3"><BreadcrumbList className="min-h-5 flex-nowrap overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><BreadcrumbItem><BreadcrumbLink to="/">Rooms</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbLink to={`/?roomId=${item.roomId}`}>{item.roomName}</BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator /><BreadcrumbItem><BreadcrumbPage>{item.storageLocationName}</BreadcrumbPage></BreadcrumbItem></BreadcrumbList></Breadcrumb></div>
       <div className="flex w-full justify-end sm:w-auto"><SpaceActionsMenu name={item.name} onEdit={() => navigate(`/items/${item.id}/edit`)} onMove={() => { setMoveSuccess(''); setShowMoveDialog(true) }} onDelete={() => setShowDeleteConfirmation(true)} /></div>
     </div>
     {moveSuccess && <p role="status" className="mt-4 rounded-xl bg-mint px-4 py-3 text-sm font-semibold text-emerald-800">{moveSuccess}</p>}

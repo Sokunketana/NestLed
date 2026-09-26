@@ -176,11 +176,11 @@ export default function HouseholdSettings({ embedded = false }: HouseholdSetting
     <section className="card">
       <div className="flex items-start gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center text-pine"><Icon name="users" className="h-4 w-4" /></span><div><h3 className="text-xl">Members</h3><p className="mt-1 text-sm text-ink-soft">People who can view and update this home.</p></div></div>
       <div className="mt-4 divide-y">
-        {household.members.map(member => <div key={member.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0 sm:flex-nowrap">
+        {household.members.map(member => <div key={member.id} className="flex flex-nowrap items-center gap-3 py-3 first:pt-0 last:pb-0">
           {member.pictureUrl
             ? <img src={member.pictureUrl} alt="" referrerPolicy="no-referrer" className="h-10 w-10 rounded-full object-cover" />
             : <span className="grid h-10 w-10 place-items-center rounded-full bg-stone-100 font-semibold">{(member.displayName || member.email)[0].toUpperCase()}</span>}
-          <div className="min-w-0 flex-1 basis-[calc(100%-3.25rem)] sm:basis-auto">
+          <div className="min-w-0 flex-1">
             <p className="truncate font-semibold">{member.displayName || member.email}</p>
             <p className="truncate text-sm text-stone-500">{member.email}</p>
           </div>

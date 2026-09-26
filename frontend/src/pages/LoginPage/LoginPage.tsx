@@ -6,12 +6,12 @@ export default function LoginPage() {
   const denied = new URLSearchParams(window.location.search).has('loginError')
 
   return <main className="login-shell flex min-h-screen items-center justify-center overflow-hidden px-4 py-6 sm:px-6">
-    <section className="login-card-shell w-full max-w-sm">
+    <section className="login-card-shell mx-auto w-full max-w-sm">
       <div className="login-brand mb-7 text-center">
         <BrandLogo size="large" />
       </div>
 
-      <div className="login-panel p-6 sm:p-9">
+      <div className="login-panel w-full p-6 sm:p-9">
         <h1 className="page-title text-center text-deep">Welcome back.</h1>
         <p className="mt-3 text-center leading-relaxed text-stone-600">Sign in to manage your home inventory.</p>
         {(denied || error) && <p role="alert" className="login-alert mt-6">{denied ? 'Sign-in could not be completed. Use a Google account with a verified email and try again.' : error}</p>}
@@ -22,7 +22,7 @@ export default function LoginPage() {
             <path fill="#FBBC05" d="M6.39 13.91A6.01 6.01 0 0 1 6.08 12c0-.66.11-1.3.31-1.91V7.5H3.06A10 10 0 0 0 2 12c0 1.61.39 3.14 1.06 4.5l3.33-2.59Z" />
             <path fill="#EA4335" d="M12 5.96c1.47 0 2.79.51 3.83 1.51l2.87-2.87C16.96 2.99 14.7 2 12 2a9.99 9.99 0 0 0-8.94 5.5l3.33 2.59C7.18 7.72 9.39 5.96 12 5.96Z" />
           </svg>
-          <span>Sign in with Google</span>
+          <span className="login-google-label">Sign in with Google</span>
         </button>
         <p className="login-privacy mt-6 text-center text-xs leading-relaxed text-stone-400">Private to you and invited household members.</p>
       </div>

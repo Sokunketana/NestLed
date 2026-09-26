@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.logout.HttpStatusReturnin
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -38,6 +39,13 @@ public class SecurityConfig {
             OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService,
             @Value("${server.servlet.session.cookie.same-site:lax}") String sessionCookieSameSite,
             @Value("${server.servlet.session.cookie.secure:false}") boolean sessionCookieSecure) throws Exception {
+        if ("none".equalsIgnoreCase(sessionCookieSameSite) && !sessionCookieSecure) {
+            throw new IllegalStateException("SESSION_COOKIE_SECURE must be true when SESSION_COOKIE_SAME_SITE is none");
+        }
+        if (authProperties.frontendUrl().startsWith("https://") && !sessionCookieSecure) {
+            throw new IllegalStateException("SESSION_COOKIE_SECURE must be true when FRONTEND_URL uses HTTPS");
+        }
+
         CookieCsrfTokenRepository csrfRepository = new CookieCsrfTokenRepository();
         csrfRepository.setCookiePath("/");
         // The frontend and backend are separate sites in production (Vercel + Render).
@@ -52,6 +60,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfRepository)
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.deny())
+                        .contentSecurityPolicy(csp -> csp.policyDirectives(
+                                "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"))
+                        .referrerPolicy(referrer -> referrer.policy(
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER)))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                         .requestMatchers("/oauth2/**", "/login/**", "/error").permitAll()

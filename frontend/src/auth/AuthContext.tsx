@@ -15,7 +15,6 @@ type AuthContextValue = {
   logout: () => Promise<void>
   deleteAccount: () => Promise<void>
   updateDisplayName: (displayName: string) => Promise<void>
-  completeOnboarding: () => Promise<void>
   updateHouseholdName: (id: number, name: string) => void
 }
 
@@ -50,10 +49,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updatedUser = await authApi.updateDisplayName(displayName)
       await mutate(updatedUser, { revalidate: false })
       void revalidateInventory({ household: true })
-    },
-    completeOnboarding: async () => {
-      await authApi.completeOnboarding()
-      await mutate(currentUser => currentUser ? { ...currentUser, onboardingCompleted: true } : currentUser, { revalidate: false })
     },
     updateHouseholdName: (id: number, name: string) => {
       void mutate(currentUser => currentUser ? {

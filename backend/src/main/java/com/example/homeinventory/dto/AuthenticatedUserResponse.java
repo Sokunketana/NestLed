@@ -11,19 +11,4 @@ public record AuthenticatedUserResponse(
         Long householdId,
         String householdName,
         HouseholdRole householdRole,
-        List<PendingHouseholdInvitationResponse> pendingInvitations,
-        boolean onboardingCompleted) {
-
-    public AuthenticatedUserResponse(
-            Long id,
-            String email,
-            String displayName,
-            String pictureUrl,
-            Long householdId,
-            String householdName,
-            HouseholdRole householdRole,
-            List<PendingHouseholdInvitationResponse> pendingInvitations) {
-        this(id, email, displayName, pictureUrl, householdId, householdName, householdRole,
-                pendingInvitations, true);
-    }
-}
+        List<PendingHouseholdInvitationResponse> pendingInvitations) {}

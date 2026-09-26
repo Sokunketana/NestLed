@@ -7,6 +7,7 @@ import { itemApi } from '../../api/itemApi'
 import { roomApi } from '../../api/roomApi'
 import { storageLocationApi } from '../../api/storageLocationApi'
 import { ApiRequestError } from '../../api/http'
+import AddCategoryModal from '../../components/AddCategoryModal'
 import DuplicateItemModal from '../../components/DuplicateItemModal'
 import ItemPhoto from '../../components/ItemPhoto'
 import { ErrorMessage, Loading } from '../../components/PageState'
@@ -38,6 +39,8 @@ export default function ItemFormPage() {
   const [photoError, setPhotoError] = useState('')
   const [duplicateItems, setDuplicateItems] = useState<Item[]>([])
   const [pendingDuplicatePayload, setPendingDuplicatePayload] = useState<ItemPayload | null>(null)
+  const [showAddCategory, setShowAddCategory] = useState(false)
+  const [recentCategory, setRecentCategory] = useState<Category | null>(null)
   const photoInput = useRef<HTMLInputElement>(null)
   const persistedItemId = useRef<number | null>(id ? Number(id) : null)
   const itemVersion = useRef<number | null>(null)
@@ -159,17 +162,31 @@ export default function ItemFormPage() {
     }
   }
 
+  async function handleCategorySaved(category: Category) {
+    setRecentCategory(category)
+    set('categoryId', category.id)
+    setShowAddCategory(false)
+    try {
+      await revalidateInventory({ categories: true, dashboard: true, itemDetails: true, items: true, rooms: true })
+    } catch {
+      // The newly created category is kept in the local list so the item form remains usable.
+    }
+  }
+
   const loadError = roomsError || categoriesError || locationsError || itemError
   if (loadError) return <ErrorMessage message={loadError instanceof Error ? loadError.message : 'Unable to load the item form.'} />
   if (!rooms || !categories || !locations || (editing && !item)) return <Loading />
   const roomList = rooms ?? []
-  const categoryList = categories ?? []
+  const categoryList = recentCategory && !categories.some(category => category.id === recentCategory.id)
+    ? [...categories, recentCategory].sort((left, right) => left.name.localeCompare(right.name))
+    : categories
   const locationList = locations ?? []
   const roomLocations = locationList.filter(location => location.roomId === form.roomId)
   const hasSelectedPhoto = Boolean(photoPreviewUrl)
   const hasDisplayedPhoto = hasSelectedPhoto || Boolean(existingPhotoUrl && !removePhoto)
 
   return <>
+    {showAddCategory && <AddCategoryModal onClose={() => setShowAddCategory(false)} onSaved={handleCategorySaved} />}
     {duplicateItems.length > 0 && <DuplicateItemModal
       items={duplicateItems}
       onClose={() => { setDuplicateItems([]); setPendingDuplicatePayload(null) }}
@@ -177,7 +194,10 @@ export default function ItemFormPage() {
     />}
     <Link to={editing ? `/items/${id}` : '/items'} className="inline-flex items-center gap-2 text-sm font-bold text-pine"><Icon name="arrow-left" className="h-4 w-4" />Cancel</Link>
     <div className="mt-5 max-w-3xl"><h1 className="page-title">{editing ? 'Edit item' : 'Add an item'}</h1><p className="mt-2 text-stone-500">Start with the item’s name and place. Add extra details only when they’re useful.</p></div>
-    {!roomList.length || !locationList.length || !categoryList.length ? <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">Create at least one <Link className="underline" to="/rooms">room and storage location</Link> and <Link className="underline" to="/categories">category</Link> before adding an item.</div> : null}
+    {!roomList.length || !locationList.length || !categoryList.length ? <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+      {(!roomList.length || !locationList.length) && <>Create at least one <Link className="underline" to="/rooms">room and storage location</Link> before adding an item.</>}
+      {!categoryList.length && <>{(!roomList.length || !locationList.length) && ' '}Add a <button type="button" className="font-semibold underline" onClick={() => setShowAddCategory(true)}>category here</button> or manage categories in <Link className="underline" to="/categories">Categories</Link> before adding an item.</>}
+    </div> : null}
     <form onSubmit={submit} className="mt-8 space-y-6">
       {error && <ErrorMessage message={error} />}
       <section className="card">
@@ -186,7 +206,10 @@ export default function ItemFormPage() {
           <div className="md:col-span-2"><label className="label">Item name *</label><input className="field" required maxLength={150} value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Passport" /></div>
           <div><label className="label">Room *</label><Select required value={form.roomId ? String(form.roomId) : ''} onValueChange={value => { set('roomId', Number(value)); set('storageLocationId', 0) }}><SelectTrigger><SelectValue placeholder="Select room" /></SelectTrigger><SelectContent><SelectItem value="">Select room</SelectItem>{roomList.map(r => <SelectItem key={r.id} value={String(r.id)}>{r.name}</SelectItem>)}</SelectContent></Select></div>
           <div><label className="label">Storage location *</label><Select required value={form.storageLocationId ? String(form.storageLocationId) : ''} onValueChange={value => set('storageLocationId', Number(value))} disabled={!form.roomId}><SelectTrigger><SelectValue placeholder={form.roomId && !roomLocations.length ? 'Add a location to this room first' : 'Select location'} /></SelectTrigger><SelectContent><SelectItem value="">{form.roomId && !roomLocations.length ? 'Add a location to this room first' : 'Select location'}</SelectItem>{roomLocations.map(l => <SelectItem key={l.id} value={String(l.id)}>{l.name}</SelectItem>)}</SelectContent></Select>{form.roomId > 0 && !roomLocations.length && <p className="mt-2 text-sm text-amber-700">This room has no storage locations. <Link className="font-semibold underline" to="/rooms">Add one first</Link>.</p>}</div>
-          <div><label className="label">Category *</label><Select required value={form.categoryId ? String(form.categoryId) : ''} onValueChange={value => set('categoryId', Number(value))}><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent><SelectItem value="">Select category</SelectItem>{categoryList.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+          <div>
+            <div className="mb-1.5 flex items-center justify-between gap-2"><label className="label mb-0">Category *</label><button type="button" className="inline-flex items-center gap-1 text-sm font-semibold text-pine hover:underline" onClick={() => setShowAddCategory(true)} disabled={saving}><Icon name="plus" className="h-3.5 w-3.5" />Add category</button></div>
+            <Select required value={form.categoryId ? String(form.categoryId) : ''} onValueChange={value => set('categoryId', Number(value))}><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent><SelectItem value="">Select category</SelectItem>{categoryList.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}</SelectContent></Select>
+          </div>
         </div>
       </section>
       <details className="card group" open={editing || undefined}>

@@ -132,7 +132,6 @@ export default function LandingPage() {
 
       <section className="lp-faq lp-container" id="faq" aria-labelledby="lp-faq-title"><div className="lp-faq-heading"><Badge variant="secondary">GOOD TO KNOW</Badge><h2 id="lp-faq-title">A few questions, answered.</h2><p>Everything you need to feel at home with Nestled.</p></div><div className="lp-faq-list">{faqs.map(({ question, answer }) => <details key={question}><summary>{question}<Icon name="plus" /></summary><p>{answer}</p></details>)}</div></section>
 
-      <section className="lp-container lp-final-section"><div className="lp-final-card"><div className="lp-final-glow" /><div className="lp-final-copy"><Badge variant="outline">READY WHEN YOU ARE</Badge><h2>Feel good about<br />what’s where.</h2><p>A calmer home begins with knowing what you have. Give everything a place with Nestled.</p><Link className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-final-button' })} to="/login">Get started <Icon name="arrow-right" /></Link></div><div className="lp-final-art" aria-hidden="true"><span className="lp-final-art-ring"><Icon name="home" /></span><span className="lp-final-art-note"><Icon name="check" /> Everything in its place</span></div></div></section>
     </main>
 
     <footer className="lp-footer"><div className="lp-container lp-footer-inner"><Brand /><span>© {new Date().getFullYear()} Nestled. Your home, organized with care.</span><a href="#main-content" onClick={event => scrollToAnchor(event, 'main-content')}>Back to top ↑</a></div></footer>

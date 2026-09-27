@@ -8,7 +8,6 @@ import './landing.css'
 
 function Brand() {
   return <Link className="lp-brand" to="/" aria-label="Nestled home">
-    <span className="lp-brand-mark" aria-hidden="true"><Icon name="home" /></span>
     <span>Nestled<span className="lp-brand-dot">.</span></span>
   </Link>
 }

@@ -64,7 +64,7 @@ function Brand() {
 function HomePath() {
   const places = [
     { icon: 'home' as const, label: 'HOME', name: 'Your home', tone: 'green' },
-    { icon: 'home' as const, label: 'ROOM', name: 'Bedroom', tone: 'amber' },
+    { icon: 'grid' as const, label: 'ROOM', name: 'Bedroom', tone: 'amber' },
     { icon: 'box' as const, label: 'STORAGE SPOT', name: 'Top drawer', tone: 'lilac' },
     { icon: 'tag' as const, label: 'ITEM', name: 'Passport', tone: 'coral' },
   ]

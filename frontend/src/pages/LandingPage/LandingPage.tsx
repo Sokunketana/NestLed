@@ -1,10 +1,58 @@
-import { useState } from 'react'
+import { useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../../components/Icon'
 import { Badge } from '../../components/ui/badge'
 import { Button, buttonVariants } from '../../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import './landing.css'
+
+function scrollToAnchor(event: MouseEvent<HTMLAnchorElement>, targetId: string, afterNavigate?: () => void) {
+  const target = document.getElementById(targetId)
+  if (!target) return
+
+  event.preventDefault()
+  afterNavigate?.()
+  window.history.pushState(null, '', `#${targetId}`)
+
+  const startY = window.scrollY
+  const targetY = Math.max(0, startY + target.getBoundingClientRect().top - 24)
+  const distance = targetY - startY
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(distance) < 2) {
+    window.scrollTo(0, targetY)
+    return
+  }
+
+  const duration = Math.min(1800, Math.max(1000, Math.abs(distance) * 0.55))
+  const startedAt = performance.now()
+  let frame = 0
+
+  const finish = () => {
+    window.removeEventListener('wheel', cancel)
+    window.removeEventListener('touchstart', cancel)
+    window.removeEventListener('pointerdown', cancel)
+    window.removeEventListener('keydown', cancel)
+  }
+  const cancel = () => {
+    cancelAnimationFrame(frame)
+    finish()
+  }
+  const animate = (now: number) => {
+    const progress = Math.min((now - startedAt) / duration, 1)
+    const eased = progress < 0.5
+      ? 4 * progress ** 3
+      : 1 - ((-2 * progress + 2) ** 3) / 2
+    window.scrollTo(0, startY + distance * eased)
+
+    if (progress < 1) frame = requestAnimationFrame(animate)
+    else finish()
+  }
+
+  window.addEventListener('wheel', cancel, { passive: true })
+  window.addEventListener('touchstart', cancel, { passive: true })
+  window.addEventListener('pointerdown', cancel, { passive: true })
+  window.addEventListener('keydown', cancel)
+  frame = requestAnimationFrame(animate)
+}
 
 function Brand() {
   return <Link className="lp-brand" to="/" aria-label="Nestled home">
@@ -57,9 +105,9 @@ export default function LandingPage() {
     <header className="lp-header"><div className="lp-container lp-header-inner">
       <Brand />
       <nav className={`lp-nav ${menuOpen ? 'is-open' : ''}`} id="landing-navigation" aria-label="Main navigation">
-        <a href="#features" onClick={() => setMenuOpen(false)}>Features</a>
-        <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
-        <a href="#faq" onClick={() => setMenuOpen(false)}>FAQ</a>
+        <a href="#features" onClick={event => scrollToAnchor(event, 'features', () => setMenuOpen(false))}>Features</a>
+        <a href="#how-it-works" onClick={event => scrollToAnchor(event, 'how-it-works', () => setMenuOpen(false))}>How it works</a>
+        <a href="#faq" onClick={event => scrollToAnchor(event, 'faq', () => setMenuOpen(false))}>FAQ</a>
       </nav>
       <div className="lp-header-actions"><Link className="lp-sign-in" to="/login">Sign in</Link><Link className={buttonVariants({ size: 'sm', className: 'lp-nav-cta' })} to="/login">Get started <Icon name="arrow-right" /></Link></div>
       <Button variant="outline" size="icon" className="lp-menu-button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-controls="landing-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><span className="lp-menu-lines"><i /><i /><i /></span></Button>
@@ -70,7 +118,7 @@ export default function LandingPage() {
         <Badge variant="outline" className="lp-announcement"><Icon name="sparkles" /> THE HOME INVENTORY THAT FEELS LIKE HOME <Icon name="arrow-right" /></Badge>
         <h1 id="lp-title">A place for everything.<br /><span>Finally.</span></h1>
         <p>Keep track of what you own, know exactly where it lives, and bring your household along. A little organization goes a long way.</p>
-        <div className="lp-hero-actions"><Link className={buttonVariants({ size: 'lg', className: 'lp-primary-cta' })} to="/login">Get started with Nestled <Icon name="arrow-right" /></Link><a className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-secondary-cta' })} href="#how-it-works">See how it works</a></div>
+        <div className="lp-hero-actions"><Link className={buttonVariants({ size: 'lg', className: 'lp-primary-cta' })} to="/login">Get started with Nestled <Icon name="arrow-right" /></Link><a className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-secondary-cta' })} href="#how-it-works" onClick={event => scrollToAnchor(event, 'how-it-works')}>See how it works</a></div>
         <div className="lp-hero-points"><span><Icon name="check" /> Organize by room</span><span><Icon name="check" /> Find things faster</span><span><Icon name="check" /> Share with your household</span></div>
       </section>
 
@@ -87,6 +135,6 @@ export default function LandingPage() {
       <section className="lp-container lp-final-section"><div className="lp-final-card"><div className="lp-final-glow" /><div className="lp-final-copy"><Badge variant="outline">READY WHEN YOU ARE</Badge><h2>Feel good about<br />what’s where.</h2><p>A calmer home begins with knowing what you have. Give everything a place with Nestled.</p><Link className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-final-button' })} to="/login">Get started <Icon name="arrow-right" /></Link></div><div className="lp-final-art" aria-hidden="true"><span className="lp-final-art-ring"><Icon name="home" /></span><span className="lp-final-art-note"><Icon name="check" /> Everything in its place</span></div></div></section>
     </main>
 
-    <footer className="lp-footer"><div className="lp-container lp-footer-inner"><Brand /><span>© {new Date().getFullYear()} Nestled. Your home, organized with care.</span><a href="#main-content">Back to top ↑</a></div></footer>
+    <footer className="lp-footer"><div className="lp-container lp-footer-inner"><Brand /><span>© {new Date().getFullYear()} Nestled. Your home, organized with care.</span><a href="#main-content" onClick={event => scrollToAnchor(event, 'main-content')}>Back to top ↑</a></div></footer>
   </div>
 }

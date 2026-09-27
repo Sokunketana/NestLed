@@ -1,8 +1,9 @@
-import { useState, type MouseEvent } from 'react'
+import { Fragment, useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../../components/Icon'
 import { Badge } from '../../components/ui/badge'
 import { Button, buttonVariants } from '../../components/ui/button'
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '../../components/ui/breadcrumb'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import './landing.css'
 
@@ -86,7 +87,7 @@ function HomePath() {
 }
 
 const features = [
-  { icon: 'home' as const, label: 'SPACE BY SPACE', title: 'Organize the way you live.', description: 'Build a simple map of your home with rooms and storage spots. Every item gets an address you can remember.', tone: 'green', detail: 'Home  /  Bedroom  /  Top drawer', detailIcon: 'map' as const },
+  { icon: 'home' as const, label: 'SPACE BY SPACE', title: 'Organize the way you live.', description: 'Build a simple map of your home with rooms and storage spots. Every item gets an address you can remember.', tone: 'green', breadcrumb: ['Home', 'Bedroom', 'Top drawer'] },
   { icon: 'search' as const, label: 'FIND IT FAST', title: 'Skip the scavenger hunt.', description: 'Search for what you need and know exactly where to look, even for the things you tucked away months ago.', tone: 'amber', detail: 'Passport found in Top drawer', detailIcon: 'check' as const },
   { icon: 'users' as const, label: 'BETTER TOGETHER', title: 'Keep everyone in the know.', description: 'Invite your household so everyone shares the same clear picture of what’s at home and where it lives.', tone: 'lilac', detail: 'Your household stays in sync', detailIcon: 'users' as const },
 ]
@@ -126,7 +127,7 @@ export default function LandingPage() {
 
       <section className="lp-trust-strip" aria-label="A simpler way to manage your home"><div className="lp-container"><span>Made for the way real homes work.</span><div><Icon name="home" /> Room by room</div><div><Icon name="search" /> Easy to find</div><div><Icon name="users" /> Better together</div></div></section>
 
-      <section className="lp-section lp-container" id="features" aria-labelledby="lp-features-title"><div className="lp-section-heading"><Badge variant="secondary">WHY NESTLED</Badge><h2 id="lp-features-title">Your home makes more sense<br />when everything has a place.</h2><p>Spend less time remembering where things went and more time enjoying the space you’ve made.</p></div><div className="lp-feature-grid">{features.map(feature => <Card className="lp-feature-card" key={feature.label}><CardHeader><span className={`lp-feature-icon ${feature.tone}`}><Icon name={feature.icon} /></span><Badge variant="outline" className="lp-feature-label">{feature.label}</Badge><CardTitle>{feature.title}</CardTitle><CardDescription>{feature.description}</CardDescription></CardHeader><CardContent><div className="lp-feature-detail"><Icon name={feature.detailIcon} /><span>{feature.detail}</span></div></CardContent></Card>)}</div></section>
+      <section className="lp-section lp-container" id="features" aria-labelledby="lp-features-title"><div className="lp-section-heading"><Badge variant="secondary">WHY NESTLED</Badge><h2 id="lp-features-title">Your home makes more sense<br />when everything has a place.</h2><p>Spend less time remembering where things went and more time enjoying the space you’ve made.</p></div><div className="lp-feature-grid">{features.map(feature => <Card className="lp-feature-card" key={feature.label}><CardHeader><span className={`lp-feature-icon ${feature.tone}`}><Icon name={feature.icon} /></span><Badge variant="outline" className="lp-feature-label">{feature.label}</Badge><CardTitle>{feature.title}</CardTitle><CardDescription>{feature.description}</CardDescription></CardHeader><CardContent><div className="lp-feature-detail">{'breadcrumb' in feature ? <Breadcrumb className="lp-feature-breadcrumb"><BreadcrumbList>{feature.breadcrumb.map((crumb, index) => <Fragment key={crumb}>{index > 0 && <BreadcrumbSeparator />}<BreadcrumbItem>{index === feature.breadcrumb.length - 1 ? <BreadcrumbPage className="lp-feature-crumb-current">{crumb}</BreadcrumbPage> : <span className="lp-feature-crumb">{crumb}</span>}</BreadcrumbItem></Fragment>)}</BreadcrumbList></Breadcrumb> : <><Icon name={feature.detailIcon} /><span>{feature.detail}</span></>}</div></CardContent></Card>)}</div></section>
 
       <section className="lp-how" id="how-it-works" aria-labelledby="lp-how-title"><div className="lp-container lp-how-inner"><div className="lp-how-copy"><Badge variant="outline">SIMPLE FROM THE START</Badge><h2 id="lp-how-title">From “where is it?”<br />to “there it is.”</h2><p>There’s no complicated setup. Just build your home’s map as you go, one room and one item at a time.</p><Link className={buttonVariants({ size: 'lg' })} to="/login">Make yourself at home <Icon name="arrow-right" /></Link></div><div className="lp-step-list"><div><span>01</span><div><h3>Set up your spaces</h3><p>Add rooms and the storage spots inside them.</p></div><Icon name="home" /></div><div><span>02</span><div><h3>Put things in their place</h3><p>Save items with the details and photos that matter.</p></div><Icon name="box" /></div><div><span>03</span><div><h3>Find and share with ease</h3><p>Search your home and invite others to stay in sync.</p></div><Icon name="search" /></div></div></div></section>
 

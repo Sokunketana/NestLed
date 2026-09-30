@@ -84,9 +84,9 @@ function HomePath() {
 }
 
 const features = [
-  { icon: 'home' as const, title: 'Organize the way you live.', description: 'Build a simple map of your home with rooms and storage spots. Every item gets an address you can remember.', tone: 'green' },
-  { icon: 'search' as const, title: 'Skip the scavenger hunt.', description: 'Search for what you need and know exactly where to look, even for the things you tucked away months ago.', tone: 'amber' },
-  { icon: 'users' as const, title: 'Keep everyone in the know.', description: 'Invite your household so everyone shares the same clear picture of what’s at home and where it lives.', tone: 'lilac' },
+  { title: 'Organize the way you live.', description: 'Build a simple map of your home with rooms and storage spots. Every item gets an address you can remember.' },
+  { title: 'Skip the scavenger hunt.', description: 'Search for what you need and know exactly where to look, even for the things you tucked away months ago.' },
+  { title: 'Keep everyone in the know.', description: 'Invite your household so everyone shares the same clear picture of what’s at home and where it lives.' },
 ]
 
 const faqs = [
@@ -125,7 +125,7 @@ export default function LandingPage() {
         <section className="lp-trust-strip" aria-label="A simpler way to manage your home"><div className="lp-container"><span><Icon name="sparkles" /> Made for the way real homes work.</span><div><Icon name="home" /> Room by room</div><div><Icon name="search" /> Easy to find</div><div><Icon name="users" /> Better together</div></div></section>
       </div>
 
-      <section className="lp-section lp-container" id="features" aria-labelledby="lp-features-title"><div className="lp-section-heading"><h2 id="lp-features-title">Your home makes more sense<br />when everything has a place.</h2><p>Spend less time remembering where things went and more time enjoying the space you’ve made.</p></div><div className="lp-feature-grid">{features.map(feature => <Card className="lp-feature-card" key={feature.title}><CardHeader><span className={`lp-feature-icon ${feature.tone}`}><Icon name={feature.icon} /></span><CardTitle>{feature.title}</CardTitle><CardDescription>{feature.description}</CardDescription></CardHeader></Card>)}</div></section>
+      <section className="lp-section lp-container" id="features" aria-labelledby="lp-features-title"><div className="lp-section-heading"><h2 id="lp-features-title">Your home makes more sense<br />when everything has a place.</h2><p>Spend less time remembering where things went and more time enjoying the space you’ve made.</p></div><div className="lp-feature-grid">{features.map(feature => <Card className="lp-feature-card" key={feature.title}><CardHeader><CardTitle>{feature.title}</CardTitle><CardDescription>{feature.description}</CardDescription></CardHeader></Card>)}</div></section>
 
       <section className="lp-how" id="how-it-works" aria-labelledby="lp-how-title"><div className="lp-container lp-how-inner"><div className="lp-how-copy"><h2 id="lp-how-title">From “where is it?”<br />to “there it is.”</h2><p>There’s no complicated setup. Just build your home’s map as you go, one room and one item at a time.</p><Link className={buttonVariants({ size: 'lg' })} to="/login">Make yourself at home <Icon name="arrow-right" /></Link></div><div className="lp-step-list"><div><span>01</span><div><h3>Set up your spaces</h3><p>Add rooms and the storage spots inside them.</p></div><Icon name="home" /></div><div><span>02</span><div><h3>Put things in their place</h3><p>Save items with the details and photos that matter.</p></div><Icon name="box" /></div><div><span>03</span><div><h3>Find and share with ease</h3><p>Search your home and invite others to stay in sync.</p></div><Icon name="search" /></div></div></div></section>
 

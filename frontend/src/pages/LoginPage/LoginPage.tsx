@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext'
 import BrandLogo from '../../components/BrandLogo'
 
@@ -27,7 +28,7 @@ export default function LoginPage() {
         <p className="login-privacy mt-6 text-center text-xs leading-relaxed text-stone-400">Private to you and invited household members.</p>
       </div>
 
-      <p className="login-caption mt-6 text-center text-xs text-stone-400">Your home, organized with care.</p>
+      <p className="login-caption mt-6 text-center text-xs text-stone-400"><Link className="text-deep underline underline-offset-4 hover:text-pine" to="/">Explore Nestled</Link> · Your home, organized with care.</p>
     </section>
   </main>
 }

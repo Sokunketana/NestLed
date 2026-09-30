@@ -51,7 +51,7 @@ export default function Layout() {
       <header className="sticky top-0 z-10 border-b border-line/80 bg-cream/90 backdrop-blur-md">
         <div className="relative mx-auto flex w-full max-w-7xl flex-wrap items-center gap-3 px-4 py-3 sm:flex-nowrap sm:gap-4 sm:px-5 lg:px-8 min-[1600px]:grid min-[1600px]:grid-cols-[auto_minmax(0,1fr)_auto]">
           <Link to="/" className="group order-1 flex shrink-0 items-center gap-2 rounded-xl py-1 sm:order-none">
-            <BrandLogo householdName={user?.householdName} showHousehold />
+            <BrandLogo />
           </Link>
           <form onSubmit={submit} className="order-3 flex min-w-0 basis-full gap-2 sm:order-none sm:mx-0 sm:w-0 sm:max-w-none sm:flex-1 sm:basis-auto sm:gap-3 min-[1600px]:static min-[1600px]:w-auto min-[1600px]:max-w-none min-[1600px]:translate-x-0 min-[1600px]:translate-y-0 min-[1600px]:px-0">
             <div className="relative min-w-0 flex-1"><Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
@@ -78,7 +78,7 @@ export default function Layout() {
             {showProfileMenu && <div role="menu" aria-label="Account menu" className="absolute right-0 top-[calc(100%+0.75rem)] z-30 w-[min(16rem,calc(100vw-1.5rem))] rounded-2xl border border-line bg-surface p-2 shadow-card">
               <div className="border-b border-line px-3 py-2.5">
                 <p className="break-words text-sm font-semibold text-ink">{accountName}</p>
-                {user?.email && <p className="mt-0.5 break-all text-xs text-ink-soft">{user.email}</p>}
+                {user?.householdName && <p className="mt-0.5 break-words text-xs text-ink-soft">{user.householdName}</p>}
               </div>
               <Link
                 to="/profile"

@@ -133,7 +133,7 @@ async function mockAuthenticatedApi(page: Page, setup: { rooms?: typeof room[]; 
   })
 }
 
-test('anonymous visitors see the sign-in page', async ({ page }) => {
+test('anonymous visitors can open the sign-in page from the landing page', async ({ page }) => {
   await page.route('**/api/auth/me', route => route.fulfill({
     status: 401,
     contentType: 'application/json',
@@ -142,6 +142,9 @@ test('anonymous visitors see the sign-in page', async ({ page }) => {
 
   await page.goto('/')
 
+  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await page.getByRole('link', { name: 'Sign in' }).click()
+  await expect(page).toHaveURL(/\/login$/)
   await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible()
 })
@@ -160,7 +163,14 @@ test('an authenticated user can drill down from a room to item details', async (
   await page.getByRole('link', { name: /Passport/ }).click()
   await expect(page).toHaveURL(/\/items\/1$/)
   await expect(page.getByRole('heading', { name: 'Passport', exact: true })).toBeVisible()
-  await expect(page.getByText('Bedroom → Top drawer')).toBeVisible()
+  const breadcrumb = page.getByRole('navigation', { name: 'breadcrumb' })
+  await expect(breadcrumb.getByRole('link', { name: 'Rooms' })).toBeVisible()
+  await expect(breadcrumb.getByRole('link', { name: 'Bedroom' })).toBeVisible()
+  await expect(breadcrumb.getByText('Top drawer', { exact: true })).toBeVisible()
+  await breadcrumb.getByRole('link', { name: 'Bedroom' }).click()
+  await expect(page).toHaveURL(/\/\?roomId=1$/)
+  await page.goBack()
+  await expect(page.getByRole('heading', { name: 'Passport', exact: true })).toBeVisible()
   await page.getByRole('link', { name: 'Back to Top drawer' }).click()
   await expect(page.getByRole('heading', { name: 'Items in Top drawer' })).toBeVisible()
 })

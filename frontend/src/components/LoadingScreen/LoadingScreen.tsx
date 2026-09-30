@@ -1,23 +1,19 @@
 export default function LoadingScreen() {
-  return <main className="loading-screen" aria-busy="true" aria-live="polite">
-    <div className="loading-screen__glow loading-screen__glow--top" aria-hidden="true" />
-    <div className="loading-screen__glow loading-screen__glow--bottom" aria-hidden="true" />
+  return (
+    <main className="loading-screen" aria-busy="true" role="status" aria-label="Loading">
+      <div className="loading-screen__glow loading-screen__glow--top" aria-hidden="true" />
+      <div className="loading-screen__glow loading-screen__glow--bottom" aria-hidden="true" />
 
-    <section className="loading-card">
       <div className="loading-visual" aria-hidden="true">
         <span className="loading-ring loading-ring--outer" />
         <span className="loading-ring loading-ring--inner" />
-        <span className="loading-wordmark">Nestled</span>
+        <span className="loading-core">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="m5 14 11-9 11 9v12H5V14Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+            <path d="M12 26v-8h8v8M9 14h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
       </div>
-
-      <h1 className="loading-title">Making room for your home.</h1>
-      <p className="loading-description">Checking your session and preparing your inventory…</p>
-
-      <div className="loading-progress" aria-hidden="true"><span /></div>
-      <div className="loading-status">
-        <span className="loading-dots" aria-hidden="true"><i /><i /><i /></span>
-        <span>Getting things ready</span>
-      </div>
-    </section>
-  </main>
+    </main>
+  )
 }

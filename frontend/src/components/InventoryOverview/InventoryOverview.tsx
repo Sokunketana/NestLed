@@ -181,7 +181,19 @@ export default function InventoryOverview({ dashboard, rooms, locations, categor
   return <>
     <h1 className="sr-only">Home inventory overview</h1>
     <section aria-label="Inventory stats" className="grid grid-cols-3 gap-2 sm:gap-4">
-      {[{ label: 'Total items', value: dashboard.totalItems, note: 'All catalogued belongings' }, { label: 'Rooms', value: dashboard.totalRooms, note: 'Spaces in your home' }, { label: 'Categories', value: dashboard.totalCategories, note: 'Ways your items are grouped' }].map(stat => <div className="card min-w-0 p-3 text-center sm:p-5" key={stat.label}><p className="text-[0.65rem] font-semibold leading-tight text-stone-500 sm:text-sm">{stat.label}</p><p className="mt-3 text-2xl font-bold tracking-tight sm:mt-5 sm:text-3xl">{stat.value}</p><p className="mt-0.5 hidden text-[0.65rem] leading-tight text-ink-soft sm:mt-1 sm:block sm:text-xs">{stat.note}</p></div>)}
+      {[
+        { label: 'Total items', value: dashboard.totalItems, note: 'All catalogued belongings' },
+        { label: 'Rooms', value: dashboard.totalRooms, note: 'Spaces in your home' },
+        { label: 'Categories', value: dashboard.totalCategories, note: 'Ways your items are grouped' },
+      ].map(stat => (
+        <div className="card flex min-w-0 flex-col items-center justify-center gap-1 px-2 py-2.5 text-center sm:min-h-[4.75rem] sm:flex-row sm:justify-between sm:gap-3 sm:px-4 sm:py-3 sm:text-left" key={stat.label}>
+          <div className="min-w-0">
+            <p className="text-[0.65rem] font-semibold leading-tight text-stone-500 sm:text-sm">{stat.label}</p>
+            <p className="hidden text-xs leading-tight text-ink-soft lg:block">{stat.note}</p>
+          </div>
+          <p className="shrink-0 text-xl font-bold leading-none tracking-tight sm:text-2xl">{stat.value}</p>
+        </div>
+      ))}
     </section>
 
     <section className="mt-3" aria-labelledby="inventory-level-title">

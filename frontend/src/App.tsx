@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Layout from './components/Layout'
 import DashboardPage from './pages/DashboardPage'
 import HomeTreePage from './pages/HomeTreePage'
@@ -8,6 +8,7 @@ import ItemFormPage from './pages/ItemFormPage'
 import RoomsPage from './pages/RoomsPage'
 import CategoriesPage from './pages/CategoriesPage'
 import LoginPage from './pages/LoginPage'
+import LandingPage from './pages/LandingPage'
 import MovementHistoryPage from './pages/MovementHistoryPage'
 import { useAuth } from './auth/AuthContext'
 import LoadingScreen from './components/LoadingScreen'
@@ -18,13 +19,19 @@ import HouseholdDataPage from './pages/HouseholdDataPage'
 
 export default function App() {
   const { status } = useAuth()
+  const { search } = useLocation()
 
   if (status === 'loading') {
     return <LoadingScreen />
   }
-  if (status === 'anonymous') return <LoginPage />
+  if (status === 'anonymous') return <Routes>
+    <Route path="/" element={new URLSearchParams(search).has('loginError') ? <Navigate to={`/login${search}`} replace /> : <LandingPage />} />
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Routes>
 
   return <Routes>
+    <Route path="/login" element={<Navigate to="/" replace />} />
     <Route element={<Layout />}>
       <Route path="/" element={<DashboardPage />} />
       <Route path="/home" element={<HomeTreePage />} />

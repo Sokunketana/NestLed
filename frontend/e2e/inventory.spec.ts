@@ -133,7 +133,7 @@ async function mockAuthenticatedApi(page: Page, setup: { rooms?: typeof room[]; 
   })
 }
 
-test('anonymous visitors see the sign-in page', async ({ page }) => {
+test('anonymous visitors can open the sign-in page from the landing page', async ({ page }) => {
   await page.route('**/api/auth/me', route => route.fulfill({
     status: 401,
     contentType: 'application/json',
@@ -142,6 +142,9 @@ test('anonymous visitors see the sign-in page', async ({ page }) => {
 
   await page.goto('/')
 
+  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await page.getByRole('link', { name: 'Sign in' }).click()
+  await expect(page).toHaveURL(/\/login$/)
   await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible()
 })

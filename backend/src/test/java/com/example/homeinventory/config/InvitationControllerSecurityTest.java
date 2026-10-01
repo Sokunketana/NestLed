@@ -44,6 +44,22 @@ class InvitationControllerSecurityTest {
     private HouseholdAccessService householdAccessService;
 
     @Test
+    void throttlesInvitationRequestsByUserBeforeCallingTheService() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            mockMvc.perform(post("/api/invitations/99/accept")
+                            .with(oidcLogin().idToken(token -> token.subject("limited-user"))).with(csrf()))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(post("/api/invitations/99/accept")
+                        .with(oidcLogin().idToken(token -> token.subject("limited-user"))).with(csrf()))
+                .andExpect(status().isTooManyRequests());
+        verify(invitationService, org.mockito.Mockito.times(10)).accept(any(), eq(99L));
+        mockMvc.perform(post("/api/invitations/99/accept")
+                        .with(oidcLogin().idToken(token -> token.subject("other-user"))).with(csrf()))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void letsAuthenticatedHouseholdlessUserAcceptAnInvitation() throws Exception {
         when(invitationService.accept(any(), eq(23L))).thenReturn(new AuthenticatedUserResponse(
                 1L, "person@example.com", "Person Example", null,

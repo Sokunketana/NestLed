@@ -13,6 +13,7 @@ import com.example.homeinventory.exception.BadRequestException;
 import com.example.homeinventory.exception.DuplicateItemException;
 import com.example.homeinventory.exception.ResourceNotFoundException;
 import com.example.homeinventory.repository.ItemRepository;
+import com.example.homeinventory.repository.HouseholdRepository;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -39,10 +41,17 @@ public class ItemService {
     private final PhotoStorageService photoStorageService;
     private final HouseholdAccessService householdAccessService;
     private final ItemMovementService itemMovementService;
+    private final HouseholdRepository householdRepository;
+    private final int maxPhotosPerHousehold;
 
     public ItemService(ItemRepository itemRepository, RoomService roomService, CategoryService categoryService,
                        StorageLocationService storageLocationService, PhotoStorageService photoStorageService,
-                       HouseholdAccessService householdAccessService, ItemMovementService itemMovementService) {
+                       HouseholdAccessService householdAccessService, ItemMovementService itemMovementService,
+                       HouseholdRepository householdRepository,
+                       @Value("${app.photo-storage.max-photos-per-household:20}") int maxPhotosPerHousehold) {
+        if (maxPhotosPerHousehold <= 0) {
+            throw new IllegalArgumentException("Household photo limit must be positive");
+        }
         this.itemRepository = itemRepository;
         this.roomService = roomService;
         this.categoryService = categoryService;
@@ -50,6 +59,8 @@ public class ItemService {
         this.photoStorageService = photoStorageService;
         this.householdAccessService = householdAccessService;
         this.itemMovementService = itemMovementService;
+        this.householdRepository = householdRepository;
+        this.maxPhotosPerHousehold = maxPhotosPerHousehold;
     }
 
     public List<ItemResponse> findAll(Long roomId, Long categoryId, Long storageLocationId) {
@@ -160,7 +171,19 @@ public class ItemService {
 
     @Transactional
     public ItemResponse updatePhoto(Long id, MultipartFile file) {
-        Item item = getEntity(id);
+        Long householdId = activeHousehold().getId();
+        // Hold the household lock until transaction completion. Lock before reading
+        // the item so concurrent replacements see the latest committed filename.
+        householdRepository.findByIdForPhotoUpload(householdId)
+                .orElseThrow(() -> new ResourceNotFoundException("Household was not found"));
+        Item item = itemRepository.findByIdAndHouseholdId(id, householdId)
+                .orElseThrow(() -> new ResourceNotFoundException("Item with id " + id + " was not found"));
+        if (item.getPhotoFilename() == null
+                && itemRepository.countByHouseholdIdAndPhotoFilenameIsNotNull(householdId)
+                >= maxPhotosPerHousehold) {
+            throw new BadRequestException("Household photo limit of " + maxPhotosPerHousehold
+                    + " reached. Remove an existing photo before uploading another");
+        }
         PhotoStorageService.StoredPhoto newPhoto = photoStorageService.store(file);
         String previousFilename = item.getPhotoFilename();
         try {

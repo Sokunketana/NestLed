@@ -275,7 +275,8 @@ class ItemServiceTest {
                                 Household household, ItemMovementService movements) {
         HouseholdAccessService access = mock(HouseholdAccessService.class);
         when(access.getActiveHousehold()).thenReturn(household);
-        return new ItemService(items, rooms, categories, locations, photos, access, movements);
+        return new ItemService(items, rooms, categories, locations, photos, access, movements,
+                mock(com.example.homeinventory.repository.HouseholdRepository.class), 100);
     }
 
     private Household household() {

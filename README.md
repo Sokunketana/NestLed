@@ -31,6 +31,24 @@ It deliberately focuses on Spring Boot fundamentals. Authentication uses Google 
 - DTO-only controller responses (JPA entities never become the API contract)
 - Responsive React interface and one centralized API layer
 
+## Request rate limits
+
+Bucket4j enforces the following token buckets before protected work runs:
+
+| Requests | Identity | Default burst capacity | Refill |
+|---|---|---|---|
+| `/oauth2/**`, `/login/**`, `/api/auth/csrf` | Client IP | 20 | 20 tokens/minute |
+| Photo uploads, household import and import preview | OIDC issuer + subject | 20 | 20 tokens/minute |
+| Sending, accepting, rejecting, or cancelling invitations | OIDC issuer + subject | 10 | 10 tokens/hour |
+
+Exhausted buckets return HTTP `429` with a JSON `message` and `Retry-After` in seconds, exposed to the frontend through CORS. OPTIONS preflight requests and ordinary API reads do not consume tokens. Authentication and CSRF checks still apply to protected operations. Upload and invitation quotas are separate and shared across all relevant resource IDs for each user.
+
+Configure capacities and refill periods with the `RATE_LIMIT_*` variables in `backend/.env.example`. Capacity must be positive; periods must be positive and at most one day. Tokens replenish gradually, so these are burst limits with a sustained refill rate, rather than fixed calendar windows.
+
+Buckets are in memory per backend instance and reset on restart. Each category retains at most `RATE_LIMIT_MAX_BUCKETS` identities (default 10,000); idle buckets expire after a full refill period. If storage is full, new identities receive `429` rather than evicting active quotas. Use shared Bucket4j storage such as Redis before scaling to multiple backend instances if quotas must be global.
+
+IP limits use the servlet's resolved remote address. Because this application enables forwarded-header processing for deployment, the backend must sit behind a trusted proxy that strips or replaces client-supplied forwarded headers, with direct backend access restricted. Otherwise a client could spoof its IP quota. For direct local deployment without a proxy, set `SERVER_FORWARD_HEADERS_STRATEGY=none`.
+
 ## Folder structure and request layers
 
 ```text

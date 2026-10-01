@@ -1,6 +1,7 @@
 package com.example.homeinventory.config;
 
 import com.example.homeinventory.service.AppUserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -29,13 +31,15 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @Configuration
-@EnableConfigurationProperties(AuthProperties.class)
+@EnableConfigurationProperties({AuthProperties.class, RateLimitProperties.class})
 public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             AuthProperties authProperties,
             HouseholdMembershipFilter householdMembershipFilter,
+            RequestRateLimiter requestRateLimiter,
+            ObjectMapper objectMapper,
             OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService,
             @Value("${server.servlet.session.cookie.same-site:lax}") String sessionCookieSameSite,
             @Value("${server.servlet.session.cookie.secure:false}") boolean sessionCookieSecure) throws Exception {
@@ -84,9 +88,16 @@ public class SecurityConfig {
                         .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
                         .deleteCookies("JSESSIONID"));
 
-        http.addFilterAfter(householdMembershipFilter, AuthorizationFilter.class);
+        http.addFilterBefore(new RateLimitFilter(requestRateLimiter, true, objectMapper), OAuth2AuthorizationRequestRedirectFilter.class);
+        http.addFilterAfter(new RateLimitFilter(requestRateLimiter, false, objectMapper), AuthorizationFilter.class);
+        http.addFilterAfter(householdMembershipFilter, RateLimitFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    RequestRateLimiter requestRateLimiter(RateLimitProperties properties) {
+        return new RequestRateLimiter(properties);
     }
 
     private SimpleUrlAuthenticationSuccessHandler successHandler(String frontendUrl) {
@@ -111,6 +122,7 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of(authProperties.frontendUrl()));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Accept", "Content-Type", "X-XSRF-TOKEN"));
+        configuration.setExposedHeaders(List.of("Retry-After"));
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

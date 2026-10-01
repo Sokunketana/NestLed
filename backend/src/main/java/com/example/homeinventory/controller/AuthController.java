@@ -5,9 +5,12 @@ import com.example.homeinventory.dto.CsrfTokenResponse;
 import com.example.homeinventory.dto.UpdateDisplayNameRequest;
 import com.example.homeinventory.service.AccountDeletionService;
 import com.example.homeinventory.service.AppUserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -42,8 +45,13 @@ public class AuthController {
 
     @DeleteMapping("/account")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void deleteAccount(@AuthenticationPrincipal OidcUser oidcUser) {
+    void deleteAccount(@AuthenticationPrincipal OidcUser oidcUser, HttpServletRequest request) {
         accountDeletionService.deleteAccount(oidcUser);
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        SecurityContextHolder.clearContext();
     }
 
     @GetMapping("/csrf")

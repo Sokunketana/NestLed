@@ -89,9 +89,8 @@ function AddItemModal({ rooms, locations, categories, defaultRoomId, defaultLoca
   return <div className="fixed inset-0 z-40 grid place-items-center bg-ink/45 p-4 backdrop-blur-sm" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) onClose() }}>
     <section className="max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[1.75rem] border border-line bg-surface shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="add-item-title">
       <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-5 sm:px-7">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-coral/10 text-[#a64d39]"><Icon name="plus" className="h-5 w-5" /></span>
-          <div><h2 id="add-item-title" className="text-2xl">Add an item</h2><p className="mt-1 text-sm text-ink-soft">Give it a name and a place. You can fill in the extras later.</p></div>
+        <div className="min-w-0">
+          <h2 id="add-item-title" className="text-2xl">Add an item</h2><p className="mt-1 text-sm text-ink-soft">Give it a name and a place. You can fill in the extras later.</p>
         </div>
         <button type="button" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-stone-400 hover:bg-cream hover:text-ink" aria-label="Close add item dialog" onClick={onClose} disabled={saving}><Icon name="x" className="h-5 w-5" /></button>
       </div>

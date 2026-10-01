@@ -96,7 +96,10 @@ export default function CustomColorModal({ anchorRef, value, onChange, onClose }
     colorFieldRef.current?.focus()
 
     const closeOnEscape = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') onCloseRef.current()
+      if (event.key === 'Escape' && !event.defaultPrevented) {
+        event.preventDefault()
+        onCloseRef.current()
+      }
     }
     const keepPanelInViewport = () => {
       if (!dialog?.style.top) return

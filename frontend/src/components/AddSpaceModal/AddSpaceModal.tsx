@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import useModalEscape from '../../useModalEscape'
 import { revalidateInventory } from '../../api/cache'
 import { roomApi } from '../../api/roomApi'
 import { storageLocationApi } from '../../api/storageLocationApi'
@@ -14,6 +15,8 @@ export default function AddSpaceModal({ mode, room, onClose, onSaved }: AddSpace
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const label = mode === 'room' ? 'room' : 'location'
+
+  const modalRef = useModalEscape(onClose, saving)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -34,7 +37,7 @@ export default function AddSpaceModal({ mode, room, onClose, onSaved }: AddSpace
   }
 
   return <div className="fixed inset-0 z-40 grid place-items-center bg-ink/45 p-4 backdrop-blur-sm" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget && !saving) onClose() }}>
-    <section className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-[1.75rem] border border-line bg-surface shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="add-space-title">
+    <section ref={modalRef} className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-[1.75rem] border border-line bg-surface shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="add-space-title">
       <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-5 sm:px-7">
         <div><h2 id="add-space-title" className="text-2xl">Add {label}</h2>{room && <p className="mt-1 text-sm text-ink-soft">In {room.name}</p>}</div>
         <button type="button" className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-stone-400 hover:bg-cream hover:text-ink" aria-label={`Close add ${label} dialog`} onClick={onClose} disabled={saving}><Icon name="x" className="h-5 w-5" /></button>

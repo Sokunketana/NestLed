@@ -7,9 +7,14 @@ import com.example.homeinventory.entity.Household;
 import com.example.homeinventory.entity.Room;
 import com.example.homeinventory.entity.StorageLocation;
 import com.example.homeinventory.repository.ItemRepository;
+import com.example.homeinventory.repository.HouseholdRepository;
+import com.example.homeinventory.exception.BadRequestException;
+import com.example.homeinventory.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InOrder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -24,6 +29,7 @@ class ItemPhotoServiceTest {
     private ItemRepository items;
     private PhotoStorageService photos;
     private ItemService service;
+    private HouseholdRepository households;
 
     @BeforeEach
     void setUp() {
@@ -33,8 +39,10 @@ class ItemPhotoServiceTest {
         when(household.getId()).thenReturn(99L);
         HouseholdAccessService access = mock(HouseholdAccessService.class);
         when(access.getActiveHousehold()).thenReturn(household);
+        households = mock(HouseholdRepository.class);
+        when(households.findByIdForPhotoUpload(99L)).thenReturn(java.util.Optional.of(household));
         service = new ItemService(items, mock(RoomService.class), mock(CategoryService.class),
-                mock(StorageLocationService.class), photos, access, mock(ItemMovementService.class));
+                mock(StorageLocationService.class), photos, access, mock(ItemMovementService.class), households, 100);
     }
 
     @AfterEach
@@ -42,6 +50,67 @@ class ItemPhotoServiceTest {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.clearSynchronization();
         }
+    }
+
+    @Test
+    void rejectsMissingHouseholdBeforeWritingFiles() {
+        when(households.findByIdForPhotoUpload(99L)).thenReturn(java.util.Optional.empty());
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.updatePhoto(42L, mock(MultipartFile.class)));
+        verifyNoInteractions(items, photos);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1})
+    void refusesNonPositiveQuotaConfiguration(int limit) {
+        assertThrows(IllegalArgumentException.class, () -> new ItemService(items,
+                mock(RoomService.class), mock(CategoryService.class), mock(StorageLocationService.class),
+                photos, mock(HouseholdAccessService.class), mock(ItemMovementService.class), households, limit));
+    }
+
+    @Test
+    void rejectsNewPhotosAtOrAboveHouseholdLimitBeforeWritingFiles() {
+        Item item = itemWithPhoto(null, null);
+        MultipartFile upload = mock(MultipartFile.class);
+        when(items.findByIdAndHouseholdId(42L, 99L)).thenReturn(java.util.Optional.of(item));
+        when(items.countByHouseholdIdAndPhotoFilenameIsNotNull(99L)).thenReturn(100L, 101L);
+
+        for (int attempt = 0; attempt < 2; attempt++) {
+            BadRequestException error = assertThrows(BadRequestException.class,
+                    () -> service.updatePhoto(42L, upload));
+            assertEquals("Household photo limit of 100 reached. Remove an existing photo before uploading another",
+                    error.getMessage());
+        }
+        verifyNoInteractions(photos);
+        verify(items, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void acceptsLastAvailableSlotAfterLockingHouseholdAndCheckingItsCount() {
+        Item item = itemWithPhoto(null, null);
+        MultipartFile upload = mock(MultipartFile.class);
+        when(items.findByIdAndHouseholdId(42L, 99L)).thenReturn(java.util.Optional.of(item));
+        when(items.countByHouseholdIdAndPhotoFilenameIsNotNull(99L)).thenReturn(99L);
+        when(photos.store(upload)).thenReturn(new PhotoStorageService.StoredPhoto(
+                "22222222-2222-4222-8222-222222222222.png", "image/png"));
+        when(items.saveAndFlush(item)).thenReturn(item);
+
+        service.updatePhoto(42L, upload);
+
+        InOrder order = inOrder(households, items, photos);
+        order.verify(households).findByIdForPhotoUpload(99L);
+        order.verify(items).findByIdAndHouseholdId(42L, 99L);
+        order.verify(items).countByHouseholdIdAndPhotoFilenameIsNotNull(99L);
+        order.verify(photos).store(upload);
+        order.verify(items).saveAndFlush(item);
+    }
+
+    @Test
+    void rejectsItemsOutsideActiveHouseholdBeforeWritingFiles() {
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.updatePhoto(42L, mock(MultipartFile.class)));
+        verifyNoInteractions(photos);
+        verify(items, never()).countByHouseholdIdAndPhotoFilenameIsNotNull(any());
     }
 
     @Test
@@ -58,6 +127,7 @@ class ItemPhotoServiceTest {
         assertEquals("items/42/photo", response.photoUrl());
         assertEquals(newFilename, item.getPhotoFilename());
         assertEquals("image/png", item.getPhotoContentType());
+        verify(items, never()).countByHouseholdIdAndPhotoFilenameIsNotNull(any());
         InOrder order = inOrder(items, photos);
         order.verify(items).findByIdAndHouseholdId(42L, 99L);
         order.verify(photos).store(upload);

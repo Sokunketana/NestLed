@@ -216,6 +216,21 @@ class ItemControllerTest {
     }
 
     @Test
+    void updatePhotoReturnsActionableErrorWhenHouseholdQuotaIsReached() throws Exception {
+        when(itemService.updatePhoto(eq(42L), any())).thenThrow(
+                new com.example.homeinventory.exception.BadRequestException(
+                        "Household photo limit of 100 reached. Remove an existing photo before uploading another"));
+        MockMultipartFile photo = new MockMultipartFile(
+                "file", "camera.png", MediaType.IMAGE_PNG_VALUE, new byte[]{1, 2, 3});
+
+        mockMvc.perform(multipart("/api/items/42/photo").file(photo)
+                        .with(request -> { request.setMethod("PUT"); return request; }))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(
+                        "Household photo limit of 100 reached. Remove an existing photo before uploading another"));
+    }
+
+    @Test
     void updatePhotoAcceptsMultipartFile() throws Exception {
         MockMultipartFile photo = new MockMultipartFile(
                 "file", "camera.png", MediaType.IMAGE_PNG_VALUE, new byte[]{1, 2, 3});

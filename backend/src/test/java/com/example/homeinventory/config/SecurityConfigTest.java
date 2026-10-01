@@ -7,6 +7,8 @@ import com.example.homeinventory.dto.AuthenticatedUserResponse;
 import com.example.homeinventory.service.AccountDeletionService;
 import com.example.homeinventory.service.AppUserService;
 import com.example.homeinventory.service.HouseholdAccessService;
+import com.example.homeinventory.exception.BadRequestException;
+import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,15 +16,26 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
+import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
@@ -159,6 +172,48 @@ class SecurityConfigTest {
 
         mockMvc.perform(delete("/api/auth/account").with(oidcLogin()).with(csrf()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void accountDeletionInvalidatesStoredSessionWithoutCallingLogout() throws Exception {
+        MockHttpSession session = authenticatedSession();
+        SecurityContext context = (SecurityContext) session.getAttribute(
+                HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+
+        mockMvc.perform(delete("/api/auth/account").session(session).with(csrf()))
+                .andExpect(status().isNoContent());
+
+        verify(accountDeletionService).deleteAccount((DefaultOidcUser) context.getAuthentication().getPrincipal());
+        assertThat(session.isInvalid()).isTrue();
+        assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        mockMvc.perform(get("/api/auth/me").session(session))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rejectedAccountDeletionPreservesStoredSession() throws Exception {
+        MockHttpSession session = authenticatedSession();
+        doThrow(new BadRequestException("Transfer household ownership before deleting this account"))
+                .when(accountDeletionService).deleteAccount(any());
+
+        mockMvc.perform(delete("/api/auth/account").session(session).with(csrf()))
+                .andExpect(status().isBadRequest());
+
+        assertThat(session.isInvalid()).isFalse();
+        mockMvc.perform(get("/api/auth/me").session(session))
+                .andExpect(status().isOk());
+    }
+
+    private MockHttpSession authenticatedSession() {
+        var authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        var idToken = new OidcIdToken("test-token", Instant.now(), Instant.now().plusSeconds(300),
+                java.util.Map.of("sub", "account-deletion-user"));
+        var principal = new DefaultOidcUser(authorities, idToken);
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new OAuth2AuthenticationToken(principal, authorities, "google"));
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+        return session;
     }
 
     @TestConfiguration

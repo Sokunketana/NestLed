@@ -47,6 +47,17 @@ export default function ItemFormPage() {
   const initializedItemId = useRef<number | null>(null)
 
   useEffect(() => {
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key !== 'Escape' || event.defaultPrevented || saving || showAddCategory || duplicateItems.length > 0) return
+      event.preventDefault()
+      navigate(editing ? `/items/${id}` : '/items')
+    }
+
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [duplicateItems.length, editing, id, navigate, saving, showAddCategory])
+
+  useEffect(() => {
     persistedItemId.current = itemId
     initializedItemId.current = null
     if (!editing) {

@@ -1,5 +1,6 @@
 import { useId, useState, type FormEvent } from 'react'
 import { categoryApi } from '../../api/categoryApi'
+import useModalEscape from '../../useModalEscape'
 import Icon from '../Icon'
 import SpaceColorPicker from '../SpaceColorPicker'
 import type { AddCategoryModalProps } from './AddCategoryModal.type'
@@ -14,6 +15,7 @@ export default function AddCategoryModal({ onClose, onSaved }: AddCategoryModalP
   const [color, setColor] = useState(defaultColor)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const modalRef = useModalEscape(onClose, saving)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -39,6 +41,7 @@ export default function AddCategoryModal({ onClose, onSaved }: AddCategoryModalP
     onMouseDown={event => { if (event.target === event.currentTarget) close() }}
   >
     <section
+      ref={modalRef}
       className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-[1.75rem] border border-line bg-surface shadow-2xl"
       role="dialog"
       aria-modal="true"

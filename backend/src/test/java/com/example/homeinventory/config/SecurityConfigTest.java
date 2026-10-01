@@ -71,6 +71,15 @@ class SecurityConfigTest {
                 org.mockito.ArgumentMatchers.eq(123L), any());
         org.mockito.Mockito.verify(itemService, org.mockito.Mockito.never()).updatePhoto(
                 org.mockito.ArgumentMatchers.eq(124L), any());
+        // URI overload preserves the encoded text rather than escaping '%' a second time.
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(
+                        org.springframework.http.HttpMethod.PUT, java.net.URI.create("/api/items/124/%70hoto"))
+                        .file("file", new byte[]{1, 2, 3})
+                        .with(oidcLogin().idToken(token -> token.subject("upload-user"))).with(csrf()))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().exists("Retry-After"));
+        org.mockito.Mockito.verify(itemService, org.mockito.Mockito.never()).updatePhoto(
+                org.mockito.ArgumentMatchers.eq(124L), any());
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart(
                         org.springframework.http.HttpMethod.PUT, "/api/items/124/photo")
                         .file("file", new byte[]{1, 2, 3})

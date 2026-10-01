@@ -3,6 +3,8 @@ package com.example.homeinventory.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -34,6 +36,46 @@ class RateLimitFilterTest {
         new RateLimitFilter(limiter, publicRoutes, new ObjectMapper().findAndRegisterModules())
                 .doFilter(request, response, new MockFilterChain());
         return response;
+    }
+
+    @Test
+    void matchesEncodedPathsUnderAContextPath() throws Exception {
+        login("alice");
+        when(limiter.retryAfter(UPLOAD, "null|alice")).thenReturn(2L);
+        var request = new MockHttpServletRequest("PUT", "/inventory/api/items/1/%70hoto");
+        request.setContextPath("/inventory");
+        var response = new MockHttpServletResponse();
+        new RateLimitFilter(limiter, false, new ObjectMapper().findAndRegisterModules())
+                .doFilter(request, response, new MockFilterChain());
+        assertThat(response.getStatus()).isEqualTo(429);
+        verify(limiter).retryAfter(UPLOAD, "null|alice");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "PUT, /api/items/1/%70hoto, UPLOAD",
+            "PUT, /%61pi/%69tems/1/photo, UPLOAD",
+            "POST, /api/household/%69mport, UPLOAD",
+            "POST, /api/household/import/%70review, UPLOAD",
+            "POST, /api/household/%69nvitations, INVITATION",
+            "POST, /api/invitations/1/%61ccept, INVITATION",
+            "DELETE, /api/%69nvitations/1, INVITATION",
+            "DELETE, /api/household/%69nvitations/1, INVITATION"
+    })
+    void encodedOperationsUseTheSameUserQuota(String method, String path,
+            RequestRateLimiter.Rule rule) throws Exception {
+        login("alice");
+        when(limiter.retryAfter(rule, "null|alice")).thenReturn(2L);
+        assertThat(request(false, method, path).getStatus()).isEqualTo(429);
+        verify(limiter).retryAfter(rule, "null|alice");
+    }
+
+    @ParameterizedTest
+    @CsvSource({"/%6fauth2/authorization/google", "/%6cogin/oauth2/code/google", "/api/auth/%63srf"})
+    void encodedPublicPathsUseTheSameIpQuota(String path) throws Exception {
+        when(limiter.retryAfter(PUBLIC_AUTH, "192.0.2.1")).thenReturn(3L);
+        assertThat(request(true, "GET", path).getStatus()).isEqualTo(429);
+        verify(limiter).retryAfter(PUBLIC_AUTH, "192.0.2.1");
     }
 
     @Test

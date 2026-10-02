@@ -4,6 +4,7 @@ import com.example.homeinventory.dto.BulkMoveItemsRequest;
 import com.example.homeinventory.dto.BulkMoveItemsResponse;
 import com.example.homeinventory.dto.CreateItemRequest;
 import com.example.homeinventory.dto.ItemResponse;
+import com.example.homeinventory.dto.ItemSearchResponse;
 import com.example.homeinventory.dto.UpdateItemRequest;
 import com.example.homeinventory.service.ItemPhoto;
 import com.example.homeinventory.service.ItemService;
@@ -33,8 +34,10 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemResponse> search(@RequestParam String name) { 
-        return itemService.search(name); 
+    public ItemSearchResponse search(@RequestParam String name,
+                                     @RequestParam(defaultValue = "0") int page,
+                                     @RequestParam(defaultValue = "20") int size) {
+        return itemService.search(name, page, size);
     }
 
     @GetMapping("/{id}")

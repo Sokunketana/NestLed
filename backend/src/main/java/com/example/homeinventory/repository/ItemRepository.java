@@ -4,13 +4,16 @@ import com.example.homeinventory.entity.Item;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findByHouseholdIdOrderByNameAsc(Long householdId);
     List<Item> findTop8ByHouseholdIdOrderByCreatedAtDescIdDesc(Long householdId);
-    List<Item> findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAsc(Long householdId, String name);
+    Slice<Item> findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAscIdAsc(
+            Long householdId, String name, Pageable pageable);
     List<Item> findByHouseholdIdAndRoomIdOrderByNameAsc(Long householdId, Long roomId);
     List<Item> findByHouseholdIdAndCategoryIdOrderByNameAsc(Long householdId, Long categoryId);
     List<Item> findByHouseholdIdAndRoomIdAndCategoryIdOrderByNameAsc(

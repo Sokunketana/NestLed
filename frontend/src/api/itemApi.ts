@@ -1,6 +1,13 @@
 import type { BulkMoveItemsPayload, BulkMoveItemsResponse, Item, ItemPayload, ItemUpdatePayload } from '../types'
 import { request } from './http'
 
+export interface ItemSearchResponse {
+  content: Item[]
+  page: number
+  size: number
+  hasNext: boolean
+}
+
 export const itemApi = {
   list: (filters?: { roomId?: string; categoryId?: string; storageLocationId?: string }) => {
     const query = new URLSearchParams()
@@ -9,7 +16,9 @@ export const itemApi = {
     if (filters?.storageLocationId) query.set('storageLocationId', filters.storageLocationId)
     return request<Item[]>(`/items${query.size ? `?${query}` : ''}`)
   },
-  search: (name: string) => request<Item[]>(`/items/search?name=${encodeURIComponent(name)}`),
+  search: (name: string, page = 0, size = 20) => request<ItemSearchResponse>(
+    `/items/search?name=${encodeURIComponent(name)}&page=${page}&size=${size}`,
+  ),
   get: (id: number) => request<Item>(`/items/${id}`),
   create: (body: ItemPayload, allowDuplicate = false) => request<Item>(
     `/items${allowDuplicate ? '?allowDuplicate=true' : ''}`,

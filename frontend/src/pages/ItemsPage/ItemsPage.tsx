@@ -4,6 +4,7 @@ import useSWR from 'swr'
 import { categoryApi } from '../../api/categoryApi'
 import { cacheKeys, revalidateInventory } from '../../api/cache'
 import { itemApi } from '../../api/itemApi'
+import type { ItemSearchResponse } from '../../api/itemApi'
 import { roomApi } from '../../api/roomApi'
 import { storageLocationApi } from '../../api/storageLocationApi'
 import BulkMoveItemsModal from '../../components/BulkMoveItemsModal'
@@ -43,18 +44,26 @@ function ItemCardContent({ item }: ItemCardContentProps) {
 
 export default function ItemsPage() {
   const [params, setParams] = useSearchParams()
-  const q = params.get('q') ?? ''
+  const q = (params.get('q') ?? '').trim()
+  const requestedPage = Number(params.get('page') ?? '0')
+  const page = Number.isSafeInteger(requestedPage) && requestedPage >= 0 ? requestedPage : 0
+  const invalidSearch = params.has('q') && q.length < 2
   const roomId = params.get('roomId') ?? ''
   const categoryId = params.get('categoryId') ?? ''
   const storageLocationId = params.get('storageLocationId') ?? ''
 
   const itemKey = q
-    ? cacheKeys.itemSearch(q)
+    ? cacheKeys.itemSearch(q, page)
     : cacheKeys.itemList({ roomId, categoryId, storageLocationId })
-  const { data: items, error: itemError } = useSWR<Item[]>(
-    itemKey,
-    q ? () => itemApi.search(q) : () => itemApi.list({ roomId, categoryId, storageLocationId }),
+  const { data: listedItems, error: itemError } = useSWR<Item[]>(
+    !q && !invalidSearch ? itemKey : null,
+    () => itemApi.list({ roomId, categoryId, storageLocationId }),
   )
+  const { data: searchResults, error: searchError } = useSWR<ItemSearchResponse>(
+    q && !invalidSearch ? itemKey : null,
+    () => itemApi.search(q, page),
+  )
+  const items = q ? searchResults?.content : listedItems
   const { data: rooms, error: roomsError } = useSWR<Room[]>(cacheKeys.rooms, roomApi.list)
   const { data: categories, error: categoriesError } = useSWR<Category[]>(cacheKeys.categories, categoryApi.list)
   const { data: locations, error: locationsError } = useSWR<StorageLocation[]>(cacheKeys.locations, storageLocationApi.list)
@@ -62,7 +71,8 @@ export default function ItemsPage() {
   const roomList = rooms ?? []
   const categoryList = categories ?? []
   const locationList = locations ?? []
-  const loadError = itemError || roomsError || categoriesError || locationsError
+  const loadError = (invalidSearch ? new Error('Search name must contain at least 2 characters') : null)
+    || searchError || itemError || roomsError || categoriesError || locationsError
   const [actionError, setActionError] = useState('')
   const [success, setSuccess] = useState('')
   const [isSelecting, setIsSelecting] = useState(false)
@@ -85,6 +95,13 @@ export default function ItemsPage() {
     else next.delete(key)
     if (key === 'roomId') next.delete('storageLocationId')
     next.delete('q')
+    next.delete('page')
+    setParams(next)
+  }
+
+  function changePage(nextPage: number) {
+    const next = new URLSearchParams(params)
+    next.set('page', String(nextPage))
     setParams(next)
   }
 
@@ -267,6 +284,14 @@ export default function ItemsPage() {
         </div>
       )}
     </div>
+
+    {q && searchResults && !loadError && (
+      <nav aria-label="Search results pages" className="mt-6 flex items-center justify-center gap-4">
+        <button type="button" className="btn-secondary" disabled={page === 0} onClick={() => changePage(page - 1)}>Previous</button>
+        <span className="text-sm text-ink-soft">Page {page + 1}</span>
+        <button type="button" className="btn-secondary" disabled={!searchResults.hasNext} onClick={() => changePage(page + 1)}>Next</button>
+      </nav>
+    )}
 
     {isMoveDialogOpen && selectedCount > 0 && (
       <BulkMoveItemsModal

@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { ConfirmationModalProps } from './ConfirmationModal.type'
 
 export default function ConfirmationModal({
@@ -47,18 +48,22 @@ export default function ConfirmationModal({
     if (!isConfirming) onClose()
   }
 
-  return (
+  return createPortal(
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
       aria-describedby={`${descriptionId}${error ? ` ${errorId}` : ''}`}
-      className="m-auto max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md overflow-y-auto rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100%-2rem)]"
+      className="fixed inset-0 m-auto max-h-[calc(100dvh-3rem)] w-[calc(100%-1.5rem)] max-w-md -translate-y-3 overflow-y-auto rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm sm:max-h-[calc(100dvh-5rem)] sm:w-[calc(100%-2rem)] sm:-translate-y-6"
       onCancel={event => { event.preventDefault(); close() }}
       onClick={event => { if (event.target === event.currentTarget) close() }}
     >
       <div className="p-5 sm:p-7">
         <div className="grid h-12 w-12 place-items-center rounded-full bg-red-50 text-red-700" aria-hidden="true">
-          {intent === 'logout' || intent === 'leave'
+          {intent === 'transfer'
+            ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4" />
+              </svg>
+            : intent === 'logout' || intent === 'leave'
             ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-6 w-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6A2.25 2.25 0 0 0 5.25 5.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M18 9l3 3m0 0-3 3m3-3H9" />
               </svg>
@@ -76,6 +81,7 @@ export default function ConfirmationModal({
           </button>
         </div>
       </div>
-    </dialog>
+    </dialog>,
+    document.body,
   )
 }

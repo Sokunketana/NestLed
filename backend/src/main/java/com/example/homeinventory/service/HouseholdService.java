@@ -82,10 +82,33 @@ public class HouseholdService {
     }
 
     @Transactional
+    public HouseholdResponse transferOwnership(OidcUser principal, Long memberId) {
+        HouseholdMembership owner = requiredOwner(principal);
+        if (owner.getUser().getId().equals(memberId)) {
+            throw new BadRequestException("Choose another household member as the new owner");
+        }
+        Household household = owner.getHousehold();
+        HouseholdMembership successor = membershipRepository
+                .findByHouseholdIdAndUserIdForUpdate(household.getId(), memberId)
+                .orElseThrow(() -> new ResourceNotFoundException("Household member was not found"));
+        if (successor.getRole() != HouseholdRole.MEMBER) {
+            throw new BadRequestException("Choose a household member as the new owner");
+        }
+
+        owner.moveTo(household, HouseholdRole.MEMBER);
+        successor.moveTo(household, HouseholdRole.OWNER);
+        owner.getUser().joinHousehold(household, HouseholdRole.MEMBER);
+        successor.getUser().joinHousehold(household, HouseholdRole.OWNER);
+        membershipRepository.saveAll(List.of(owner, successor));
+        userRepository.saveAll(List.of(owner.getUser(), successor.getUser()));
+        return toResponse(owner);
+    }
+
+    @Transactional
     public HouseholdResponse removeMember(OidcUser principal, Long memberId) {
         HouseholdMembership owner = requiredOwner(principal);
         HouseholdMembership member = membershipRepository
-                .findByHouseholdIdAndUserId(owner.getHousehold().getId(), memberId)
+                .findByHouseholdIdAndUserIdForUpdate(owner.getHousehold().getId(), memberId)
                 .orElseThrow(() -> new ResourceNotFoundException("Household member was not found"));
         if (member.getRole() == HouseholdRole.OWNER) {
             throw new BadRequestException("A household owner cannot be removed");
@@ -104,7 +127,7 @@ public class HouseholdService {
     @Transactional
     public void leave(OidcUser principal) {
         AppUser user = appUserService.getRequired(principal);
-        HouseholdMembership membership = requiredMember(user);
+        HouseholdMembership membership = requiredMemberForUpdate(user);
         if (membership.getRole() == HouseholdRole.OWNER) {
             throw new BadRequestException("A household owner cannot leave the household");
         }
@@ -128,9 +151,19 @@ public class HouseholdService {
     }
 
     private HouseholdMembership requiredOwner(OidcUser principal) {
-        HouseholdMembership membership = requiredMember(principal);
+        HouseholdMembership membership = requiredMemberForUpdate(appUserService.getRequired(principal));
         if (membership.getRole() != HouseholdRole.OWNER) {
             throw new AccessDeniedException("Only the household owner can manage members");
+        }
+        return membership;
+    }
+
+    private HouseholdMembership requiredMemberForUpdate(AppUser user) {
+        HouseholdMembership membership = membershipRepository.findByUserIdForUpdate(user.getId())
+                .orElseThrow(() -> new AccessDeniedException("Join a household first"));
+        if (user.getHousehold() == null
+                || !membership.getHousehold().getId().equals(user.getHousehold().getId())) {
+            throw new AccessDeniedException("This account cannot access the current household");
         }
         return membership;
     }

@@ -37,7 +37,7 @@ public class AccountDeletionService {
     @Transactional
     public void deleteAccount(OidcUser principal) {
         AppUser appUser = appUserService.getRequired(principal);
-        HouseholdMembership membership = membershipRepository.findByUserId(appUser.getId()).orElse(null);
+        HouseholdMembership membership = membershipRepository.findByUserIdForUpdate(appUser.getId()).orElse(null);
 
         if (membership == null) {
             deleteUser(appUser);
@@ -48,7 +48,7 @@ public class AccountDeletionService {
         Long householdId = household.getId();
         long memberCount = membershipRepository.countByHouseholdId(householdId);
         if (membership.getRole() == HouseholdRole.OWNER && memberCount > 1) {
-            throw new BadRequestException("Transfer household ownership before deleting this account");
+            throw new BadRequestException("Transfer household ownership in Household settings before deleting this account");
         }
 
         deleteInvitationsForEmail(appUser.getEmail());

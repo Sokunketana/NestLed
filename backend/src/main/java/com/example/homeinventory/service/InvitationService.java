@@ -34,7 +34,11 @@ public class InvitationService {
     public AuthenticatedUserResponse accept(OidcUser principal, Long invitationId) {
         AppUser invitee = appUserService.getRequired(principal);
         HouseholdInvitation invitation = requiredInvitation(invitee, invitationId);
-        HouseholdMembership membership = membershipRepository.findByUserId(invitee.getId()).orElse(null);
+        HouseholdMembership membership = membershipRepository.findByUserIdForUpdate(invitee.getId()).orElse(null);
+        if (membership != null && membership.getRole() == HouseholdRole.OWNER
+                && membershipRepository.countByHouseholdId(membership.getHousehold().getId()) > 1) {
+            throw new BadRequestException("Transfer household ownership in Household settings before joining another household");
+        }
         if (membership != null && membership.getHousehold().getId().equals(invitation.getHousehold().getId())) {
             throw new BadRequestException("This account already belongs to that household");
         }

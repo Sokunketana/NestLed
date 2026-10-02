@@ -3,6 +3,7 @@ package com.example.homeinventory.controller;
 import com.example.homeinventory.dto.HouseholdResponse;
 import com.example.homeinventory.dto.InviteHouseholdMemberRequest;
 import com.example.homeinventory.dto.UpdateHouseholdRequest;
+import com.example.homeinventory.dto.TransferHouseholdOwnershipRequest;
 import com.example.homeinventory.service.HouseholdService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -52,6 +53,12 @@ public class HouseholdController {
     @DeleteMapping("/members/{id}")
     public HouseholdResponse removeMember(@AuthenticationPrincipal OidcUser user, @PathVariable Long id) {
         return service.removeMember(user, id);
+    }
+
+    @PostMapping("/ownership")
+    public HouseholdResponse transferOwnership(@AuthenticationPrincipal OidcUser user,
+            @Valid @RequestBody TransferHouseholdOwnershipRequest request) {
+        return service.transferOwnership(user, request.memberId());
     }
 
     @DeleteMapping("/leave")

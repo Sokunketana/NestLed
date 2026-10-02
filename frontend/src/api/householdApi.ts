@@ -105,6 +105,9 @@ export const householdApi = {
   removeMember: (id: number) => request<Household>(`/household/members/${id}`, {
     method: 'DELETE',
   }),
+  transferOwnership: (memberId: number) => request<Household>('/household/ownership', {
+    method: 'POST', body: JSON.stringify({ memberId }),
+  }),
   leave: () => request<void>('/household/leave', {
     method: 'DELETE',
   }),

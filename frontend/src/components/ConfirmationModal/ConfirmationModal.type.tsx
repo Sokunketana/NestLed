@@ -4,7 +4,7 @@ export type ConfirmationModalProps = {
   confirmLabel?: string
   confirmingLabel?: string
   errorMessage?: string
-  intent?: 'delete' | 'logout' | 'leave'
+  intent?: 'delete' | 'logout' | 'leave' | 'transfer'
   onClose: () => void
   onConfirm: () => Promise<void> | void
 }

@@ -275,6 +275,7 @@ The end-to-end tests use mocked API responses, so they do not require Google OAu
 | GET | `/api/household/export?format=json` or `?format=csv` | Download the owner’s household inventory export |
 | POST | `/api/household/import/preview` | Validate a Nestled JSON export and preview what will be created or reused |
 | POST | `/api/household/import` | Import a validated Nestled JSON export into the owner’s current household |
+| POST | `/api/household/ownership` | Owner transfers ownership to an existing member using `{ "memberId": 123 }` |
 | DELETE | `/api/household/leave` | Leave the current household as a non-owner member |
 | POST | `/api/invitations/{id}/accept` | Accept an invitation addressed to the signed-in email |
 | DELETE | `/api/invitations/{id}` | Decline an invitation addressed to the signed-in email |
@@ -293,6 +294,8 @@ The end-to-end tests use mocked API responses, so they do not require Google OAu
 | GET/PUT/DELETE | `/api/categories/{id}` | Read/update/delete a category |
 | GET/POST | `/api/storage-locations` | List/create locations |
 | GET/PUT/DELETE | `/api/storage-locations/{id}` | Read/update/delete a location |
+
+To delete an account that owns a household with other members, open **Household** settings and choose **Transfer ownership** beside an existing member. Confirming promotes that member to owner and makes you a regular member; you can then delete your account without removing the other members or their inventory. Only the current owner can transfer, and the recipient must already belong to the same household. Pending invitees must accept first. Ownership changes and both users' cached roles commit together; membership locks prevent simultaneous transfers, removals, departures, and account deletions from acting on stale roles.
 
 ## Complete “Add Item” request flow
 

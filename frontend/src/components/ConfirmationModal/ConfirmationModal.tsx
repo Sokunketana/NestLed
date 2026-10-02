@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { ConfirmationModalProps } from './ConfirmationModal.type'
 
 export default function ConfirmationModal({
@@ -47,12 +48,12 @@ export default function ConfirmationModal({
     if (!isConfirming) onClose()
   }
 
-  return (
+  return createPortal(
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
       aria-describedby={`${descriptionId}${error ? ` ${errorId}` : ''}`}
-      className="m-auto max-h-[calc(100dvh-1.5rem)] w-[calc(100%-1.5rem)] max-w-md overflow-y-auto rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm sm:max-h-[calc(100dvh-2rem)] sm:w-[calc(100%-2rem)]"
+      className="fixed inset-0 m-auto max-h-[calc(100dvh-3rem)] w-[calc(100%-1.5rem)] max-w-md -translate-y-3 overflow-y-auto rounded-3xl border-0 bg-white p-0 text-ink shadow-2xl backdrop:bg-ink/50 backdrop:backdrop-blur-sm sm:max-h-[calc(100dvh-5rem)] sm:w-[calc(100%-2rem)] sm:-translate-y-6"
       onCancel={event => { event.preventDefault(); close() }}
       onClick={event => { if (event.target === event.currentTarget) close() }}
     >
@@ -80,6 +81,7 @@ export default function ConfirmationModal({
           </button>
         </div>
       </div>
-    </dialog>
+    </dialog>,
+    document.body,
   )
 }

@@ -18,6 +18,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.SliceImpl;
@@ -59,6 +60,36 @@ class ItemServiceTest {
             assertThrows(BadRequestException.class, () -> service.search("ab", 0, size));
         }
         verifyNoInteractions(items);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"107374183, 20", "2147483647, 2", "2147483647, 100"})
+    void searchRejectsOffsetsAboveJpaLimitBeforeQuerying(int page, int size) {
+        ItemRepository items = mock(ItemRepository.class);
+        ItemService service = service(items, mock(RoomService.class), mock(CategoryService.class),
+                mock(StorageLocationService.class), mock(PhotoStorageService.class), household());
+
+        BadRequestException error = assertThrows(BadRequestException.class,
+                () -> service.search("ab", page, size));
+
+        assertEquals("Search pagination offset must not exceed 2147483647", error.getMessage());
+        verifyNoInteractions(items);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"2147483647, 1", "107374182, 20"})
+    void searchAllowsOffsetsAtOrBelowJpaLimit(int page, int size) {
+        ItemRepository items = mock(ItemRepository.class);
+        ItemService service = service(items, mock(RoomService.class), mock(CategoryService.class),
+                mock(StorageLocationService.class), mock(PhotoStorageService.class), household());
+        var pageable = PageRequest.of(page, size);
+        when(items.findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAscIdAsc(99L, "ab", pageable))
+                .thenReturn(new SliceImpl<>(List.of(), pageable, false));
+
+        var response = service.search("ab", page, size);
+
+        assertEquals(page, response.page());
+        verify(items).findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAscIdAsc(99L, "ab", pageable);
     }
 
     @Test

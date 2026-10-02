@@ -102,6 +102,9 @@ public class ItemService {
         if (size < 1 || size > 100) {
             throw new BadRequestException("Search size must be between 1 and 100");
         }
+        if ((long) page * size > Integer.MAX_VALUE) {
+            throw new BadRequestException("Search pagination offset must not exceed " + Integer.MAX_VALUE);
+        }
         var results = itemRepository.findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAscIdAsc(
                 activeHousehold().getId(), query, PageRequest.of(page, size));
         return new ItemSearchResponse(results.stream().map(this::toResponse).toList(),

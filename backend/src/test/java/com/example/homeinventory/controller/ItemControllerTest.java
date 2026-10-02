@@ -75,6 +75,16 @@ class ItemControllerTest {
     }
 
     @Test
+    void searchReturnsBadRequestWhenOffsetExceedsJpaLimit() throws Exception {
+        when(itemService.search("ab", 107374183, 20)).thenCallRealMethod();
+
+        mockMvc.perform(get("/api/items/search").param("name", "ab")
+                        .param("page", "107374183").param("size", "20"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Search pagination offset must not exceed 2147483647"));
+    }
+
+    @Test
     void searchRejectsMissingNameAndNonNumericPagination() throws Exception {
         mockMvc.perform(get("/api/items/search")).andExpect(status().isBadRequest());
         mockMvc.perform(get("/api/items/search").param("name", "ab").param("page", "abc"))

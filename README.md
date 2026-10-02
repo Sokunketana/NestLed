@@ -230,10 +230,12 @@ curl -X POST http://localhost:8080/api/rooms -H "Content-Type: application/json"
 curl -X POST http://localhost:8080/api/categories -H "Content-Type: application/json" -d '{"name":"Documents","color":"#2563EB"}'
 curl -X POST http://localhost:8080/api/storage-locations -H "Content-Type: application/json" -d '{"name":"Top drawer","roomId":1}'
 curl -X POST http://localhost:8080/api/items -H "Content-Type: application/json" -d '{"name":"Passport","quantity":1,"categoryId":1,"roomId":1,"storageLocationId":1,"estimatedValue":0,"condition":"GOOD"}'
-curl "http://localhost:8080/api/items/search?name=passport"
+curl "http://localhost:8080/api/items/search?name=passport&page=0&size=20"
 ```
 
-`ItemControllerTest` exercises request validation through MockMvc (a simulated HTTP layer). `ItemServiceTest` checks the cross-room storage-location business rule with Mockito dependencies.
+Item search requires at least two characters after trimming whitespace. `page` is zero-based and defaults to `0`; `size` defaults to `20` and must be between `1` and `100`. Invalid search values return HTTP `400`. The response is `{ "content": [...], "page": 0, "size": 20, "hasNext": false }`. Results stay within the active household and sort by name, then ID so equal names have a stable order. The frontend uses `hasNext` to browse pages. The database fetches at most one extra row to determine whether another page exists, without counting every match.
+
+`ItemControllerTest` exercises request validation through MockMvc (a simulated HTTP layer). `ItemServiceTest` checks search validation and the cross-room storage-location business rule with Mockito dependencies. `ItemSearchRepositoryTest` verifies database pagination, case-insensitive matching, stable ordering, and household isolation.
 
 ### Stages 11–13 — React, connection, and CRUD UI
 

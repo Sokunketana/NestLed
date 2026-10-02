@@ -16,7 +16,7 @@ export const cacheKeys = {
     if (filters?.storageLocationId) query.set('storageLocationId', filters.storageLocationId)
     return `/items${query.size ? `?${query}` : ''}`
   },
-  itemSearch: (name: string) => `/items/search?name=${encodeURIComponent(name)}`,
+  itemSearch: (name: string, page = 0, size = 20) => `/items/search?name=${encodeURIComponent(name)}&page=${page}&size=${size}`,
 }
 
 /** Remove data that belongs to the currently signed-in household. */

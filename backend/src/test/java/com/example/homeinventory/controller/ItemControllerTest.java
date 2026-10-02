@@ -1,6 +1,9 @@
 package com.example.homeinventory.controller;
 
 import com.example.homeinventory.dto.BulkMoveItemsResponse;
+import com.example.homeinventory.dto.ItemSearchResponse;
+import com.example.homeinventory.exception.BadRequestException;
+import java.util.List;
 import com.example.homeinventory.entity.ItemCondition;
 import com.example.homeinventory.exception.GlobalExceptionHandler;
 import com.example.homeinventory.service.ItemPhoto;
@@ -39,6 +42,53 @@ class ItemControllerTest {
         mockMvc = MockMvcBuilders.standaloneSetup(new ItemController(itemService))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
+    }
+
+    @Test
+    void searchUsesBoundedDefaultsAndReturnsPaginationMetadata() throws Exception {
+        when(itemService.search("ab", 0, 20)).thenReturn(new ItemSearchResponse(List.of(), 0, 20, false));
+
+        mockMvc.perform(get("/api/items/search").param("name", "ab"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20))
+                .andExpect(jsonPath("$.hasNext").value(false));
+        verify(itemService).search("ab", 0, 20);
+    }
+
+    @Test
+    void searchForwardsExplicitPagination() throws Exception {
+        mockMvc.perform(get("/api/items/search").param("name", "ab").param("page", "2").param("size", "10"))
+                .andExpect(status().isOk());
+        verify(itemService).search("ab", 2, 10);
+    }
+
+    @Test
+    void searchReturnsBadRequestForInvalidQuery() throws Exception {
+        when(itemService.search(" a ", 0, 20))
+                .thenThrow(new BadRequestException("Search name must contain at least 2 characters"));
+
+        mockMvc.perform(get("/api/items/search").param("name", " a "))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Search name must contain at least 2 characters"));
+    }
+
+    @Test
+    void searchReturnsBadRequestWhenOffsetExceedsJpaLimit() throws Exception {
+        when(itemService.search("ab", 107374183, 20)).thenCallRealMethod();
+
+        mockMvc.perform(get("/api/items/search").param("name", "ab")
+                        .param("page", "107374183").param("size", "20"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Search pagination offset must not exceed 2147483647"));
+    }
+
+    @Test
+    void searchRejectsMissingNameAndNonNumericPagination() throws Exception {
+        mockMvc.perform(get("/api/items/search")).andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/items/search").param("name", "ab").param("page", "abc"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

@@ -16,7 +16,7 @@ export default function Layout() {
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    if (!search.trim()) return
+    if (search.trim().length < 2) return
     navigate(`/items?q=${encodeURIComponent(search.trim())}`)
   }
 
@@ -55,9 +55,9 @@ export default function Layout() {
           </Link>
           <form onSubmit={submit} className="order-3 flex min-w-0 basis-full gap-2 sm:order-none sm:mx-0 sm:w-0 sm:max-w-none sm:flex-1 sm:basis-auto sm:gap-3 min-[1600px]:static min-[1600px]:w-auto min-[1600px]:max-w-none min-[1600px]:translate-x-0 min-[1600px]:translate-y-0 min-[1600px]:px-0">
             <div className="relative min-w-0 flex-1"><Icon name="search" className="absolute left-3.5 top-3 h-4 w-4 text-stone-400" />
-              <input aria-label="Global item search" className="field h-11 pl-10" placeholder="Find an item…" value={search} onChange={e => setSearch(e.target.value)} />
+              <input aria-label="Global item search" minLength={2} title="Enter at least 2 characters" className="field h-11 pl-10" placeholder="Find an item…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
-            <button className="btn-primary h-11 shrink-0 px-3 sm:px-4"><Icon name="search" className="h-4 w-4 sm:hidden" /><span className="hidden sm:inline">Search</span></button>
+            <button disabled={search.trim().length < 2} className="btn-primary h-11 shrink-0 px-3 sm:px-4"><Icon name="search" className="h-4 w-4 sm:hidden" /><span className="hidden sm:inline">Search</span></button>
           </form>
           <div ref={profileMenuRef} className="relative order-2 ml-auto shrink-0 sm:order-none">
             <button

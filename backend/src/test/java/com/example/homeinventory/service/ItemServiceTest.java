@@ -16,6 +16,12 @@ import com.example.homeinventory.repository.ItemRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,9 +33,99 @@ import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class ItemServiceTest {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "a", " a "})
+    void searchRejectsShortTrimmedNamesBeforeQuerying(String name) {
+        ItemRepository items = mock(ItemRepository.class);
+        ItemService service = service(items, mock(RoomService.class), mock(CategoryService.class),
+                mock(StorageLocationService.class), mock(PhotoStorageService.class), household());
+
+        assertThrows(BadRequestException.class, () -> service.search(name, 0, 20));
+        verifyNoInteractions(items);
+    }
+
+    @Test
+    void searchRejectsInvalidPaginationBeforeQuerying() {
+        ItemRepository items = mock(ItemRepository.class);
+        ItemService service = service(items, mock(RoomService.class), mock(CategoryService.class),
+                mock(StorageLocationService.class), mock(PhotoStorageService.class), household());
+
+        assertThrows(BadRequestException.class, () -> service.search("ab", -1, 20));
+        for (int size : new int[] {-1, 0, 101, Integer.MAX_VALUE}) {
+            assertThrows(BadRequestException.class, () -> service.search("ab", 0, size));
+        }
+        verifyNoInteractions(items);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"107374183, 20", "2147483647, 2", "2147483647, 100"})
+    void searchRejectsOffsetsAboveJpaLimitBeforeQuerying(int page, int size) {
+        ItemRepository items = mock(ItemRepository.class);
+        ItemService service = service(items, mock(RoomService.class), mock(CategoryService.class),
+                mock(StorageLocationService.class), mock(PhotoStorageService.class), household());
+
+        BadRequestException error = assertThrows(BadRequestException.class,
+                () -> service.search("ab", page, size));
+
+        assertEquals("Search pagination offset must not exceed 2147483647", error.getMessage());
+        verifyNoInteractions(items);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"2147483647, 1", "107374182, 20"})
+    void searchAllowsOffsetsAtOrBelowJpaLimit(int page, int size) {
+        ItemRepository items = mock(ItemRepository.class);
+        ItemService service = service(items, mock(RoomService.class), mock(CategoryService.class),
+                mock(StorageLocationService.class), mock(PhotoStorageService.class), household());
+        var pageable = PageRequest.of(page, size);
+        when(items.findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAscIdAsc(99L, "ab", pageable))
+                .thenReturn(new SliceImpl<>(List.of(), pageable, false));
+
+        var response = service.search("ab", page, size);
+
+        assertEquals(page, response.page());
+        verify(items).findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAscIdAsc(99L, "ab", pageable);
+    }
+
+    @Test
+    void searchTrimsTheQueryAndReturnsHouseholdScopedPage() {
+        ItemRepository items = mock(ItemRepository.class);
+        ItemService service = service(items, mock(RoomService.class), mock(CategoryService.class),
+                mock(StorageLocationService.class), mock(PhotoStorageService.class), household());
+        var pageable = PageRequest.of(1, 2);
+        Item match = duplicateItem("Passport");
+        when(items.findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAscIdAsc(99L, "Pa", pageable))
+                .thenReturn(new SliceImpl<>(List.of(match), pageable, true));
+
+        var response = service.search(" Pa ", 1, 2);
+
+        assertEquals("Passport", response.content().getFirst().name());
+        assertEquals(1, response.page());
+        assertEquals(2, response.size());
+        assertEquals(true, response.hasNext());
+        verify(items).findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAscIdAsc(99L, "Pa", pageable);
+    }
+
+    @Test
+    void searchAllowsMaximumPageSizeAndReturnsAnEmptyLastPage() {
+        ItemRepository items = mock(ItemRepository.class);
+        ItemService service = service(items, mock(RoomService.class), mock(CategoryService.class),
+                mock(StorageLocationService.class), mock(PhotoStorageService.class), household());
+        var pageable = PageRequest.of(2, 100);
+        when(items.findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAscIdAsc(99L, "ab", pageable))
+                .thenReturn(new SliceImpl<>(List.of(), pageable, false));
+
+        var response = service.search("ab", 2, 100);
+
+        assertEquals(List.of(), response.content());
+        assertEquals(false, response.hasNext());
+    }
+
     @Test
     void createWarnsWhenAnItemWithTheSameNameAndPlacementExists() {
         ItemRepository items = mock(ItemRepository.class);

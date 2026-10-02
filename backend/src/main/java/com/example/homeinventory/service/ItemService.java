@@ -4,6 +4,7 @@ import com.example.homeinventory.dto.BulkMoveItemsRequest;
 import com.example.homeinventory.dto.BulkMoveItemsResponse;
 import com.example.homeinventory.dto.CreateItemRequest;
 import com.example.homeinventory.dto.ItemResponse;
+import com.example.homeinventory.dto.ItemSearchResponse;
 import com.example.homeinventory.dto.UpdateItemRequest;
 import com.example.homeinventory.entity.Item;
 import com.example.homeinventory.entity.Household;
@@ -20,6 +21,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -89,10 +91,24 @@ public class ItemService {
         return items.stream().map(this::toResponse).toList();
     }
 
-    public List<ItemResponse> search(String name) {
-        return itemRepository.findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAsc(
-                        activeHousehold().getId(), name.trim())
-                .stream().map(this::toResponse).toList();
+    public ItemSearchResponse search(String name, int page, int size) {
+        String query = name == null ? "" : name.trim();
+        if (query.length() < 2) {
+            throw new BadRequestException("Search name must contain at least 2 characters");
+        }
+        if (page < 0) {
+            throw new BadRequestException("Search page must be 0 or greater");
+        }
+        if (size < 1 || size > 100) {
+            throw new BadRequestException("Search size must be between 1 and 100");
+        }
+        if ((long) page * size > Integer.MAX_VALUE) {
+            throw new BadRequestException("Search pagination offset must not exceed " + Integer.MAX_VALUE);
+        }
+        var results = itemRepository.findByHouseholdIdAndNameContainingIgnoreCaseOrderByNameAscIdAsc(
+                activeHousehold().getId(), query, PageRequest.of(page, size));
+        return new ItemSearchResponse(results.stream().map(this::toResponse).toList(),
+                page, size, results.hasNext());
     }
 
     public ItemResponse findById(Long id) {

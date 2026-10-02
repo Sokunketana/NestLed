@@ -41,7 +41,7 @@ class AccountDeletionServiceTest {
         Item item = new Item();
         item.setPhotoFilename("photo.jpg");
         when(appUserService.getRequired(principal)).thenReturn(user);
-        when(membershipRepository.findByUserId(1L)).thenReturn(Optional.of(membership));
+        when(membershipRepository.findByUserIdForUpdate(1L)).thenReturn(Optional.of(membership));
         when(membershipRepository.countByHouseholdId(10L)).thenReturn(1L);
         when(itemRepository.findByHouseholdIdOrderByNameAsc(10L)).thenReturn(List.of(item));
 
@@ -61,7 +61,7 @@ class AccountDeletionServiceTest {
         AppUser user = user(1L, "member@example.com");
         HouseholdMembership membership = membership(20L, household, user, HouseholdRole.MEMBER);
         when(appUserService.getRequired(principal)).thenReturn(user);
-        when(membershipRepository.findByUserId(1L)).thenReturn(Optional.of(membership));
+        when(membershipRepository.findByUserIdForUpdate(1L)).thenReturn(Optional.of(membership));
         when(membershipRepository.countByHouseholdId(10L)).thenReturn(2L);
 
         service().deleteAccount(principal);
@@ -78,7 +78,7 @@ class AccountDeletionServiceTest {
         AppUser user = user(1L, "owner@example.com");
         HouseholdMembership membership = membership(20L, household, user, HouseholdRole.OWNER);
         when(appUserService.getRequired(principal)).thenReturn(user);
-        when(membershipRepository.findByUserId(1L)).thenReturn(Optional.of(membership));
+        when(membershipRepository.findByUserIdForUpdate(1L)).thenReturn(Optional.of(membership));
         when(membershipRepository.countByHouseholdId(10L)).thenReturn(2L);
 
         assertThrows(BadRequestException.class, () -> service().deleteAccount(principal));

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { SWRConfig } from 'swr'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import HouseholdPage from './HouseholdPage'
 import type { Household } from '../../api/householdApi'
 
@@ -14,6 +14,7 @@ const mocks = vi.hoisted(() => ({
     cancelInvitation: vi.fn(),
     removeMember: vi.fn(),
     leave: vi.fn(),
+    transferOwnership: vi.fn(),
   },
   useAuth: vi.fn(),
   updateHouseholdName: vi.fn(),
@@ -50,6 +51,54 @@ function renderPage() {
 }
 
 describe('HouseholdPage', () => {
+  beforeAll(() => {
+    HTMLDialogElement.prototype.showModal = function () { this.open = true }
+    HTMLDialogElement.prototype.close = function () { this.open = false }
+  })
+
+  const member = { id: 3, email: 'member@example.com', displayName: 'Member', role: 'MEMBER' as const }
+
+  it('confirms transfer and removes owner controls after success', async () => {
+    const shared = { ...household, members: [...household.members, member] }
+    mocks.householdApi.get.mockResolvedValue(shared)
+    mocks.householdApi.transferOwnership.mockResolvedValue({
+      ...shared, currentUserRole: 'MEMBER',
+      members: [{ ...household.members[0], role: 'MEMBER' }, { ...member, role: 'OWNER' }],
+    })
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Transfer ownership to Member' }))
+    expect(mocks.householdApi.transferOwnership).not.toHaveBeenCalled()
+    expect(screen.getByText(/Only the new owner can transfer ownership back/)).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: /^Transfer ownership$/ }))
+
+    await screen.findByText(/Ownership transferred\. You are now a member/)
+    expect(mocks.householdApi.transferOwnership).toHaveBeenCalledWith(3)
+    expect(screen.queryByRole('button', { name: /^Save$/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Remove$/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Leave household/ })).toBeVisible()
+  })
+
+  it('keeps owner controls and displays a failed transfer in the dialog', async () => {
+    mocks.householdApi.get.mockResolvedValue({ ...household, members: [...household.members, member] })
+    mocks.householdApi.transferOwnership.mockRejectedValue(new Error('Household member was not found'))
+    renderPage()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Transfer ownership to Member' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Transfer ownership$/ }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Household member was not found')
+    expect(screen.getByRole('button', { name: /^Save$/ })).toBeVisible()
+  })
+
+  it('does not offer transfer to non-owners', async () => {
+    mocks.householdApi.get.mockResolvedValue({ ...household, currentUserRole: 'MEMBER', members: [...household.members, member] })
+    renderPage()
+
+    await screen.findByRole('button', { name: /Leave household/ })
+    expect(screen.queryByRole('button', { name: /Transfer ownership/ })).not.toBeInTheDocument()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.householdApi.get.mockResolvedValue(household)

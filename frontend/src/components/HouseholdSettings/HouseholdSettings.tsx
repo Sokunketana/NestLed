@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react'
-import useSWR from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
+import type { AuthenticatedUser } from '../../api/authApi'
 import { editableHouseholdName, householdApi, householdNameWithSuffix, HOUSEHOLD_SUFFIX, type Household, type HouseholdMember } from '../../api/householdApi'
 import { invitationApi } from '../../api/invitationApi'
 import { cacheKeys } from '../../api/cache'
@@ -15,6 +16,7 @@ const MAX_EDITABLE_HOUSEHOLD_NAME_LENGTH = MAX_HOUSEHOLD_NAME_LENGTH - HOUSEHOLD
 
 export default function HouseholdSettings({ embedded = false }: HouseholdSettingsProps) {
   const { user, updateHouseholdName } = useAuth()
+  const { mutate: mutateCache } = useSWRConfig()
   const { data: household, error: loadError, mutate } = useSWR<Household>(cacheKeys.household, householdApi.get)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -23,6 +25,8 @@ export default function HouseholdSettings({ embedded = false }: HouseholdSetting
   const [saving, setSaving] = useState(false)
   const [busy, setBusy] = useState(false)
   const [removeTarget, setRemoveTarget] = useState<HouseholdMember | null>(null)
+  const [transferTarget, setTransferTarget] = useState<HouseholdMember | null>(null)
+  const [ownershipTransferred, setOwnershipTransferred] = useState(false)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
   const [respondingInvitationId, setRespondingInvitationId] = useState<number | null>(null)
   const [invitationError, setInvitationError] = useState<string | null>(null)
@@ -85,6 +89,16 @@ export default function HouseholdSettings({ embedded = false }: HouseholdSetting
     window.location.assign('/')
   }
 
+  async function transferOwnership() {
+    if (!transferTarget) return
+    const updated = await householdApi.transferOwnership(transferTarget.id)
+    await mutate(updated, { revalidate: false })
+    await mutateCache(cacheKeys.authMe, (current: AuthenticatedUser | undefined) => current
+      ? { ...current, householdRole: updated.currentUserRole } : current, { revalidate: false })
+    setTransferTarget(null)
+    setOwnershipTransferred(true)
+  }
+
   async function respondToInvitation(id: number, decision: 'accept' | 'reject') {
     setRespondingInvitationId(id)
     setInvitationError(null)
@@ -119,6 +133,7 @@ export default function HouseholdSettings({ embedded = false }: HouseholdSetting
     </div>
 
     {(error || loadError) && <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error || loadMessage}</p>}
+    {ownershipTransferred && <p role="status" className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">Ownership transferred. You are now a member and can leave the household or delete your account.</p>}
 
     <section className="card">
       <div className="flex items-start gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center text-pine"><Icon name="home" className="h-4 w-4" /></span><div><h3 className="text-xl">Household name</h3><p className="mt-1 text-sm text-ink-soft">This is the name everyone in your household sees.</p></div></div>
@@ -176,7 +191,7 @@ export default function HouseholdSettings({ embedded = false }: HouseholdSetting
     <section className="card">
       <div className="flex items-start gap-3"><span className="grid h-9 w-9 shrink-0 place-items-center text-pine"><Icon name="users" className="h-4 w-4" /></span><div><h3 className="text-xl">Members</h3><p className="mt-1 text-sm text-ink-soft">People who can view and update this home.</p></div></div>
       <div className="mt-4 divide-y">
-        {household.members.map(member => <div key={member.id} className="flex flex-nowrap items-center gap-3 py-3 first:pt-0 last:pb-0">
+        {household.members.map(member => <div key={member.id} className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0">
           {member.pictureUrl
             ? <img src={member.pictureUrl} alt="" referrerPolicy="no-referrer" className="h-10 w-10 rounded-full object-cover" />
             : <span className="grid h-10 w-10 place-items-center rounded-full bg-stone-100 font-semibold">{(member.displayName || member.email)[0].toUpperCase()}</span>}
@@ -185,6 +200,9 @@ export default function HouseholdSettings({ embedded = false }: HouseholdSetting
             <p className="truncate text-sm text-stone-500">{member.email}</p>
           </div>
           <span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-600">{member.role === 'OWNER' ? 'Owner' : 'Member'}</span>
+          {isOwner && member.role === 'MEMBER' && <button type="button" className="btn-secondary" disabled={busy}
+            aria-label={`Transfer ownership to ${member.displayName || member.email}`}
+            onClick={() => setTransferTarget(member)}>Transfer ownership</button>}
           {isOwner && member.role !== 'OWNER' && <button type="button" className="btn-danger" disabled={busy}
             onClick={() => setRemoveTarget(member)}>Remove</button>}
         </div>)}
@@ -203,6 +221,16 @@ export default function HouseholdSettings({ embedded = false }: HouseholdSetting
     </section>}
   </div>
 
+  {transferTarget && <ConfirmationModal
+      title={`Transfer ownership to ${transferTarget.displayName || transferTarget.email}?`}
+      description={`${transferTarget.email} will become the owner and manage household members and settings. You will remain a member. Only the new owner can transfer ownership back to you.`}
+      confirmLabel="Transfer ownership"
+      confirmingLabel="Transferring…"
+      errorMessage="Unable to transfer household ownership. Please try again."
+      intent="transfer"
+      onClose={() => setTransferTarget(null)}
+      onConfirm={transferOwnership}
+    />}
   {removeTarget && <ConfirmationModal
       title={`Remove ${removeTarget.displayName || removeTarget.email}?`}
       description={`${removeTarget.email} will immediately lose access to this household and must be invited again before they can rejoin.`}

@@ -27,6 +27,63 @@ import static org.mockito.Mockito.when;
 
 class HouseholdServiceTest {
     @Test
+    void transferPromotesMemberAndDemotesOwnerIncludingCachedRoles() {
+        Fixture fixture = new Fixture();
+        AppUser successor = fixture.user(2L, "member@example.com");
+        successor.joinHousehold(fixture.shared, HouseholdRole.MEMBER);
+        HouseholdMembership member = new HouseholdMembership(fixture.shared, successor, HouseholdRole.MEMBER);
+        when(fixture.memberships.findByHouseholdIdAndUserIdForUpdate(10L, 2L)).thenReturn(Optional.of(member));
+        when(fixture.memberships.findByHouseholdIdOrderByUserDisplayNameAscUserEmailAsc(10L))
+                .thenReturn(List.of(fixture.owner, member));
+
+        var response = fixture.service.transferOwnership(fixture.principal, 2L);
+
+        assertEquals(HouseholdRole.MEMBER, fixture.owner.getRole());
+        assertEquals(HouseholdRole.MEMBER, fixture.ownerUser.getHouseholdRole());
+        assertEquals(HouseholdRole.OWNER, member.getRole());
+        assertEquals(HouseholdRole.OWNER, successor.getHouseholdRole());
+        assertEquals(HouseholdRole.MEMBER, response.currentUserRole());
+        assertEquals(1, response.members().stream().filter(value -> value.role() == HouseholdRole.OWNER).count());
+        verify(fixture.memberships).saveAll(List.of(fixture.owner, member));
+        verify(fixture.users).saveAll(List.of(fixture.ownerUser, successor));
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> fixture.service.transferOwnership(fixture.principal, 2L));
+    }
+
+    @Test
+    void memberCannotTransferOwnership() {
+        Fixture fixture = new Fixture();
+        fixture.owner.moveTo(fixture.shared, HouseholdRole.MEMBER);
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> fixture.service.transferOwnership(fixture.principal, 2L));
+        verify(fixture.memberships, never()).saveAll(any());
+        verify(fixture.users, never()).saveAll(any());
+    }
+
+    @Test
+    void ownerCannotTransferToSelf() {
+        Fixture fixture = new Fixture();
+
+        assertThrows(BadRequestException.class,
+                () -> fixture.service.transferOwnership(fixture.principal, 1L));
+        assertEquals(HouseholdRole.OWNER, fixture.owner.getRole());
+        verify(fixture.memberships, never()).saveAll(any());
+    }
+
+    @Test
+    void ownerCannotTransferToAnOutsiderOrPendingInvitee() {
+        Fixture fixture = new Fixture();
+        when(fixture.memberships.findByHouseholdIdAndUserIdForUpdate(10L, 77L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> fixture.service.transferOwnership(fixture.principal, 77L));
+        assertEquals(HouseholdRole.OWNER, fixture.owner.getRole());
+        verify(fixture.memberships, never()).saveAll(any());
+        verify(fixture.users, never()).saveAll(any());
+    }
+
+    @Test
     void ownerRenameAddsTheHouseholdSuffix() {
         Fixture fixture = new Fixture();
 
@@ -52,7 +109,7 @@ class HouseholdServiceTest {
         memberUser.joinHousehold(fixture.shared, HouseholdRole.MEMBER);
         HouseholdMembership member = new HouseholdMembership(
                 fixture.shared, memberUser, HouseholdRole.MEMBER);
-        when(fixture.memberships.findByHouseholdIdAndUserId(10L, 2L)).thenReturn(Optional.of(member));
+        when(fixture.memberships.findByHouseholdIdAndUserIdForUpdate(10L, 2L)).thenReturn(Optional.of(member));
 
         fixture.service.removeMember(fixture.principal, 2L);
 
@@ -64,7 +121,7 @@ class HouseholdServiceTest {
     @Test
     void ownerCannotRemoveAMemberFromAnotherHouseholdByGuessingTheirId() {
         Fixture fixture = new Fixture();
-        when(fixture.memberships.findByHouseholdIdAndUserId(10L, 77L)).thenReturn(Optional.empty());
+        when(fixture.memberships.findByHouseholdIdAndUserIdForUpdate(10L, 77L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
                 () -> fixture.service.removeMember(fixture.principal, 77L));
@@ -80,7 +137,7 @@ class HouseholdServiceTest {
         HouseholdMembership member = new HouseholdMembership(
                 fixture.shared, memberUser, HouseholdRole.MEMBER);
         when(fixture.appUsers.getRequired(fixture.principal)).thenReturn(memberUser);
-        when(fixture.memberships.findByUserIdAndHouseholdId(2L, 10L)).thenReturn(Optional.of(member));
+        when(fixture.memberships.findByUserIdForUpdate(2L)).thenReturn(Optional.of(member));
 
         fixture.service.leave(fixture.principal);
 
@@ -114,7 +171,7 @@ class HouseholdServiceTest {
         Fixture() {
             ownerUser.joinHousehold(shared, HouseholdRole.OWNER);
             when(appUsers.getRequired(principal)).thenReturn(ownerUser);
-            when(memberships.findByUserIdAndHouseholdId(1L, 10L)).thenReturn(Optional.of(owner));
+            when(memberships.findByUserIdForUpdate(1L)).thenReturn(Optional.of(owner));
             when(memberships.findByHouseholdIdOrderByUserDisplayNameAscUserEmailAsc(10L))
                     .thenReturn(List.of(owner));
             when(invitations.findByHouseholdIdOrderByCreatedAtAsc(10L)).thenReturn(List.of());

@@ -45,7 +45,7 @@ class InvitationServiceTest {
         AuthenticatedUserResponse expected = profile(20L, HouseholdRole.MEMBER);
         when(appUserService.getRequired(principal)).thenReturn(invitee);
         when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
-        when(membershipRepository.findByUserId(5L)).thenReturn(Optional.empty());
+        when(membershipRepository.findByUserIdForUpdate(5L)).thenReturn(Optional.empty());
         when(appUserService.getProfile(principal)).thenReturn(expected);
 
         AuthenticatedUserResponse response = service.accept(principal, 10L);
@@ -73,7 +73,7 @@ class InvitationServiceTest {
         AuthenticatedUserResponse expected = profile(20L, HouseholdRole.MEMBER);
         when(appUserService.getRequired(principal)).thenReturn(invitee);
         when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
-        when(membershipRepository.findByUserId(5L)).thenReturn(Optional.of(existingMembership));
+        when(membershipRepository.findByUserIdForUpdate(5L)).thenReturn(Optional.of(existingMembership));
         when(appUserService.getProfile(principal)).thenReturn(expected);
 
         AuthenticatedUserResponse response = service.accept(principal, 10L);
@@ -114,7 +114,7 @@ class InvitationServiceTest {
         HouseholdInvitation invitation = new HouseholdInvitation(household, "family@example.com");
         when(appUserService.getRequired(principal)).thenReturn(invitee);
         when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
-        when(membershipRepository.findByUserId(5L))
+        when(membershipRepository.findByUserIdForUpdate(5L))
                 .thenReturn(Optional.of(new HouseholdMembership(household, invitee, HouseholdRole.MEMBER)));
 
         assertThrows(BadRequestException.class, () -> service.accept(principal, 10L));
@@ -141,6 +141,26 @@ class InvitationServiceTest {
 
         assertThrows(ResourceNotFoundException.class, () -> service().reject(principal, 10L));
         verify(appUserService, never()).getProfile(principal);
+    }
+
+    @Test
+    void sharedHouseholdOwnerMustTransferBeforeAcceptingAnotherInvitation() {
+        AppUser owner = invitee("family@example.com");
+        Household current = household(30L);
+        owner.joinHousehold(current, HouseholdRole.OWNER);
+        HouseholdMembership membership = new HouseholdMembership(current, owner, HouseholdRole.OWNER);
+        HouseholdInvitation invitation = new HouseholdInvitation(household(20L), "family@example.com");
+        when(appUserService.getRequired(principal)).thenReturn(owner);
+        when(invitationRepository.findById(10L)).thenReturn(Optional.of(invitation));
+        when(membershipRepository.findByUserIdForUpdate(5L)).thenReturn(Optional.of(membership));
+        when(membershipRepository.countByHouseholdId(30L)).thenReturn(2L);
+
+        assertThrows(BadRequestException.class, () -> service().accept(principal, 10L));
+
+        assertEquals(HouseholdRole.OWNER, membership.getRole());
+        assertSame(current, membership.getHousehold());
+        verify(membershipRepository, never()).save(org.mockito.ArgumentMatchers.any());
+        verify(invitationRepository, never()).delete(invitation);
     }
 
     private InvitationService service() {

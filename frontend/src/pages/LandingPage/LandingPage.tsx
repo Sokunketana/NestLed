@@ -113,14 +113,16 @@ export default function LandingPage() {
 
     <main id="main-content">
       <div className="lp-opening">
-        <section className="lp-hero lp-container" aria-labelledby="lp-title">
-          <h1 id="lp-title">A place for everything.<br /><span>Finally.</span></h1>
-          <p>Keep track of what you own, know exactly where it lives, and bring your household along. A little organization goes a long way.</p>
-          <div className="lp-hero-actions"><Link className={buttonVariants({ size: 'lg', className: 'lp-primary-cta' })} to="/login">Get started with Nestled <Icon name="arrow-right" /></Link><a className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-secondary-cta' })} href="#how-it-works" onClick={event => scrollToAnchor(event, 'how-it-works')}>See how it works</a></div>
-          <div className="lp-hero-points"><span><Icon name="check" /> Organize by room</span><span><Icon name="check" /> Find things faster</span><span><Icon name="check" /> Share with your household</span></div>
-        </section>
+        <div className="lp-opening-content">
+          <section className="lp-hero lp-container" aria-labelledby="lp-title">
+            <h1 id="lp-title">A place for everything.<br /><span>Finally.</span></h1>
+            <p>Keep track of what you own, know exactly where it lives, and bring your household along. A little organization goes a long way.</p>
+            <div className="lp-hero-actions"><Link className={buttonVariants({ size: 'lg', className: 'lp-primary-cta' })} to="/login">Get started with Nestled <Icon name="arrow-right" /></Link><a className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-secondary-cta' })} href="#how-it-works" onClick={event => scrollToAnchor(event, 'how-it-works')}>See how it works</a></div>
+            <div className="lp-hero-points"><span><Icon name="check" /> Organize by room</span><span><Icon name="check" /> Find things faster</span><span><Icon name="check" /> Share with your household</span></div>
+          </section>
 
-        <HomePath />
+          <HomePath />
+        </div>
 
         <section className="lp-trust-strip" aria-label="A simpler way to manage your home"><div className="lp-container"><span><Icon name="sparkles" /> Made for the way real homes work.</span><div><Icon name="home" /> Room by room</div><div><Icon name="search" /> Easy to find</div><div><Icon name="users" /> Better together</div></div></section>
       </div>

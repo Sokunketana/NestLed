@@ -19,7 +19,8 @@
 .lp-menu-button { display: none !important; }
 
 .lp-opening { display: flex; min-height: calc(100vh - 76px); min-height: calc(100svh - 76px); flex-direction: column; }
-.lp-hero { position: relative; z-index: 1; display: flex; min-height: 520px; flex-direction: column; align-items: center; padding-top: 91px; padding-bottom: 53px; text-align: center; }
+.lp-opening-content { display: flex; flex: 1; flex-direction: column; justify-content: center; padding-block: 64px; }
+.lp-hero { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding-bottom: 53px; text-align: center; }
 .lp-hero h1 { margin: 0 0 17px; font-size: clamp(3.3rem, 6.35vw, 5.7rem); font-weight: 800; line-height: 1.04; letter-spacing: -.078em; }
 .lp-hero h1 span { color: #548d66; }
 .lp-hero > p { max-width: 610px; margin: 0; color: #687a6e; font-size: 17px; line-height: 1.7; }
@@ -31,7 +32,7 @@
 .lp-hero-points { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 27px; margin-top: 27px; color: #78887c; font-size: 11px; font-weight: 700; }
 .lp-hero-points span { display: inline-flex; align-items: center; gap: 5px; }.lp-hero-points svg { width: 13px; height: 13px; color: #5b9e70; }
 
-.lp-path-section { position: relative; padding-bottom: 78px; }
+.lp-path-section { position: relative; }
 .lp-path-card { display: grid; grid-template-columns: 310px minmax(0, 1fr); align-items: center; gap: 35px; padding: 30px 36px; border-color: #dce8dc; border-radius: 17px; background: linear-gradient(135deg, #fff 0%, #f8fbf7 100%); box-shadow: 0 16px 36px rgba(31, 67, 41, .06); }
 .lp-path-copy h2 { margin: 0 0 8px; color: #203a2b; font-size: 28px; font-weight: 800; line-height: 1.15; }
 .lp-path-copy p { max-width: 300px; margin: 0; color: #708374; font-size: 13px; line-height: 1.6; }
@@ -43,7 +44,7 @@
 .lp-path-list small { color: #94a797; font-size: 9px; font-weight: 800; letter-spacing: .1em; }.lp-path-list strong { color: #2a4b36; font-size: 13px; font-weight: 800; white-space: nowrap; }.lp-path-arrow { position: absolute; top: 31px; right: -12px; width: 18px; height: 18px; color: #a8bea9; }
 
 .lp-trust-strip { margin-top: auto; border-top: 1px solid #e7eee6; border-bottom: 1px solid #e7eee6; background: #f7faf6; }.lp-trust-strip .lp-container { display: flex; min-height: 89px; align-items: center; justify-content: space-between; gap: 16px; }.lp-trust-strip .lp-container > span { display: flex; align-items: center; gap: 7px; color: #74907b; font-size: 12px; font-weight: 800; }.lp-trust-strip .lp-container > div { display: flex; align-items: center; gap: 7px; color: #55755e; font-size: 12px; font-weight: 700; }.lp-trust-strip svg { width: 16px; height: 16px; color: #76a680; }
-.lp-section { padding-top: 115px; padding-bottom: 125px; }.lp-section-heading { max-width: 730px; margin: 0 auto 45px; text-align: center; }.lp-section h2, .lp-how h2, .lp-faq h2 { margin: 0 0 14px; font-size: clamp(2.5rem, 4.3vw, 4.25rem); font-weight: 800; line-height: 1.13; letter-spacing: -.065em; }.lp-section-heading p, .lp-faq-heading p { max-width: 540px; margin: 0 auto; color: #728277; font-size: 15px; line-height: 1.7; }
+.lp-section { padding-top: 115px; padding-bottom: 125px; }.lp-section-heading { max-width: 960px; margin: 0 auto 45px; text-align: center; }.lp-section h2, .lp-how h2, .lp-faq h2 { margin: 0 0 14px; font-size: clamp(2.5rem, 4.3vw, 4.25rem); font-weight: 800; line-height: 1.13; letter-spacing: -.065em; }.lp-section-heading p, .lp-faq-heading p { max-width: 540px; margin: 0 auto; color: #728277; font-size: 15px; line-height: 1.7; }
 .lp-how h2 { font-size: clamp(2rem, 3.8vw, 3.2rem); }
 .lp-feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .lp-feature-card { display: flex; flex-direction: column; border-color: #e1e9df; border-radius: 14px; background: #fff; box-shadow: 0 4px 18px rgba(36, 69, 41, .035); transition: transform .24s ease, border-color .24s ease, box-shadow .24s ease; }
@@ -74,8 +75,8 @@
 @media (max-width: 760px) {
   .lp-container { width: min(100% - 38px, 1160px); }.lp-header-inner { min-height: 68px; }.lp-nav { position: absolute; top: calc(100% + 6px); right: 19px; left: 19px; display: none; flex-direction: column; align-items: stretch; gap: 0; margin: 0; padding: 9px; border: 1px solid #dfe9de; border-radius: 10px; background: #fff; box-shadow: 0 14px 25px rgba(25, 60, 35, .12); }.lp-nav.is-open { display: flex; }.lp-nav a { padding: 11px; border-radius: 6px; }.lp-nav a:hover { background: #f1f7f0; }.lp-header-actions { margin-left: auto; }.lp-nav-cta { display: none !important; }.lp-menu-button { display: inline-flex !important; }.lp-menu-lines { display: flex; width: 17px; flex-direction: column; gap: 4px; }.lp-menu-lines i { width: 17px; height: 2px; border-radius: 2px; background: #285744; }
   .lp-opening { min-height: calc(100vh - 68px); min-height: calc(100svh - 68px); }
-  .lp-hero { min-height: 0; padding-top: 80px; padding-bottom: 53px; }.lp-hero h1 { font-size: clamp(3.2rem, 10vw, 4.7rem); }.lp-hero > p { font-size: 15px; }
-  .lp-path-section { padding-bottom: 55px; }.lp-path-card { padding: 26px; }
+  .lp-hero h1 { font-size: clamp(3.2rem, 10vw, 4.7rem); }.lp-hero > p { font-size: 15px; }
+  .lp-path-card { padding: 26px; }
   .lp-section { padding-block: 80px; }.lp-feature-grid { grid-template-columns: 1fr; gap: 14px; }.lp-feature-card [data-slot="card-description"] { max-width: 550px; }.lp-how-inner { grid-template-columns: 1fr; padding-block: 80px; }.lp-faq { grid-template-columns: 1fr; padding-block: 80px; }.lp-faq-heading { max-width: 600px; }
 }
 
@@ -85,7 +86,8 @@
 
 @media (max-width: 460px) {
   .lp-container { width: min(100% - 34px, 1160px); }.lp-brand { font-size: 20px; }.lp-header-actions { gap: 0; }.lp-sign-in { font-size: 12px; }.lp-header-inner { gap: 17px; }
-  .lp-hero { padding-top: 67px; padding-bottom: 45px; }.lp-hero h1 { font-size: clamp(2.65rem, 10.6vw, 3.4rem); }.lp-hero > p { font-size: 14px; }.lp-hero-actions { width: 100%; flex-direction: column; }.lp-hero-actions a { width: 100%; }.lp-hero-points { gap: 7px 14px; margin-top: 22px; font-size: 9px; }
+  .lp-opening-content { padding-block: 48px; }
+  .lp-hero { padding-bottom: 45px; }.lp-hero h1 { font-size: clamp(2.65rem, 10.6vw, 3.4rem); }.lp-hero > p { font-size: 14px; }.lp-hero-actions { width: 100%; flex-direction: column; }.lp-hero-actions a { width: 100%; }.lp-hero-points { gap: 7px 14px; margin-top: 22px; font-size: 9px; }
   .lp-path-card { padding: 22px 18px; }.lp-path-copy h2 { font-size: 25px; }.lp-path-copy p { font-size: 12px; }.lp-path-list strong { font-size: 12px; }.lp-path-list li { padding: 12px 4px; }.lp-trust-strip .lp-container { min-height: 77px; gap: 6px; }.lp-trust-strip .lp-container > div { flex-direction: column; gap: 4px; font-size: 9px; text-align: center; }.lp-trust-strip svg { width: 15px; height: 15px; }
   .lp-section, .lp-faq { padding-block: 70px; }.lp-section h2, .lp-how h2, .lp-faq h2 { font-size: 2.35rem; }.lp-section-heading p { font-size: 14px; }.lp-how-inner { padding-block: 70px; }.lp-how-copy > p { font-size: 14px; }.lp-step-list > div { grid-template-columns: 28px 1fr 20px; gap: 10px; padding: 15px; }.lp-step-list h3 { font-size: 15px; }.lp-step-list p { font-size: 11px; }.lp-faq-list summary { font-size: 13px; }.lp-footer-inner { min-height: 130px; flex-wrap: wrap; align-content: center; }.lp-footer-inner > span { order: 3; width: 100%; }
 }

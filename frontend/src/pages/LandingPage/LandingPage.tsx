@@ -1,5 +1,6 @@
 import { useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../auth/AuthContext'
 import Icon from '../../components/Icon'
 import { Button, buttonVariants } from '../../components/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
@@ -97,6 +98,7 @@ const faqs = [
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { backendReady } = useAuth()
 
   return <div className="lp-page" id="page-top">
     <a className="lp-skip" href="#main-content">Skip to content</a>
@@ -107,7 +109,7 @@ export default function LandingPage() {
         <a href="#how-it-works" onClick={event => scrollToAnchor(event, 'how-it-works', () => setMenuOpen(false))}>How it works</a>
         <a href="#faq" onClick={event => scrollToAnchor(event, 'faq', () => setMenuOpen(false))}>FAQ</a>
       </nav>
-      <div className="lp-header-actions"><Link className="lp-sign-in" to="/login">Sign in</Link><Link className={buttonVariants({ size: 'sm', className: 'lp-nav-cta' })} to="/login">Get started <Icon name="arrow-right" /></Link></div>
+      <div className="lp-header-actions">{backendReady && <><Link className="lp-sign-in" to="/login">Sign in</Link><Link className={buttonVariants({ size: 'sm', className: 'lp-nav-cta' })} to="/login">Get started <Icon name="arrow-right" /></Link></>}</div>
       <Button variant="outline" size="icon" className="lp-menu-button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-controls="landing-navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><span className="lp-menu-lines"><i /><i /><i /></span></Button>
     </div></header>
 
@@ -117,7 +119,13 @@ export default function LandingPage() {
           <section className="lp-hero lp-container" aria-labelledby="lp-title">
             <h1 id="lp-title">A place for everything.<br /><span>Finally.</span></h1>
             <p>Keep track of what you own, know exactly where it lives, and bring your household along. A little organization goes a long way.</p>
-            <div className="lp-hero-actions"><Link className={buttonVariants({ size: 'lg', className: 'lp-primary-cta' })} to="/login">Get started with Nestled <Icon name="arrow-right" /></Link><a className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-secondary-cta' })} href="#how-it-works" onClick={event => scrollToAnchor(event, 'how-it-works')}>See how it works</a></div>
+            <div className="lp-hero-actions">
+              {backendReady
+                ? <Link className={buttonVariants({ size: 'lg', className: 'lp-primary-cta' })} to="/login">Get started with Nestled <Icon name="arrow-right" /></Link>
+                : <Button size="lg" className="lp-primary-cta" disabled aria-describedby="lp-sign-in-status">Get started with Nestled <Icon name="arrow-right" /></Button>}
+              <a className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-secondary-cta' })} href="#how-it-works" onClick={event => scrollToAnchor(event, 'how-it-works')}>See how it works</a>
+            </div>
+            {!backendReady && <div className="lp-sign-in-status" id="lp-sign-in-status" role="status">Sign-in is getting ready…</div>}
             <div className="lp-hero-points"><span><Icon name="check" /> Organize by room</span><span><Icon name="check" /> Find things faster</span><span><Icon name="check" /> Share with your household</span></div>
           </section>
 
@@ -129,7 +137,7 @@ export default function LandingPage() {
 
       <section className="lp-section lp-container" id="features" aria-labelledby="lp-features-title"><div className="lp-section-heading"><h2 id="lp-features-title">Your home makes more sense<br />when everything has a place.</h2><p>Spend less time remembering where things went and more time enjoying the space you’ve made.</p></div><div className="lp-feature-grid">{features.map(feature => <Card className="lp-feature-card" key={feature.title}><CardHeader><CardTitle>{feature.title}</CardTitle><CardDescription>{feature.description}</CardDescription></CardHeader></Card>)}</div></section>
 
-      <section className="lp-how" id="how-it-works" aria-labelledby="lp-how-title"><div className="lp-container lp-how-inner"><div className="lp-how-copy"><h2 id="lp-how-title">From “where is it?”<br />to “there it is.”</h2><p>There’s no complicated setup. Just build your home’s map as you go, one room and one item at a time.</p><Link className={buttonVariants({ size: 'lg' })} to="/login">Make yourself at home <Icon name="arrow-right" /></Link></div><div className="lp-step-list"><div><span>01</span><div><h3>Set up your spaces</h3><p>Add rooms and the storage spots inside them.</p></div><Icon name="home" /></div><div><span>02</span><div><h3>Put things in their place</h3><p>Save items with the details and photos that matter.</p></div><Icon name="box" /></div><div><span>03</span><div><h3>Find and share with ease</h3><p>Search your home and invite others to stay in sync.</p></div><Icon name="search" /></div></div></div></section>
+      <section className="lp-how" id="how-it-works" aria-labelledby="lp-how-title"><div className="lp-container lp-how-inner"><div className="lp-how-copy"><h2 id="lp-how-title">From “where is it?”<br />to “there it is.”</h2><p>There’s no complicated setup. Just build your home’s map as you go, one room and one item at a time.</p>{backendReady && <Link className={buttonVariants({ size: 'lg' })} to="/login">Make yourself at home <Icon name="arrow-right" /></Link>}</div><div className="lp-step-list"><div><span>01</span><div><h3>Set up your spaces</h3><p>Add rooms and the storage spots inside them.</p></div><Icon name="home" /></div><div><span>02</span><div><h3>Put things in their place</h3><p>Save items with the details and photos that matter.</p></div><Icon name="box" /></div><div><span>03</span><div><h3>Find and share with ease</h3><p>Search your home and invite others to stay in sync.</p></div><Icon name="search" /></div></div></div></section>
 
       <section className="lp-faq lp-container" id="faq" aria-labelledby="lp-faq-title"><div className="lp-faq-heading"><h2 id="lp-faq-title">A few questions, answered.</h2><p>Everything you need to feel at home with Nestled.</p></div><div className="lp-faq-list">{faqs.map(({ question, answer }) => <details key={question}><summary>{question}<Icon name="plus" /></summary><p>{answer}</p></details>)}</div></section>
 

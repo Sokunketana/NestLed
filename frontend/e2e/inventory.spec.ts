@@ -149,6 +149,57 @@ test('anonymous visitors can open the sign-in page from the landing page', async
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible()
 })
 
+test('public pages stay usable while the session check is pending', async ({ page }) => {
+  // Leave the request unanswered to simulate a backend that has not started.
+  await page.route('**/api/auth/me', () => {})
+
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await expect(page.getByRole('status', { name: 'Loading' })).toBeHidden()
+  await page.getByRole('link', { name: 'Sign in', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
+
+  await page.goto('/login')
+  await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible()
+})
+
+test('the landing page stays visible when the backend is unavailable', async ({ page }) => {
+  const authRequests: Promise<void>[] = []
+  await page.route('**/api/auth/me', route => {
+    const aborted = route.abort('connectionrefused')
+    authRequests.push(aborted)
+    return aborted
+  })
+
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  // The API client makes three attempts before reporting a network failure.
+  await expect.poll(() => authRequests.length).toBe(3)
+  await Promise.all(authRequests)
+  await page.getByRole('link', { name: 'Sign in', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
+})
+
+test('private pages wait for the session check before loading inventory', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+  let releaseSession!: () => void
+  const sessionReady = new Promise<void>(resolve => { releaseSession = resolve })
+  await page.route('**/api/auth/me', async route => {
+    await sessionReady
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) })
+  })
+  const inventoryRequests: string[] = []
+  page.on('request', request => {
+    if (request.url().includes('/api/items')) inventoryRequests.push(request.url())
+  })
+
+  await page.goto('/items')
+  await expect(page.getByRole('status', { name: 'Loading' })).toBeVisible()
+  expect(inventoryRequests).toHaveLength(0)
+  releaseSession()
+  await expect(page.getByRole('heading', { name: 'Refine your items' })).toBeVisible()
+})
+
 test('an authenticated user can drill down from a room to item details', async ({ page }) => {
   await mockAuthenticatedApi(page)
 

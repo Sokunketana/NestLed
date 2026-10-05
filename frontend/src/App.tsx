@@ -21,13 +21,11 @@ export default function App() {
   const { status } = useAuth()
   const { search } = useLocation()
 
-  if (status === 'loading') {
-    return <LoadingScreen />
-  }
-  if (status === 'anonymous') return <Routes>
+  // Public pages render while the session check runs in the background.
+  if (status !== 'authenticated') return <Routes>
     <Route path="/" element={new URLSearchParams(search).has('loginError') ? <Navigate to={`/login${search}`} replace /> : <LandingPage />} />
     <Route path="/login" element={<LoginPage />} />
-    <Route path="*" element={<Navigate to="/" replace />} />
+    <Route path="*" element={status === 'loading' ? <LoadingScreen /> : <Navigate to="/" replace />} />
   </Routes>
 
   return <Routes>

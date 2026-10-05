@@ -62,7 +62,7 @@ async function fetchWithSafeRetry(url: string, init: RequestInit, method: string
       }
     } catch (cause) {
       lastError = cause
-      if (!retryable || attempt === maxAttempts - 1) throw cause
+      if (init.signal?.aborted || !retryable || attempt === maxAttempts - 1) throw cause
     }
 
     await new Promise(resolve => window.setTimeout(resolve, 400 * (attempt + 1)))

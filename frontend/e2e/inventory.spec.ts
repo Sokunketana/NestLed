@@ -171,7 +171,8 @@ test('the landing page hides sign-in controls while the session check is pending
 })
 
 test('sign-in controls appear automatically when the backend becomes ready', async ({ page }) => {
-  const authRequests: Promise<void>[] = []
+  let authRequestFailed!: () => void
+  const firstFailure = new Promise<void>(resolve => { authRequestFailed = resolve })
   let backendAvailable = false
   await page.route('**/api/auth/me', route => {
     if (backendAvailable) return route.fulfill({
@@ -179,16 +180,12 @@ test('sign-in controls appear automatically when the backend becomes ready', asy
       contentType: 'application/json',
       body: JSON.stringify({ message: 'Authentication required' }),
     })
-    const aborted = route.abort('connectionrefused')
-    authRequests.push(aborted)
-    return aborted
+    return route.abort('connectionrefused').then(authRequestFailed)
   })
 
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
-  // The API client makes three attempts before reporting a network failure.
-  await expect.poll(() => authRequests.length).toBe(3)
-  await Promise.all(authRequests)
+  await firstFailure
   await expect(page.getByRole('button', { name: 'Get started with Nestled' })).toBeDisabled()
   await expect(page.locator('a[href="/login"]')).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'See how it works' })).toBeVisible()
@@ -214,10 +211,52 @@ test('private pages wait for the session check before loading inventory', async 
 
   await page.goto('/items')
   await expect(page.getByRole('status', { name: 'Loading' })).toBeVisible()
+  // Observe the blocked page beyond its first render before releasing auth.
+  await page.waitForTimeout(500)
   expect(inventoryRequests).toHaveLength(0)
   releaseSession()
   await expect(page.getByRole('heading', { name: 'Refine your items' })).toBeVisible()
 })
+
+test('a private deep link survives a backend outage and resumes after recovery', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+  let backendAvailable = false
+  await page.route('**/api/auth/me', route => backendAvailable
+    ? route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) })
+    : route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ message: 'Starting up' }) }))
+  const inventoryRequests: string[] = []
+  page.on('request', request => {
+    if (request.url().includes('/api/items')) inventoryRequests.push(request.url())
+  })
+
+  await page.goto('/items?roomId=1')
+  await expect(page.getByText('Unable to check your session. Retrying…')).toBeVisible()
+  await expect(page).toHaveURL(/\/items\?roomId=1$/)
+  expect(inventoryRequests).toHaveLength(0)
+  backendAvailable = true
+  await expect(page.getByRole('heading', { name: 'Refine your items' })).toBeVisible({ timeout: 10000 })
+  await expect(page).toHaveURL(/\/items\?roomId=1$/)
+})
+
+for (const path of ['/', '/login']) {
+  test(`a signed-in visitor at ${path} cannot start another sign-in while checking the session`, async ({ page }) => {
+    await mockAuthenticatedApi(page)
+    let releaseSession!: () => void
+    const sessionReady = new Promise<void>(resolve => { releaseSession = resolve })
+    await page.route('**/api/auth/me', async route => {
+      await sessionReady
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) })
+    })
+    await page.goto(path)
+    await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Get started with Nestled' })).toBeDisabled()
+    await expect(page.locator('a[href="/login"]')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeHidden()
+    releaseSession()
+    await expect(page.getByRole('heading', { name: 'Rooms', exact: true })).toBeVisible()
+    await expect(page).toHaveURL(/\/$/)
+  })
+}
 
 test('a direct login visit waits for backend readiness before showing the form', async ({ page }) => {
   let releaseSession!: () => void

@@ -18,7 +18,15 @@ export type AuthenticatedUser = {
 
 export const authApi = {
   loginUrl: backendUrl('/oauth2/authorization/google'),
-  me: () => request<AuthenticatedUser>('/auth/me'),
+  me: async () => {
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 10000)
+    try {
+      return await request<AuthenticatedUser>('/auth/me', { signal: controller.signal })
+    } finally {
+      window.clearTimeout(timeout)
+    }
+  },
   updateDisplayName: (displayName: string) => request<AuthenticatedUser>('/auth/me', {
     method: 'PUT', body: JSON.stringify({ displayName }),
   }),

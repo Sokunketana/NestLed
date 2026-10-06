@@ -27,6 +27,10 @@
 .lp-hero-actions { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 30px; }
 .lp-primary-cta { min-width: 226px; border-radius: 10px; box-shadow: 0 8px 18px rgba(20, 82, 71, .15); }
 .lp-primary-cta:hover { box-shadow: 0 11px 22px rgba(20, 82, 71, .2); }
+.lp-hero-actions .lp-primary-cta:disabled { pointer-events: auto; cursor: not-allowed; box-shadow: none; }
+.lp-hero-actions .lp-primary-cta:disabled:hover { background: #145247; }
+.lp-sign-in-status { margin-top: 10px; color: #687a6e; font-size: 12px; }
+.lp-hero-actions > button { max-width: 100%; }
 .lp-primary-cta svg, .lp-how-copy a svg { width: 17px; height: 17px; }
 .lp-secondary-cta { border-radius: 10px; }
 .lp-hero-points { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 27px; margin-top: 27px; color: #78887c; font-size: 11px; font-weight: 700; }
@@ -87,7 +91,7 @@
 @media (max-width: 460px) {
   .lp-container { width: min(100% - 34px, 1160px); }.lp-brand { font-size: 20px; }.lp-header-actions { gap: 0; }.lp-sign-in { font-size: 12px; }.lp-header-inner { gap: 17px; }
   .lp-opening-content { padding-block: 48px; }
-  .lp-hero { padding-bottom: 45px; }.lp-hero h1 { font-size: clamp(2.65rem, 10.6vw, 3.4rem); }.lp-hero > p { font-size: 14px; }.lp-hero-actions { width: 100%; flex-direction: column; }.lp-hero-actions a { width: 100%; }.lp-hero-points { gap: 7px 14px; margin-top: 22px; font-size: 9px; }
+  .lp-hero { padding-bottom: 45px; }.lp-hero h1 { font-size: clamp(2.65rem, 10.6vw, 3.4rem); }.lp-hero > p { font-size: 14px; }.lp-hero-actions { width: 100%; flex-direction: column; }.lp-hero-actions a, .lp-hero-actions button { width: 100%; }.lp-hero-points { gap: 7px 14px; margin-top: 22px; font-size: 9px; }
   .lp-path-card { padding: 22px 18px; }.lp-path-copy h2 { font-size: 25px; }.lp-path-copy p { font-size: 12px; }.lp-path-list strong { font-size: 12px; }.lp-path-list li { padding: 12px 4px; }.lp-trust-strip .lp-container { min-height: 77px; gap: 6px; }.lp-trust-strip .lp-container > div { flex-direction: column; gap: 4px; font-size: 9px; text-align: center; }.lp-trust-strip svg { width: 15px; height: 15px; }
   .lp-section, .lp-faq { padding-block: 70px; }.lp-section h2, .lp-how h2, .lp-faq h2 { font-size: 2.35rem; }.lp-section-heading p { font-size: 14px; }.lp-how-inner { padding-block: 70px; }.lp-how-copy > p { font-size: 14px; }.lp-step-list > div { grid-template-columns: 28px 1fr 20px; gap: 10px; padding: 15px; }.lp-step-list h3 { font-size: 15px; }.lp-step-list p { font-size: 11px; }.lp-faq-list summary { font-size: 13px; }.lp-footer-inner { min-height: 130px; flex-wrap: wrap; align-content: center; }.lp-footer-inner > span { order: 3; width: 100%; }
 }

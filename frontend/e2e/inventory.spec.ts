@@ -149,6 +149,147 @@ test('anonymous visitors can open the sign-in page from the landing page', async
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible()
 })
 
+test('the landing page hides sign-in controls while the session check is pending', async ({ page }) => {
+  // Leave the request unanswered to simulate a backend that has not started.
+  await page.route('**/api/auth/me', () => {})
+
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await expect(page.getByRole('status', { name: 'Loading' })).toBeHidden()
+  const getStarted = page.getByRole('button', { name: 'Get started with Nestled' })
+  await expect(getStarted).toBeVisible()
+  await expect(getStarted).toBeDisabled()
+  await expect(getStarted).toHaveCSS('cursor', 'not-allowed')
+  await expect(getStarted).toHaveCSS('pointer-events', 'auto')
+  await expect(page.getByRole('status')).toHaveText('Sign-in is getting ready…')
+  await expect(page.locator('a[href="/login"]')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'See how it works' })).toBeVisible()
+
+  await page.goto('/login')
+  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeHidden()
+})
+
+test('sign-in controls appear automatically when the backend becomes ready', async ({ page }) => {
+  let authRequestFailed!: () => void
+  const firstFailure = new Promise<void>(resolve => { authRequestFailed = resolve })
+  let backendAvailable = false
+  await page.route('**/api/auth/me', route => {
+    if (backendAvailable) return route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Authentication required' }),
+    })
+    return route.abort('connectionrefused').then(authRequestFailed)
+  })
+
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await firstFailure
+  await expect(page.getByRole('button', { name: 'Get started with Nestled' })).toBeDisabled()
+  await expect(page.locator('a[href="/login"]')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'See how it works' })).toBeVisible()
+  backendAvailable = true
+  await expect(page.locator('a[href="/login"]')).toHaveCount(4, { timeout: 10000 })
+  await expect(page.getByText('Sign-in is getting ready…')).toBeHidden()
+  await page.getByRole('link', { name: 'Get started with Nestled' }).click()
+  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
+})
+
+test('private pages wait for the session check before loading inventory', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+  let releaseSession!: () => void
+  const sessionReady = new Promise<void>(resolve => { releaseSession = resolve })
+  await page.route('**/api/auth/me', async route => {
+    await sessionReady
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) })
+  })
+  const inventoryRequests: string[] = []
+  page.on('request', request => {
+    if (request.url().includes('/api/items')) inventoryRequests.push(request.url())
+  })
+
+  await page.goto('/items')
+  await expect(page.getByRole('status', { name: 'Loading' })).toBeVisible()
+  // Observe the blocked page beyond its first render before releasing auth.
+  await page.waitForTimeout(500)
+  expect(inventoryRequests).toHaveLength(0)
+  releaseSession()
+  await expect(page.getByRole('heading', { name: 'Refine your items' })).toBeVisible()
+})
+
+test('a private deep link survives a backend outage and resumes after recovery', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+  let backendAvailable = false
+  await page.route('**/api/auth/me', route => backendAvailable
+    ? route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) })
+    : route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ message: 'Starting up' }) }))
+  const inventoryRequests: string[] = []
+  page.on('request', request => {
+    if (request.url().includes('/api/items')) inventoryRequests.push(request.url())
+  })
+
+  await page.goto('/items?roomId=1')
+  await expect(page.getByText('Unable to check your session. Retrying…')).toBeVisible()
+  await expect(page).toHaveURL(/\/items\?roomId=1$/)
+  expect(inventoryRequests).toHaveLength(0)
+  backendAvailable = true
+  await expect(page.getByRole('heading', { name: 'Refine your items' })).toBeVisible({ timeout: 10000 })
+  await expect(page).toHaveURL(/\/items\?roomId=1$/)
+})
+
+for (const path of ['/', '/login']) {
+  test(`a signed-in visitor at ${path} cannot start another sign-in while checking the session`, async ({ page }) => {
+    await mockAuthenticatedApi(page)
+    let releaseSession!: () => void
+    const sessionReady = new Promise<void>(resolve => { releaseSession = resolve })
+    await page.route('**/api/auth/me', async route => {
+      await sessionReady
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) })
+    })
+    await page.goto(path)
+    await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Get started with Nestled' })).toBeDisabled()
+    await expect(page.locator('a[href="/login"]')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeHidden()
+    releaseSession()
+    await expect(page.getByRole('heading', { name: 'Rooms', exact: true })).toBeVisible()
+    await expect(page).toHaveURL(/\/$/)
+  })
+}
+
+test('a direct login visit waits for backend readiness before showing the form', async ({ page }) => {
+  let releaseSession!: () => void
+  const sessionReady = new Promise<void>(resolve => { releaseSession = resolve })
+  await page.route('**/api/auth/me', async route => {
+    await sessionReady
+    await route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Authentication required' }),
+    })
+  })
+
+  await page.goto('/login?loginError=true')
+  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeHidden()
+  releaseSession()
+  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible()
+  await expect(page.getByRole('alert')).toContainText('Sign-in could not be completed')
+})
+
+test('sign-in controls remain available after signing out of a ready backend', async ({ page }) => {
+  await mockAuthenticatedApi(page)
+  await page.route('**/api/auth/logout', route => route.fulfill({ status: 204 }))
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Open account menu for Person Example' }).click()
+  await page.getByRole('menuitem', { name: 'Sign out' }).click()
+  await page.getByRole('dialog', { name: 'Sign out?' }).getByRole('button', { name: 'Sign out', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await expect(page.locator('a[href="/login"]')).toHaveCount(4)
+})
+
 test('an authenticated user can drill down from a room to item details', async ({ page }) => {
   await mockAuthenticatedApi(page)
 

@@ -5,10 +5,11 @@ import { authApi, type AuthenticatedUser } from '../api/authApi'
 import { cacheKeys, clearUserScopedCache, revalidateInventory } from '../api/cache'
 import { ApiRequestError } from '../api/http'
 
-type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
+type AuthStatus = 'loading' | 'unavailable' | 'authenticated' | 'anonymous'
 
 type AuthContextValue = {
   status: AuthStatus
+  backendReady: boolean
   user: AuthenticatedUser | null
   error: string | null
   login: () => void
@@ -24,15 +25,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: user, error: requestError, isLoading, mutate } = useSWR<AuthenticatedUser, ApiRequestError>(
     cacheKeys.authMe,
     authApi.me,
-    { revalidateOnFocus: false, shouldRetryOnError: false },
+    {
+      revalidateOnFocus: false,
+      onErrorRetry: (error, _key, _config, revalidate, { retryCount }) => {
+        // A 401 confirms that the backend is ready for anonymous sign-in.
+        if (error instanceof ApiRequestError && error.status === 401) return
+        window.setTimeout(() => { void revalidate({ retryCount }) }, 3000)
+      },
+    },
   )
-  const status: AuthStatus = isLoading ? 'loading' : user ? 'authenticated' : 'anonymous'
+  const sessionRejected = requestError instanceof ApiRequestError && requestError.status === 401
+  const status: AuthStatus = user ? 'authenticated' : isLoading ? 'loading' : requestError && !sessionRejected ? 'unavailable' : 'anonymous'
+  const backendReady = !isLoading && (!requestError || (requestError instanceof ApiRequestError && requestError.status === 401))
   const error = requestError && !(requestError instanceof ApiRequestError && requestError.status === 401)
     ? requestError.message
     : null
 
   const value = useMemo<AuthContextValue>(() => ({
     status,
+    backendReady,
     user: user ?? null,
     error,
     login: () => window.location.assign(authApi.loginUrl),
@@ -66,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw logoutError
       }
     },
-  }), [error, mutate, status, user])
+  }), [backendReady, error, mutate, status, user])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -1,4 +1,4 @@
-export default function LoadingScreen() {
+export default function LoadingScreen({ message }: { message?: string }) {
   return (
     <main className="loading-screen" aria-busy="true" role="status" aria-label="Loading">
       <div className="loading-screen__glow loading-screen__glow--top" aria-hidden="true" />
@@ -14,6 +14,7 @@ export default function LoadingScreen() {
           </svg>
         </span>
       </div>
+      {message && <p className="absolute bottom-12 px-4 text-center text-sm text-stone-600">{message}</p>}
     </main>
   )
 }

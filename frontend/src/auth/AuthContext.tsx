@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   )
   const sessionRejected = requestError instanceof ApiRequestError && requestError.status === 401
-  const status: AuthStatus = user ? 'authenticated' : isLoading ? 'loading' : requestError && !sessionRejected ? 'unavailable' : 'anonymous'
+  const status: AuthStatus = user ? 'authenticated' : requestError && !sessionRejected ? 'unavailable' : isLoading ? 'loading' : 'anonymous'
   const backendReady = !isLoading && (!requestError || (requestError instanceof ApiRequestError && requestError.status === 401))
   const error = requestError && !(requestError instanceof ApiRequestError && requestError.status === 401)
     ? requestError.message

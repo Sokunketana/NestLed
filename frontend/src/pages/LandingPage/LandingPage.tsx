@@ -120,12 +120,9 @@ export default function LandingPage() {
             <h1 id="lp-title">A place for everything.<br /><span>Finally.</span></h1>
             <p>Keep track of what you own, know exactly where it lives, and bring your household along. A little organization goes a long way.</p>
             <div className="lp-hero-actions">
-              {backendReady
-                ? <Link className={buttonVariants({ size: 'lg', className: 'lp-primary-cta' })} to="/login">Get started with Nestled <Icon name="arrow-right" /></Link>
-                : <Button size="lg" className="lp-primary-cta" disabled aria-describedby="lp-sign-in-status">Get started with Nestled <Icon name="arrow-right" /></Button>}
+              {backendReady && <Link className={buttonVariants({ size: 'lg', className: 'lp-primary-cta' })} to="/login">Get started with Nestled <Icon name="arrow-right" /></Link>}
               <a className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-secondary-cta' })} href="#how-it-works" onClick={event => scrollToAnchor(event, 'how-it-works')}>See how it works</a>
             </div>
-            {!backendReady && <div className="lp-sign-in-status" id="lp-sign-in-status" role="status">Sign-in is getting ready…</div>}
             <div className="lp-hero-points"><span><Icon name="check" /> Organize by room</span><span><Icon name="check" /> Find things faster</span><span><Icon name="check" /> Share with your household</span></div>
           </section>
 

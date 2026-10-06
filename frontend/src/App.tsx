@@ -24,7 +24,7 @@ export default function App() {
   // Public pages render while the session check runs in the background.
   if (status !== 'authenticated') return <Routes>
     <Route path="/" element={new URLSearchParams(search).has('loginError') ? <Navigate to={`/login${search}`} replace /> : <LandingPage />} />
-    <Route path="/login" element={backendReady ? <LoginPage /> : <LandingPage />} />
+    <Route path="/login" element={backendReady ? <LoginPage /> : <LoadingScreen message={status === 'unavailable' ? 'Unable to check your session. Retrying…' : undefined} />} />
     <Route path="*" element={status === 'anonymous' ? <Navigate to="/" replace /> : <LoadingScreen message={status === 'unavailable' ? 'Unable to check your session. Retrying…' : undefined} />} />
   </Routes>
 

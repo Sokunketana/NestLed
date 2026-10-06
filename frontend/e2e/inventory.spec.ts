@@ -149,28 +149,26 @@ test('anonymous visitors can open the sign-in page from the landing page', async
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible()
 })
 
-test('the landing page hides sign-in controls while the session check is pending', async ({ page }) => {
+test('only See how it works opens login loading while the session check is pending', async ({ page }) => {
   // Leave the request unanswered to simulate a backend that has not started.
   await page.route('**/api/auth/me', () => {})
 
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
   await expect(page.getByRole('status', { name: 'Loading' })).toBeHidden()
-  const getStarted = page.getByRole('button', { name: 'Get started with Nestled' })
-  await expect(getStarted).toBeVisible()
-  await expect(getStarted).toBeDisabled()
-  await expect(getStarted).toHaveCSS('cursor', 'not-allowed')
-  await expect(getStarted).toHaveCSS('pointer-events', 'auto')
-  await expect(page.getByRole('status')).toHaveText('Sign-in is getting ready…')
-  await expect(page.locator('a[href="/login"]')).toHaveCount(0)
+  await expect(page.getByRole('link', { name: 'Get started with Nestled' })).toBeHidden()
+  await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeHidden()
+  await expect(page.getByRole('link', { name: 'Get started', exact: true })).toBeHidden()
+  await expect(page.getByRole('link', { name: 'Make yourself at home' })).toBeHidden()
+  await expect(page.getByText('Sign-in is getting ready…')).toBeHidden()
   await expect(page.getByRole('link', { name: 'See how it works' })).toBeVisible()
-
-  await page.goto('/login')
-  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await page.getByRole('link', { name: 'See how it works' }).click()
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByRole('status', { name: 'Loading' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeHidden()
 })
 
-test('sign-in controls appear automatically when the backend becomes ready', async ({ page }) => {
+test('login loading finishes automatically when the backend becomes ready', async ({ page }) => {
   let authRequestFailed!: () => void
   const firstFailure = new Promise<void>(resolve => { authRequestFailed = resolve })
   let backendAvailable = false
@@ -186,14 +184,11 @@ test('sign-in controls appear automatically when the backend becomes ready', asy
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
   await firstFailure
-  await expect(page.getByRole('button', { name: 'Get started with Nestled' })).toBeDisabled()
-  await expect(page.locator('a[href="/login"]')).toHaveCount(0)
-  await expect(page.getByRole('link', { name: 'See how it works' })).toBeVisible()
+  await page.getByRole('link', { name: 'See how it works' }).click()
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByRole('status', { name: 'Loading' })).toBeVisible()
   backendAvailable = true
-  await expect(page.locator('a[href="/login"]')).toHaveCount(4, { timeout: 10000 })
-  await expect(page.getByText('Sign-in is getting ready…')).toBeHidden()
-  await page.getByRole('link', { name: 'Get started with Nestled' }).click()
-  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible({ timeout: 10000 })
 })
 
 test('private pages wait for the session check before loading inventory', async ({ page }) => {
@@ -248,9 +243,11 @@ for (const path of ['/', '/login']) {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(user) })
     })
     await page.goto(path)
-    await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Get started with Nestled' })).toBeDisabled()
-    await expect(page.locator('a[href="/login"]')).toHaveCount(0)
+    if (path === '/login') {
+      await expect(page.getByRole('status', { name: 'Loading' })).toBeVisible()
+    } else {
+      await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+    }
     await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeHidden()
     releaseSession()
     await expect(page.getByRole('heading', { name: 'Rooms', exact: true })).toBeVisible()
@@ -271,7 +268,7 @@ test('a direct login visit waits for backend readiness before showing the form',
   })
 
   await page.goto('/login?loginError=true')
-  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await expect(page.getByRole('status', { name: 'Loading' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeHidden()
   releaseSession()
   await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
@@ -287,7 +284,7 @@ test('sign-in controls remain available after signing out of a ready backend', a
   await page.getByRole('menuitem', { name: 'Sign out' }).click()
   await page.getByRole('dialog', { name: 'Sign out?' }).getByRole('button', { name: 'Sign out', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
-  await expect(page.locator('a[href="/login"]')).toHaveCount(4)
+  await expect(page.locator('a[href="/login"]')).toHaveCount(5)
 })
 
 test('an authenticated user can drill down from a room to item details', async ({ page }) => {

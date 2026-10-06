@@ -149,7 +149,7 @@ test('anonymous visitors can open the sign-in page from the landing page', async
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeVisible()
 })
 
-test('only See how it works opens login loading while the session check is pending', async ({ page }) => {
+test('See how it works scrolls to the explanation while the backend is pending', async ({ page }) => {
   // Leave the request unanswered to simulate a backend that has not started.
   await page.route('**/api/auth/me', () => {})
 
@@ -163,8 +163,9 @@ test('only See how it works opens login loading while the session check is pendi
   await expect(page.getByText('Sign-in is getting ready…')).toBeHidden()
   await expect(page.getByRole('link', { name: 'See how it works' })).toBeVisible()
   await page.getByRole('link', { name: 'See how it works' }).click()
-  await expect(page).toHaveURL(/\/login$/)
-  await expect(page.getByRole('status', { name: 'Loading' })).toBeVisible()
+  await expect(page).toHaveURL(/\/#how-it-works$/)
+  await expect(page.getByRole('heading', { name: 'From “where is it?” to “there it is.”' })).toBeInViewport()
+  await expect(page.getByRole('status', { name: 'Loading' })).toBeHidden()
   await expect(page.getByRole('button', { name: 'Sign in with Google' })).toBeHidden()
 })
 
@@ -181,14 +182,45 @@ test('login loading finishes automatically when the backend becomes ready', asyn
     return route.abort('connectionrefused').then(authRequestFailed)
   })
 
-  await page.goto('/')
-  await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
+  await page.goto('/login')
   await firstFailure
-  await page.getByRole('link', { name: 'See how it works' }).click()
   await expect(page).toHaveURL(/\/login$/)
   await expect(page.getByRole('status', { name: 'Loading' })).toBeVisible()
   backendAvailable = true
   await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible({ timeout: 10000 })
+})
+
+test('a stalled session times out and keeps the retry message visible until recovery', async ({ page }) => {
+  await page.clock.install()
+  let authRequests = 0
+  let releaseRetry!: () => void
+  const retryReady = new Promise<void>(resolve => { releaseRetry = resolve })
+  await page.route('**/api/auth/me', async route => {
+    authRequests += 1
+    if (authRequests === 1) return // Simulate a backend connection that never responds.
+    await retryReady
+    await route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Authentication required' }),
+    })
+  })
+
+  await page.goto('/login')
+  await expect.poll(() => authRequests).toBe(1)
+  await expect(page.getByRole('status', { name: 'Loading' })).toBeVisible()
+  await page.clock.runFor(10000)
+  const retryMessage = page.getByText('Unable to check your session. Retrying…')
+  await expect(retryMessage).toBeVisible()
+  await page.clock.runFor(3000)
+  await expect.poll(() => authRequests).toBe(2)
+  await expect(retryMessage).toBeVisible()
+  await page.clock.runFor(1000)
+  await expect(retryMessage).toBeVisible()
+  await expect(page).toHaveURL(/\/login$/)
+  releaseRetry()
+  await expect(page.getByRole('heading', { name: 'Welcome back.' })).toBeVisible()
+  await expect(retryMessage).toBeHidden()
 })
 
 test('private pages wait for the session check before loading inventory', async ({ page }) => {
@@ -284,7 +316,9 @@ test('sign-in controls remain available after signing out of a ready backend', a
   await page.getByRole('menuitem', { name: 'Sign out' }).click()
   await page.getByRole('dialog', { name: 'Sign out?' }).getByRole('button', { name: 'Sign out', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'A place for everything. Finally.' })).toBeVisible()
-  await expect(page.locator('a[href="/login"]')).toHaveCount(5)
+  await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Get started with Nestled' })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'See how it works' })).toBeVisible()
 })
 
 test('an authenticated user can drill down from a room to item details', async ({ page }) => {

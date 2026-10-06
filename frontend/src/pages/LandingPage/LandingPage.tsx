@@ -121,7 +121,7 @@ export default function LandingPage() {
             <p>Keep track of what you own, know exactly where it lives, and bring your household along. A little organization goes a long way.</p>
             <div className="lp-hero-actions">
               {backendReady && <Link className={buttonVariants({ size: 'lg', className: 'lp-primary-cta' })} to="/login">Get started with Nestled <Icon name="arrow-right" /></Link>}
-              <Link className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-secondary-cta' })} to="/login">See how it works</Link>
+              <a className={buttonVariants({ variant: 'outline', size: 'lg', className: 'lp-secondary-cta' })} href="#how-it-works" onClick={event => scrollToAnchor(event, 'how-it-works')}>See how it works</a>
             </div>
             <div className="lp-hero-points"><span><Icon name="check" /> Organize by room</span><span><Icon name="check" /> Find things faster</span><span><Icon name="check" /> Share with your household</span></div>
           </section>
